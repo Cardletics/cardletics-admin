@@ -70,7 +70,6 @@ export default function DashboardPage() {
   const [variantFilter, setVariantFilter] = useState("all");
   const [affiliateFilter, setAffiliateFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
-
   const [chartRange, setChartRange] = useState<ChartRange>("day");
 
   useEffect(() => {
@@ -169,6 +168,64 @@ export default function DashboardPage() {
   const totalBoostCoinsSpent = boostPackPurchases.reduce((sum, item) => {
     return sum + (item.total_coin_cost || 0);
   }, 0);
+
+  const todayRevenue = useMemo(() => {
+    const today = new Date();
+    const todayKey = today.toLocaleDateString("sv-SE");
+
+    const subscriptionToday = subscriptions.reduce((sum, sub) => {
+      const key = new Date(sub.created_at).toLocaleDateString("sv-SE");
+      return key === todayKey ? sum + (sub.price_eur || 0) : sum;
+    }, 0);
+
+    const coinToday = coinPurchases.reduce((sum, purchase) => {
+      const key = new Date(purchase.created_at).toLocaleDateString("sv-SE");
+      return key === todayKey ? sum + (purchase.price_eur || 0) : sum;
+    }, 0);
+
+    return subscriptionToday + coinToday;
+  }, [subscriptions, coinPurchases]);
+
+  const yesterdayRevenue = useMemo(() => {
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayKey = yesterday.toLocaleDateString("sv-SE");
+
+    const subscriptionYesterday = subscriptions.reduce((sum, sub) => {
+      const key = new Date(sub.created_at).toLocaleDateString("sv-SE");
+      return key === yesterdayKey ? sum + (sub.price_eur || 0) : sum;
+    }, 0);
+
+    const coinYesterday = coinPurchases.reduce((sum, purchase) => {
+      const key = new Date(purchase.created_at).toLocaleDateString("sv-SE");
+      return key === yesterdayKey ? sum + (purchase.price_eur || 0) : sum;
+    }, 0);
+
+    return subscriptionYesterday + coinYesterday;
+  }, [subscriptions, coinPurchases]);
+
+  const todayPurchasesCount = useMemo(() => {
+    const today = new Date().toLocaleDateString("sv-SE");
+
+    const subCount = subscriptions.filter(
+      (sub) => new Date(sub.created_at).toLocaleDateString("sv-SE") === today
+    ).length;
+
+    const coinCount = coinPurchases.filter(
+      (purchase) => new Date(purchase.created_at).toLocaleDateString("sv-SE") === today
+    ).length;
+
+    return subCount + coinCount;
+  }, [subscriptions, coinPurchases]);
+
+  const revenueChangePercent = useMemo(() => {
+    if (yesterdayRevenue === 0) {
+      if (todayRevenue === 0) return 0;
+      return 100;
+    }
+
+    return ((todayRevenue - yesterdayRevenue) / yesterdayRevenue) * 100;
+  }, [todayRevenue, yesterdayRevenue]);
 
   const filteredSubscriptions = useMemo(() => {
     let result = [...subscriptions];
@@ -296,24 +353,51 @@ export default function DashboardPage() {
   }
 
   return (
-    <div>
-      <h1 style={{ marginTop: 0, marginBottom: "8px" }}>Dashboard</h1>
-      <p style={{ marginTop: 0, color: "#4b5563" }}>
-        Übersicht über Nutzer, Abos, Coin-Käufe, Boost-Packs und Umsatz.
-      </p>
+    <div style={pageStyle}>
+      <div style={pageHeaderStyle}>
+        <h1 style={pageTitleStyle}>Dashboard</h1>
+        <p style={pageSubtitleStyle}>
+          Übersicht über Nutzer, Abos, Coin-Käufe, Boost-Packs und Umsatz.
+        </p>
+      </div>
 
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
-          gap: "16px",
-          marginTop: "24px",
-        }}
-      >
+      <section style={heroRevenueCardStyle}>
+        <div>
+          <div style={heroLabelStyle}>Tageseinnahmen heute</div>
+          <div style={heroValueStyle}>
+            {loading ? "..." : formatMoney(todayRevenue)}
+          </div>
+          <div style={heroSublineStyle}>
+            {loading
+              ? "Lade Vergleich..."
+              : `${revenueChangePercent >= 0 ? "+" : ""}${revenueChangePercent.toFixed(
+                  1
+                )}% vs. gestern`}
+          </div>
+        </div>
+
+        <div style={heroMetaGridStyle}>
+          <div style={heroMetaCardStyle}>
+            <span style={heroMetaLabelStyle}>Gestern</span>
+            <strong style={heroMetaValueStyle}>
+              {loading ? "..." : formatMoney(yesterdayRevenue)}
+            </strong>
+          </div>
+
+          <div style={heroMetaCardStyle}>
+            <span style={heroMetaLabelStyle}>Käufe heute</span>
+            <strong style={heroMetaValueStyle}>
+              {loading ? "..." : String(todayPurchasesCount)}
+            </strong>
+          </div>
+        </div>
+      </section>
+
+      <div style={kpiGridStyle}>
         <KpiCard title="Total Users" value={loading ? "..." : String(totalUsers)} />
         <KpiCard
           title="Gesamte Card Points"
-          value={loading ? "..." : String(totalCardPoints)}
+          value={loading ? "..." : formatCoins(totalCardPoints)}
         />
         <KpiCard
           title="Neueste Registrierung"
@@ -323,7 +407,6 @@ export default function DashboardPage() {
           title="Echtgeld-Umsatz gesamt"
           value={loading ? "..." : formatMoney(totalRealMoneyRevenue)}
         />
-
         <KpiCard
           title="Alle Abos"
           value={loading ? "..." : String(subscriptions.length)}
@@ -340,7 +423,6 @@ export default function DashboardPage() {
           title="Ohne Affiliate"
           value={loading ? "..." : String(nonAffiliateSubscriptionsCount)}
         />
-
         <KpiCard title="Free" value={loading ? "..." : String(getVariantCount("Free"))} />
         <KpiCard title="Basic" value={loading ? "..." : String(getVariantCount("Basic"))} />
         <KpiCard title="Pro" value={loading ? "..." : String(getVariantCount("Pro"))} />
@@ -369,23 +451,15 @@ export default function DashboardPage() {
       </div>
 
       <div style={cardStyle}>
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            gap: "16px",
-            flexWrap: "wrap",
-          }}
-        >
+        <div style={sectionHeaderStyle}>
           <div>
-            <h3 style={{ margin: 0 }}>Echtgeld-Diagramm</h3>
-            <p style={{ margin: "8px 0 0 0", color: "#6b7280" }}>
+            <h3 style={sectionTitleStyle}>Echtgeld-Diagramm</h3>
+            <p style={sectionTextStyle}>
               Nur Abos und Coin-Käufe zählen als Umsatz. Boost-Packs zählen als Coin-Ausgabe.
             </p>
           </div>
 
-          <div style={{ display: "flex", gap: "8px" }}>
+          <div style={buttonGroupStyle}>
             <button
               onClick={() => setChartRange("day")}
               style={chartRange === "day" ? activeButtonStyle : buttonStyle}
@@ -407,44 +481,24 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-            gap: "12px",
-            marginTop: "20px",
-          }}
-        >
+        <div style={chartGridStyle}>
           {chartData.map((item) => (
-            <div
-              key={item.label}
-              style={{
-                background: "#f9fafb",
-                borderRadius: "10px",
-                padding: "12px",
-              }}
-            >
-              <div
-                style={{
-                  height: "160px",
-                  display: "flex",
-                  alignItems: "flex-end",
-                  marginBottom: "12px",
-                }}
-              >
+            <div key={item.label} style={chartCardStyle}>
+              <div style={chartBarWrapperStyle}>
                 <div
                   style={{
                     width: "100%",
                     height: `${(item.realMoneyRevenue / maxRevenue) * 100}%`,
                     minHeight: item.realMoneyRevenue > 0 ? "8px" : "0px",
-                    background: "#111827",
-                    borderRadius: "8px 8px 0 0",
+                    background: "linear-gradient(180deg, #22c55e 0%, #16a34a 100%)",
+                    borderRadius: "10px 10px 0 0",
                   }}
                 />
               </div>
 
-              <strong style={{ display: "block", marginBottom: "6px" }}>{item.label}</strong>
-              <div style={{ fontSize: "14px", color: "#374151", lineHeight: "1.6" }}>
+              <strong style={chartLabelStyle}>{item.label}</strong>
+
+              <div style={chartInfoStyle}>
                 <div>Echtgeld gesamt: {formatMoney(item.realMoneyRevenue)}</div>
                 <div>Abos: {formatMoney(item.subscriptionRevenue)}</div>
                 <div>Coins: {formatMoney(item.coinRevenue)}</div>
@@ -459,16 +513,9 @@ export default function DashboardPage() {
       </div>
 
       <div style={cardStyle}>
-        <h3 style={{ marginTop: 0 }}>Abo-Filter</h3>
+        <h3 style={sectionTitleStyle}>Abo-Filter</h3>
 
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-            gap: "16px",
-            marginTop: "16px",
-          }}
-        >
+        <div style={filterGridStyle}>
           <div>
             <label style={labelStyle}>Variante</label>
             <select
@@ -514,63 +561,84 @@ export default function DashboardPage() {
       </div>
 
       <div style={cardStyle}>
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: "16px",
-          }}
-        >
-          <h3 style={{ margin: 0 }}>Subscriptions</h3>
-          <span style={{ color: "#6b7280" }}>
+        <div style={sectionHeaderStyle}>
+          <h3 style={sectionTitleStyle}>Subscriptions</h3>
+          <span style={sectionCountStyle}>
             {loading ? "Lade..." : `${filteredSubscriptions.length} Einträge`}
           </span>
         </div>
 
         {loading ? (
-          <p>Lade Daten...</p>
+          <p style={sectionTextStyle}>Lade Daten...</p>
         ) : filteredSubscriptions.length === 0 ? (
-          <p>Keine Abos gefunden.</p>
+          <p style={sectionTextStyle}>Keine Abos gefunden.</p>
         ) : (
-          <div style={{ overflowX: "auto" }}>
-            <table
-              style={{
-                width: "100%",
-                borderCollapse: "collapse",
-                minWidth: "1200px",
-              }}
-            >
-              <thead>
-                <tr style={{ background: "#f9fafb", textAlign: "left" }}>
-                  <th style={tableHeaderStyle}>User ID</th>
-                  <th style={tableHeaderStyle}>Variante</th>
-                  <th style={tableHeaderStyle}>Status</th>
-                  <th style={tableHeaderStyle}>Affiliate</th>
-                  <th style={tableHeaderStyle}>Provider</th>
-                  <th style={tableHeaderStyle}>Preis</th>
-                  <th style={tableHeaderStyle}>Started At</th>
-                  <th style={tableHeaderStyle}>Expires At</th>
-                  <th style={tableHeaderStyle}>Created At</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredSubscriptions.map((sub) => (
-                  <tr key={sub.id} style={{ borderTop: "1px solid #e5e7eb" }}>
-                    <td style={tableCellStyle}>{sub.user_id}</td>
-                    <td style={tableCellStyle}>{sub.variant}</td>
-                    <td style={tableCellStyle}>{sub.status}</td>
-                    <td style={tableCellStyle}>{sub.is_affiliate ? "Ja" : "Nein"}</td>
-                    <td style={tableCellStyle}>{sub.provider || "—"}</td>
-                    <td style={tableCellStyle}>{formatMoney(sub.price_eur || 0)}</td>
-                    <td style={tableCellStyle}>{formatDate(sub.started_at)}</td>
-                    <td style={tableCellStyle}>{formatDate(sub.expires_at)}</td>
-                    <td style={tableCellStyle}>{formatDate(sub.created_at)}</td>
+          <>
+            <div style={mobileSubscriptionListStyle}>
+              {filteredSubscriptions.map((sub) => (
+                <div key={sub.id} style={mobileSubscriptionCardStyle}>
+                  <div style={mobileSubscriptionTopStyle}>
+                    <div>
+                      <div style={mobileLabelStyle}>User ID</div>
+                      <div style={mobileValueStyle}>{sub.user_id}</div>
+                    </div>
+                    <div style={statusBadgeStyle}>
+                      {sub.status}
+                    </div>
+                  </div>
+
+                  <div style={mobileInfoGridStyle}>
+                    <InfoItem label="Variante" value={sub.variant} />
+                    <InfoItem label="Affiliate" value={sub.is_affiliate ? "Ja" : "Nein"} />
+                    <InfoItem label="Provider" value={sub.provider || "—"} />
+                    <InfoItem label="Preis" value={formatMoney(sub.price_eur || 0)} />
+                    <InfoItem label="Started At" value={formatDate(sub.started_at)} />
+                    <InfoItem label="Expires At" value={formatDate(sub.expires_at)} />
+                    <InfoItem label="Created At" value={formatDate(sub.created_at)} />
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div style={desktopTableWrapperStyle}>
+              <table
+                style={{
+                  width: "100%",
+                  borderCollapse: "collapse",
+                  minWidth: "1200px",
+                }}
+              >
+                <thead>
+                  <tr style={{ background: "#111814", textAlign: "left" }}>
+                    <th style={tableHeaderStyle}>User ID</th>
+                    <th style={tableHeaderStyle}>Variante</th>
+                    <th style={tableHeaderStyle}>Status</th>
+                    <th style={tableHeaderStyle}>Affiliate</th>
+                    <th style={tableHeaderStyle}>Provider</th>
+                    <th style={tableHeaderStyle}>Preis</th>
+                    <th style={tableHeaderStyle}>Started At</th>
+                    <th style={tableHeaderStyle}>Expires At</th>
+                    <th style={tableHeaderStyle}>Created At</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {filteredSubscriptions.map((sub) => (
+                    <tr key={sub.id} style={{ borderTop: "1px solid #27312d" }}>
+                      <td style={tableCellStyle}>{sub.user_id}</td>
+                      <td style={tableCellStyle}>{sub.variant}</td>
+                      <td style={tableCellStyle}>{sub.status}</td>
+                      <td style={tableCellStyle}>{sub.is_affiliate ? "Ja" : "Nein"}</td>
+                      <td style={tableCellStyle}>{sub.provider || "—"}</td>
+                      <td style={tableCellStyle}>{formatMoney(sub.price_eur || 0)}</td>
+                      <td style={tableCellStyle}>{formatDate(sub.started_at)}</td>
+                      <td style={tableCellStyle}>{formatDate(sub.expires_at)}</td>
+                      <td style={tableCellStyle}>{formatDate(sub.created_at)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </div>
     </div>
@@ -580,17 +648,17 @@ export default function DashboardPage() {
 function KpiCard({ title, value }: { title: string; value: string }) {
   return (
     <div style={kpiCardStyle}>
-      <p style={{ margin: 0, fontSize: "14px", color: "#6b7280" }}>{title}</p>
-      <h3
-        style={{
-          margin: "10px 0 0 0",
-          fontSize: "24px",
-          color: "#111827",
-          wordBreak: "break-word",
-        }}
-      >
-        {value}
-      </h3>
+      <p style={kpiTitleStyle}>{title}</p>
+      <h3 style={kpiValueStyle}>{value}</h3>
+    </div>
+  );
+}
+
+function InfoItem({ label, value }: { label: string; value: string }) {
+  return (
+    <div style={infoItemStyle}>
+      <div style={infoLabelStyle}>{label}</div>
+      <div style={infoValueStyle}>{value}</div>
     </div>
   );
 }
@@ -603,61 +671,329 @@ function getWeekNumber(date: Date) {
   return Math.ceil((((tempDate.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
 }
 
-const cardStyle: CSSProperties = {
-  background: "white",
-  borderRadius: "12px",
+const pageStyle: CSSProperties = {
+  width: "100%",
+};
+
+const pageHeaderStyle: CSSProperties = {
+  marginBottom: "20px",
+};
+
+const pageTitleStyle: CSSProperties = {
+  marginTop: 0,
+  marginBottom: "8px",
+  fontSize: "30px",
+  color: "#e7f1eb",
+};
+
+const pageSubtitleStyle: CSSProperties = {
+  marginTop: 0,
+  color: "#94a39b",
+  lineHeight: 1.5,
+};
+
+const heroRevenueCardStyle: CSSProperties = {
+  background: "linear-gradient(135deg, #14532d 0%, #0f172a 100%)",
+  border: "1px solid #2f5f45",
+  borderRadius: "20px",
   padding: "20px",
-  boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
-  marginTop: "24px",
+  boxShadow: "0 8px 30px rgba(0,0,0,0.22)",
+  display: "grid",
+  gap: "16px",
+  marginBottom: "20px",
+};
+
+const heroLabelStyle: CSSProperties = {
+  fontSize: "14px",
+  color: "rgba(255,255,255,0.75)",
+  marginBottom: "8px",
+};
+
+const heroValueStyle: CSSProperties = {
+  fontSize: "34px",
+  fontWeight: 800,
+  color: "white",
+  lineHeight: 1.1,
+  wordBreak: "break-word",
+};
+
+const heroSublineStyle: CSSProperties = {
+  marginTop: "10px",
+  color: "#bbf7d0",
+  fontSize: "15px",
+  fontWeight: 600,
+};
+
+const heroMetaGridStyle: CSSProperties = {
+  display: "grid",
+  gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+  gap: "12px",
+};
+
+const heroMetaCardStyle: CSSProperties = {
+  background: "rgba(255,255,255,0.08)",
+  border: "1px solid rgba(255,255,255,0.12)",
+  borderRadius: "14px",
+  padding: "14px",
+};
+
+const heroMetaLabelStyle: CSSProperties = {
+  display: "block",
+  fontSize: "13px",
+  color: "rgba(255,255,255,0.72)",
+  marginBottom: "6px",
+};
+
+const heroMetaValueStyle: CSSProperties = {
+  color: "white",
+  fontSize: "18px",
+};
+
+const kpiGridStyle: CSSProperties = {
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+  gap: "14px",
+  marginBottom: "20px",
 };
 
 const kpiCardStyle: CSSProperties = {
-  background: "white",
-  padding: "20px",
+  background: "#171f1c",
+  padding: "18px",
+  borderRadius: "16px",
+  border: "1px solid #27312d",
+  boxShadow: "0 8px 30px rgba(0,0,0,0.16)",
+};
+
+const kpiTitleStyle: CSSProperties = {
+  margin: 0,
+  fontSize: "14px",
+  color: "#94a39b",
+};
+
+const kpiValueStyle: CSSProperties = {
+  margin: "10px 0 0 0",
+  fontSize: "24px",
+  color: "#e7f1eb",
+  wordBreak: "break-word",
+};
+
+const cardStyle: CSSProperties = {
+  background: "#171f1c",
+  borderRadius: "16px",
+  padding: "18px",
+  border: "1px solid #27312d",
+  boxShadow: "0 8px 30px rgba(0,0,0,0.16)",
+  marginTop: "20px",
+};
+
+const sectionHeaderStyle: CSSProperties = {
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+  gap: "12px",
+  flexWrap: "wrap",
+  marginBottom: "16px",
+};
+
+const sectionTitleStyle: CSSProperties = {
+  margin: 0,
+  color: "#e7f1eb",
+};
+
+const sectionTextStyle: CSSProperties = {
+  margin: "8px 0 0 0",
+  color: "#94a39b",
+  lineHeight: 1.5,
+};
+
+const sectionCountStyle: CSSProperties = {
+  color: "#94a39b",
+  fontSize: "14px",
+};
+
+const buttonGroupStyle: CSSProperties = {
+  display: "flex",
+  gap: "8px",
+  flexWrap: "wrap",
+};
+
+const buttonStyle: CSSProperties = {
+  padding: "12px 14px",
   borderRadius: "12px",
-  boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+  border: "1px solid #27312d",
+  background: "#0f1512",
+  color: "#e7f1eb",
+  cursor: "pointer",
+  minHeight: "44px",
+};
+
+const activeButtonStyle: CSSProperties = {
+  ...buttonStyle,
+  background: "#22c55e",
+  color: "#08130c",
+  border: "1px solid #22c55e",
+  fontWeight: 700,
+};
+
+const chartGridStyle: CSSProperties = {
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+  gap: "14px",
+  marginTop: "20px",
+};
+
+const chartCardStyle: CSSProperties = {
+  background: "#101714",
+  border: "1px solid #27312d",
+  borderRadius: "14px",
+  padding: "14px",
+};
+
+const chartBarWrapperStyle: CSSProperties = {
+  height: "160px",
+  display: "flex",
+  alignItems: "flex-end",
+  marginBottom: "12px",
+};
+
+const chartLabelStyle: CSSProperties = {
+  display: "block",
+  marginBottom: "8px",
+  color: "#e7f1eb",
+};
+
+const chartInfoStyle: CSSProperties = {
+  fontSize: "14px",
+  color: "#b7c6be",
+  lineHeight: 1.7,
+};
+
+const filterGridStyle: CSSProperties = {
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+  gap: "14px",
+  marginTop: "16px",
 };
 
 const inputStyle: CSSProperties = {
   width: "100%",
-  padding: "10px 12px",
-  borderRadius: "8px",
-  border: "1px solid #d1d5db",
+  padding: "12px 14px",
+  borderRadius: "12px",
+  border: "1px solid #27312d",
+  background: "#0f1512",
+  color: "#e7f1eb",
   boxSizing: "border-box",
+  minHeight: "46px",
 };
 
 const labelStyle: CSSProperties = {
   display: "block",
   marginBottom: "8px",
-  fontWeight: "bold",
+  fontWeight: 700,
+  color: "#cfe0d6",
 };
 
-const buttonStyle: CSSProperties = {
-  padding: "10px 14px",
-  borderRadius: "8px",
-  border: "1px solid #d1d5db",
-  background: "white",
-  cursor: "pointer",
+const mobileSubscriptionListStyle: CSSProperties = {
+  display: "grid",
+  gap: "14px",
 };
 
-const activeButtonStyle: CSSProperties = {
-  ...buttonStyle,
-  background: "#111827",
-  color: "white",
-  border: "1px solid #111827",
+const mobileSubscriptionCardStyle: CSSProperties = {
+  background: "#101714",
+  border: "1px solid #27312d",
+  borderRadius: "16px",
+  padding: "16px",
+};
+
+const mobileSubscriptionTopStyle: CSSProperties = {
+  display: "flex",
+  justifyContent: "space-between",
+  gap: "12px",
+  alignItems: "flex-start",
+  marginBottom: "14px",
+};
+
+const mobileLabelStyle: CSSProperties = {
+  fontSize: "12px",
+  color: "#94a39b",
+  marginBottom: "4px",
+};
+
+const mobileValueStyle: CSSProperties = {
+  fontSize: "14px",
+  color: "#e7f1eb",
+  wordBreak: "break-word",
+};
+
+const statusBadgeStyle: CSSProperties = {
+  padding: "8px 10px",
+  borderRadius: "999px",
+  background: "#163322",
+  color: "#86efac",
+  fontSize: "12px",
+  fontWeight: 700,
+  whiteSpace: "nowrap",
+};
+
+const mobileInfoGridStyle: CSSProperties = {
+  display: "grid",
+  gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+  gap: "12px",
+};
+
+const infoItemStyle: CSSProperties = {
+  background: "#171f1c",
+  border: "1px solid #27312d",
+  borderRadius: "12px",
+  padding: "12px",
+};
+
+const infoLabelStyle: CSSProperties = {
+  fontSize: "12px",
+  color: "#94a39b",
+  marginBottom: "6px",
+};
+
+const infoValueStyle: CSSProperties = {
+  fontSize: "14px",
+  color: "#e7f1eb",
+  wordBreak: "break-word",
+};
+
+const desktopTableWrapperStyle: CSSProperties = {
+  overflowX: "auto",
+  marginTop: "18px",
+  display: "none",
 };
 
 const tableHeaderStyle: CSSProperties = {
   padding: "12px",
   fontSize: "14px",
-  fontWeight: "bold",
-  color: "#374151",
-  borderBottom: "1px solid #e5e7eb",
+  fontWeight: 700,
+  color: "#cfe0d6",
+  borderBottom: "1px solid #27312d",
 };
 
 const tableCellStyle: CSSProperties = {
   padding: "12px",
   fontSize: "14px",
-  color: "#111827",
+  color: "#e7f1eb",
   verticalAlign: "top",
 };
+
+if (typeof window !== "undefined") {
+  const styleId = "dashboard-responsive-styles";
+
+  if (!document.getElementById(styleId)) {
+    const style = document.createElement("style");
+    style.id = styleId;
+    style.innerHTML = `
+      @media (min-width: 900px) {
+        .dashboard-desktop-table {
+          display: block;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+}

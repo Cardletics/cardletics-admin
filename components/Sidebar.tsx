@@ -1,83 +1,95 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+const navItems = [
+  { href: "/", label: "Dashboard" },
+  { href: "/users", label: "Users" },
+  { href: "/subscriptions", label: "Subscriptions" },
+  { href: "/revenue", label: "Revenue" },
+  { href: "/analytics", label: "Analytics" },
+  { href: "/game-data", label: "Game Data" },
+];
+
 export default function Sidebar() {
   const pathname = usePathname();
+  const [menuOpen, setMenuOpen] = useState(false);
 
-  const getLinkStyle = (path: string): React.CSSProperties => {
-    const isActive = pathname === path;
+  function isActive(path: string) {
+    return pathname === path;
+  }
 
-    return {
-      display: "block",
-      padding: "10px 12px",
-      borderRadius: "8px",
-      textDecoration: "none",
-      color: isActive ? "#111827" : "white",
-      background: isActive ? "white" : "transparent",
-      fontWeight: isActive ? "bold" : "normal",
-    };
-  };
+  function closeMenu() {
+    setMenuOpen(false);
+  }
 
   return (
-    <aside
-      style={{
-        width: "240px",
-        background: "#111827",
-        color: "white",
-        padding: "24px",
-        boxSizing: "border-box",
-      }}
-    >
-      <h2 style={{ marginTop: 0 }}>Cardletics Admin</h2>
-
-      <nav style={{ marginTop: "32px" }}>
-        <ul
-          style={{
-            listStyle: "none",
-            padding: 0,
-            margin: 0,
-            display: "flex",
-            flexDirection: "column",
-            gap: "8px",
-          }}
+    <>
+      {/* Mobile Topbar */}
+      <header className="mobile-topbar">
+        <button
+          type="button"
+          className="menu-button"
+          onClick={() => setMenuOpen(true)}
+          aria-label="Menü öffnen"
         >
-          <li>
-            <Link href="/" style={getLinkStyle("/")}>
-              Dashboard
-            </Link>
-          </li>
-          <li>
-            <Link href="/users" style={getLinkStyle("/users")}>
-              Users
-            </Link>
-          </li>
-          <li>
-            <Link href="/subscriptions" style={getLinkStyle("/subscriptions")}>
-              Subscriptions
-            </Link>
-          </li>
+          ☰
+        </button>
 
-          {/* 🔥 NEU: Revenue */}
-          <li>
-            <Link href="/revenue" style={getLinkStyle("/revenue")}>
-              Revenue
-            </Link>
-          </li>
+        <div className="mobile-topbar-title">Cardletics Admin</div>
+      </header>
 
-          <li>
-            <Link href="/analytics" style={getLinkStyle("/analytics")}>
-              Analytics
+      {/* Desktop Sidebar */}
+      <aside className="desktop-sidebar">
+        <div className="sidebar-logo">Cardletics Admin</div>
+
+        <nav className="sidebar-nav">
+          {navItems.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={`sidebar-link ${isActive(item.href) ? "active" : ""}`}
+            >
+              {item.label}
             </Link>
-          </li>
-          <li>
-            <Link href="/game-data" style={getLinkStyle("/game-data")}>
-              Game Data
+          ))}
+        </nav>
+      </aside>
+
+      {/* Mobile Drawer Overlay */}
+      {menuOpen && (
+        <div className="mobile-drawer-overlay" onClick={closeMenu} />
+      )}
+
+      {/* Mobile Drawer */}
+      <aside className={`mobile-drawer ${menuOpen ? "open" : ""}`}>
+        <div className="mobile-drawer-header">
+          <div className="mobile-drawer-title">Menü</div>
+          <button
+            type="button"
+            className="menu-button"
+            onClick={closeMenu}
+            aria-label="Menü schließen"
+          >
+            ✕
+          </button>
+        </div>
+
+        <nav className="mobile-drawer-nav">
+          {navItems.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              onClick={closeMenu}
+              className={`sidebar-link ${isActive(item.href) ? "active" : ""}`}
+            >
+              {item.label}
             </Link>
-          </li>
-        </ul>
-      </nav>
-    </aside>
+          ))}
+        </nav>
+      </aside>
+    </>
   );
 }

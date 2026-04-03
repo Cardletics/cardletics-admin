@@ -1,3 +1,4 @@
+import "./globals.css";
 import Sidebar from "../components/Sidebar";
 
 export const metadata = {
@@ -12,16 +13,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="de">
-      <body
-        style={{
-          margin: 0,
-          fontFamily: "Arial, sans-serif",
-          background: "#f5f6fa",
-        }}
-      >
-        <div style={{ display: "flex", minHeight: "100vh" }}>
+      <body>
+        <div className="admin-app">
           <Sidebar />
-          <main style={{ flex: 1, padding: "32px" }}>{children}</main>
+          <main className="admin-main">{children}</main>
         </div>
       </body>
     </html>

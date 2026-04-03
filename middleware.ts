@@ -4,8 +4,8 @@ import type { NextRequest } from "next/server";
 export function middleware(request: NextRequest) {
   const auth = request.headers.get("authorization");
 
-  const username = "admin";
-  const password = "1234";
+  const username = "lnwbr";
+  const password = "Apploginmuhkuh22!";
 
   const validAuth =
     "Basic " +
