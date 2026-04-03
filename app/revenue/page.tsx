@@ -151,6 +151,49 @@ export default function RevenuePage() {
     return sum + (item.quantity || 0);
   }, 0);
 
+  const todayRevenue = useMemo(() => {
+    const todayKey = new Date().toLocaleDateString("sv-SE");
+
+    const subscriptionToday = subscriptions.reduce((sum, item) => {
+      const key = new Date(item.created_at).toLocaleDateString("sv-SE");
+      return key === todayKey ? sum + (item.price_eur || 0) : sum;
+    }, 0);
+
+    const coinToday = coinPurchases.reduce((sum, item) => {
+      const key = new Date(item.created_at).toLocaleDateString("sv-SE");
+      return key === todayKey ? sum + (item.price_eur || 0) : sum;
+    }, 0);
+
+    return subscriptionToday + coinToday;
+  }, [subscriptions, coinPurchases]);
+
+  const yesterdayRevenue = useMemo(() => {
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayKey = yesterday.toLocaleDateString("sv-SE");
+
+    const subscriptionYesterday = subscriptions.reduce((sum, item) => {
+      const key = new Date(item.created_at).toLocaleDateString("sv-SE");
+      return key === yesterdayKey ? sum + (item.price_eur || 0) : sum;
+    }, 0);
+
+    const coinYesterday = coinPurchases.reduce((sum, item) => {
+      const key = new Date(item.created_at).toLocaleDateString("sv-SE");
+      return key === yesterdayKey ? sum + (item.price_eur || 0) : sum;
+    }, 0);
+
+    return subscriptionYesterday + coinYesterday;
+  }, [subscriptions, coinPurchases]);
+
+  const revenueChangePercent = useMemo(() => {
+    if (yesterdayRevenue === 0) {
+      if (todayRevenue === 0) return 0;
+      return 100;
+    }
+
+    return ((todayRevenue - yesterdayRevenue) / yesterdayRevenue) * 100;
+  }, [todayRevenue, yesterdayRevenue]);
+
   const chartData = useMemo(() => {
     const bucketMap = new Map<string, RevenueBucket>();
 
@@ -248,20 +291,48 @@ export default function RevenuePage() {
   }
 
   return (
-    <div>
-      <h1 style={{ marginTop: 0, marginBottom: "8px" }}>Revenue</h1>
-      <p style={{ marginTop: 0, color: "#4b5563" }}>
-        Echtgeld aus Abos + Coin-Käufen. Coins aus Marketplace-Gebühren und Boost-Pack-Ausgaben separat.
-      </p>
+    <div style={pageStyle}>
+      <div style={pageHeaderStyle}>
+        <h1 style={pageTitleStyle}>Revenue</h1>
+        <p style={pageSubtitleStyle}>
+          Echtgeld aus Abos und Coin-Käufen. Coins aus Marketplace-Gebühren und
+          Boost-Pack-Ausgaben separat.
+        </p>
+      </div>
 
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
-          gap: "16px",
-          marginTop: "24px",
-        }}
-      >
+      <section style={heroRevenueCardStyle}>
+        <div>
+          <div style={heroLabelStyle}>Tageseinnahmen heute</div>
+          <div style={heroValueStyle}>
+            {loading ? "..." : formatMoney(todayRevenue)}
+          </div>
+          <div style={heroSublineStyle}>
+            {loading
+              ? "Lade Vergleich..."
+              : `${revenueChangePercent >= 0 ? "+" : ""}${revenueChangePercent.toFixed(
+                  1
+                )}% vs. gestern`}
+          </div>
+        </div>
+
+        <div style={heroMetaGridStyle}>
+          <div style={heroMetaCardStyle}>
+            <span style={heroMetaLabelStyle}>Gestern</span>
+            <strong style={heroMetaValueStyle}>
+              {loading ? "..." : formatMoney(yesterdayRevenue)}
+            </strong>
+          </div>
+
+          <div style={heroMetaCardStyle}>
+            <span style={heroMetaLabelStyle}>Gesamt Echtgeld</span>
+            <strong style={heroMetaValueStyle}>
+              {loading ? "..." : formatMoney(totalRealMoneyRevenue)}
+            </strong>
+          </div>
+        </div>
+      </section>
+
+      <div style={kpiGridStyle}>
         <KpiCard
           title="Echtgeld gesamt"
           value={loading ? "..." : formatMoney(totalRealMoneyRevenue)}
@@ -278,7 +349,6 @@ export default function RevenuePage() {
           title="Neue Abos"
           value={loading ? "..." : String(totalNewSubscriptions)}
         />
-
         <KpiCard
           title="Coin-Käufe"
           value={loading ? "..." : String(totalCoinPurchases)}
@@ -298,23 +368,15 @@ export default function RevenuePage() {
       </div>
 
       <div style={cardStyle}>
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            gap: "16px",
-            flexWrap: "wrap",
-          }}
-        >
+        <div style={sectionHeaderStyle}>
           <div>
-            <h3 style={{ margin: 0 }}>Revenue Diagramm</h3>
-            <p style={{ margin: "8px 0 0 0", color: "#6b7280" }}>
+            <h3 style={sectionTitleStyle}>Revenue Diagramm</h3>
+            <p style={sectionTextStyle}>
               Umschaltbar nach Tag, Woche oder Monat.
             </p>
           </div>
 
-          <div style={{ display: "flex", gap: "8px" }}>
+          <div style={buttonGroupStyle}>
             <button
               onClick={() => setChartRange("day")}
               style={chartRange === "day" ? activeButtonStyle : buttonStyle}
@@ -336,45 +398,24 @@ export default function RevenuePage() {
           </div>
         </div>
 
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-            gap: "12px",
-            marginTop: "20px",
-          }}
-        >
+        <div style={chartGridStyle}>
           {chartData.map((item) => (
-            <div
-              key={item.label}
-              style={{
-                background: "#f9fafb",
-                borderRadius: "10px",
-                padding: "12px",
-              }}
-            >
-              <div
-                style={{
-                  height: "160px",
-                  display: "flex",
-                  alignItems: "flex-end",
-                  marginBottom: "12px",
-                }}
-              >
+            <div key={item.label} style={chartCardStyle}>
+              <div style={chartBarWrapperStyle}>
                 <div
                   style={{
                     width: "100%",
                     height: `${(item.realMoneyRevenue / maxRevenue) * 100}%`,
                     minHeight: item.realMoneyRevenue > 0 ? "8px" : "0px",
-                    background: "#111827",
-                    borderRadius: "8px 8px 0 0",
+                    background: "linear-gradient(180deg, #22c55e 0%, #16a34a 100%)",
+                    borderRadius: "10px 10px 0 0",
                   }}
                 />
               </div>
 
-              <strong style={{ display: "block", marginBottom: "6px" }}>{item.label}</strong>
+              <strong style={chartLabelStyle}>{item.label}</strong>
 
-              <div style={{ fontSize: "14px", color: "#374151", lineHeight: "1.6" }}>
+              <div style={chartInfoStyle}>
                 <div>Echtgeld: {formatMoney(item.realMoneyRevenue)}</div>
                 <div>Abos: {formatMoney(item.subscriptionRevenue)}</div>
                 <div>Coins: {formatMoney(item.coinRevenue)}</div>
@@ -383,7 +424,9 @@ export default function RevenuePage() {
                 <div>Boost-Käufe: {item.boostPurchases}</div>
                 <div>Boost-Coins: {formatCoins(item.boostCoinsSpent)}</div>
                 <div>Marketplace Verkäufe: {item.marketplaceSales}</div>
-                <div>Marketplace Fee Coins: {formatCoins(item.marketplaceFeeCoins)}</div>
+                <div>
+                  Marketplace Fee Coins: {formatCoins(item.marketplaceFeeCoins)}
+                </div>
               </div>
             </div>
           ))}
@@ -396,17 +439,8 @@ export default function RevenuePage() {
 function KpiCard({ title, value }: { title: string; value: string }) {
   return (
     <div style={kpiCardStyle}>
-      <p style={{ margin: 0, fontSize: "14px", color: "#6b7280" }}>{title}</p>
-      <h3
-        style={{
-          margin: "10px 0 0 0",
-          fontSize: "24px",
-          color: "#111827",
-          wordBreak: "break-word",
-        }}
-      >
-        {value}
-      </h3>
+      <p style={kpiTitleStyle}>{title}</p>
+      <h3 style={kpiValueStyle}>{value}</h3>
     </div>
   );
 }
@@ -419,32 +453,194 @@ function getWeekNumber(date: Date) {
   return Math.ceil((((tempDate.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
 }
 
-const cardStyle: CSSProperties = {
-  background: "white",
-  borderRadius: "12px",
+const pageStyle: CSSProperties = {
+  width: "100%",
+};
+
+const pageHeaderStyle: CSSProperties = {
+  marginBottom: "20px",
+};
+
+const pageTitleStyle: CSSProperties = {
+  marginTop: 0,
+  marginBottom: "8px",
+  fontSize: "30px",
+  color: "#e7f1eb",
+};
+
+const pageSubtitleStyle: CSSProperties = {
+  marginTop: 0,
+  color: "#94a39b",
+  lineHeight: 1.5,
+};
+
+const heroRevenueCardStyle: CSSProperties = {
+  background: "linear-gradient(135deg, #14532d 0%, #0f172a 100%)",
+  border: "1px solid #2f5f45",
+  borderRadius: "20px",
   padding: "20px",
-  boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
-  marginTop: "24px",
+  boxShadow: "0 8px 30px rgba(0,0,0,0.22)",
+  display: "grid",
+  gap: "16px",
+  marginBottom: "20px",
+};
+
+const heroLabelStyle: CSSProperties = {
+  fontSize: "14px",
+  color: "rgba(255,255,255,0.75)",
+  marginBottom: "8px",
+};
+
+const heroValueStyle: CSSProperties = {
+  fontSize: "34px",
+  fontWeight: 800,
+  color: "white",
+  lineHeight: 1.1,
+  wordBreak: "break-word",
+};
+
+const heroSublineStyle: CSSProperties = {
+  marginTop: "10px",
+  color: "#bbf7d0",
+  fontSize: "15px",
+  fontWeight: 600,
+};
+
+const heroMetaGridStyle: CSSProperties = {
+  display: "grid",
+  gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+  gap: "12px",
+};
+
+const heroMetaCardStyle: CSSProperties = {
+  background: "rgba(255,255,255,0.08)",
+  border: "1px solid rgba(255,255,255,0.12)",
+  borderRadius: "14px",
+  padding: "14px",
+};
+
+const heroMetaLabelStyle: CSSProperties = {
+  display: "block",
+  fontSize: "13px",
+  color: "rgba(255,255,255,0.72)",
+  marginBottom: "6px",
+};
+
+const heroMetaValueStyle: CSSProperties = {
+  color: "white",
+  fontSize: "18px",
+};
+
+const kpiGridStyle: CSSProperties = {
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+  gap: "14px",
+  marginBottom: "20px",
 };
 
 const kpiCardStyle: CSSProperties = {
-  background: "white",
-  padding: "20px",
-  borderRadius: "12px",
-  boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+  background: "#171f1c",
+  padding: "18px",
+  borderRadius: "16px",
+  border: "1px solid #27312d",
+  boxShadow: "0 8px 30px rgba(0,0,0,0.16)",
+};
+
+const kpiTitleStyle: CSSProperties = {
+  margin: 0,
+  fontSize: "14px",
+  color: "#94a39b",
+};
+
+const kpiValueStyle: CSSProperties = {
+  margin: "10px 0 0 0",
+  fontSize: "24px",
+  color: "#e7f1eb",
+  wordBreak: "break-word",
+};
+
+const cardStyle: CSSProperties = {
+  background: "#171f1c",
+  borderRadius: "16px",
+  padding: "18px",
+  border: "1px solid #27312d",
+  boxShadow: "0 8px 30px rgba(0,0,0,0.16)",
+  marginTop: "20px",
+};
+
+const sectionHeaderStyle: CSSProperties = {
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+  gap: "12px",
+  flexWrap: "wrap",
+  marginBottom: "16px",
+};
+
+const sectionTitleStyle: CSSProperties = {
+  margin: 0,
+  color: "#e7f1eb",
+};
+
+const sectionTextStyle: CSSProperties = {
+  margin: "8px 0 0 0",
+  color: "#94a39b",
+  lineHeight: 1.5,
+};
+
+const buttonGroupStyle: CSSProperties = {
+  display: "flex",
+  gap: "8px",
+  flexWrap: "wrap",
 };
 
 const buttonStyle: CSSProperties = {
-  padding: "10px 14px",
-  borderRadius: "8px",
-  border: "1px solid #d1d5db",
-  background: "white",
+  padding: "12px 14px",
+  borderRadius: "12px",
+  border: "1px solid #27312d",
+  background: "#0f1512",
+  color: "#e7f1eb",
   cursor: "pointer",
+  minHeight: "44px",
 };
 
 const activeButtonStyle: CSSProperties = {
   ...buttonStyle,
-  background: "#111827",
-  color: "white",
-  border: "1px solid #111827",
+  background: "#22c55e",
+  color: "#08130c",
+  border: "1px solid #22c55e",
+  fontWeight: 700,
+};
+
+const chartGridStyle: CSSProperties = {
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+  gap: "14px",
+  marginTop: "20px",
+};
+
+const chartCardStyle: CSSProperties = {
+  background: "#101714",
+  border: "1px solid #27312d",
+  borderRadius: "14px",
+  padding: "14px",
+};
+
+const chartBarWrapperStyle: CSSProperties = {
+  height: "160px",
+  display: "flex",
+  alignItems: "flex-end",
+  marginBottom: "12px",
+};
+
+const chartLabelStyle: CSSProperties = {
+  display: "block",
+  marginBottom: "8px",
+  color: "#e7f1eb",
+};
+
+const chartInfoStyle: CSSProperties = {
+  fontSize: "14px",
+  color: "#b7c6be",
+  lineHeight: 1.7,
 };

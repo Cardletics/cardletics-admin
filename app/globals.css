@@ -227,3 +227,75 @@ textarea {
     display: block !important;
   }
 }
+.users-mobile-list {
+  display: grid;
+}
+
+.users-desktop-table {
+  display: none;
+}
+
+@media (min-width: 900px) {
+  .users-mobile-list {
+    display: none !important;
+  }
+
+  .users-desktop-table {
+    display: block !important;
+  }
+}
+.subscriptions-mobile-list {
+  display: grid;
+}
+
+.subscriptions-desktop-table {
+  display: none;
+}
+
+@media (min-width: 900px) {
+  .subscriptions-mobile-list {
+    display: none !important;
+  }
+
+  .subscriptions-desktop-table {
+    display: block !important;
+  }
+}
+.analytics-users-mobile-list,
+.analytics-sessions-mobile-list {
+  display: grid;
+}
+
+.analytics-users-desktop-table,
+.analytics-sessions-desktop-table {
+  display: none;
+}
+
+@media (min-width: 900px) {
+  .analytics-users-mobile-list,
+  .analytics-sessions-mobile-list {
+    display: none !important;
+  }
+
+  .analytics-users-desktop-table,
+  .analytics-sessions-desktop-table {
+    display: block !important;
+  }
+}
+.user-detail-mobile-list {
+  display: grid;
+}
+
+.user-detail-desktop-table {
+  display: none;
+}
+
+@media (min-width: 900px) {
+  .user-detail-mobile-list {
+    display: none !important;
+  }
+
+  .user-detail-desktop-table {
+    display: block !important;
+  }
+}

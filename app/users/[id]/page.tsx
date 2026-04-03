@@ -114,7 +114,10 @@ export default function UserDetailPage() {
         .eq("user_id", userId);
 
       if (boostPackPurchasesResponse.error) {
-        console.error("Fehler beim Laden der Boost-Pack-Käufe:", boostPackPurchasesResponse.error);
+        console.error(
+          "Fehler beim Laden der Boost-Pack-Käufe:",
+          boostPackPurchasesResponse.error
+        );
       } else {
         setBoostPackPurchases(
           (boostPackPurchasesResponse.data as BoostPackPurchase[]) || []
@@ -127,7 +130,10 @@ export default function UserDetailPage() {
         .eq("seller_user_id", userId);
 
       if (marketplaceSalesResponse.error) {
-        console.error("Fehler beim Laden der Marketplace-Sales:", marketplaceSalesResponse.error);
+        console.error(
+          "Fehler beim Laden der Marketplace-Sales:",
+          marketplaceSalesResponse.error
+        );
       } else {
         setMarketplaceSales((marketplaceSalesResponse.data as MarketplaceSale[]) || []);
       }
@@ -247,19 +253,19 @@ export default function UserDetailPage() {
 
   if (loading) {
     return (
-      <div>
-        <h1 style={{ marginTop: 0 }}>User Details</h1>
-        <p>Lade Daten...</p>
+      <div style={pageStyle}>
+        <h1 style={pageTitleStyle}>User Details</h1>
+        <p style={pageSubtitleStyle}>Lade Daten...</p>
       </div>
     );
   }
 
   if (!profile) {
     return (
-      <div>
-        <h1 style={{ marginTop: 0 }}>User Details</h1>
-        <p>Kein User gefunden.</p>
-        <Link href="/users" style={backLinkStyle}>
+      <div style={pageStyle}>
+        <h1 style={pageTitleStyle}>User Details</h1>
+        <p style={pageSubtitleStyle}>Kein User gefunden.</p>
+        <Link href="/users" style={backTextLinkStyle}>
           Zurück zu Users
         </Link>
       </div>
@@ -267,50 +273,59 @@ export default function UserDetailPage() {
   }
 
   return (
-    <div>
-      <div style={topBarStyle}>
-        <div>
-          <h1 style={{ marginTop: 0, marginBottom: "8px" }}>
-            {profile.username || "Kein Username"}
-          </h1>
-          <p style={{ marginTop: 0, color: "#4b5563" }}>
-            Detailansicht für diesen User.
-          </p>
+    <div style={pageStyle}>
+      <div style={heroCardStyle}>
+        <div style={heroTopStyle}>
+          <div>
+            <div style={heroLabelStyle}>User Detailansicht</div>
+            <h1 style={heroTitleStyle}>{profile.username || "Kein Username"}</h1>
+            <p style={heroSubtitleStyle}>
+              Alle wichtigen Profil-, Abo-, Kauf- und Marketplace-Daten für diesen
+              User.
+            </p>
+          </div>
+
+          <div style={heroButtonGridStyle}>
+            <button onClick={handleExcelExport} style={primaryButtonStyle}>
+              Export Excel
+            </button>
+            <button onClick={handlePdfExport} style={secondaryButtonStyle}>
+              Export PDF
+            </button>
+            <Link href="/users" style={backButtonStyle}>
+              Zurück
+            </Link>
+          </div>
         </div>
 
-        <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
-          <button onClick={handleExcelExport} style={primaryButtonStyle}>
-            Export Excel
-          </button>
-          <button onClick={handlePdfExport} style={secondaryButtonStyle}>
-            Export PDF
-          </button>
-          <Link href="/users" style={backButtonStyle}>
-            Zurück
-          </Link>
+        <div style={heroMetaGridStyle}>
+          <div style={heroMetaCardStyle}>
+            <span style={heroMetaLabelStyle}>User ID</span>
+            <strong style={heroMetaValueStyle}>{profile.id}</strong>
+          </div>
+
+          <div style={heroMetaCardStyle}>
+            <span style={heroMetaLabelStyle}>Registriert</span>
+            <strong style={heroMetaValueStyle}>
+              {formatDate(profile.created_at)}
+            </strong>
+          </div>
         </div>
       </div>
 
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
-          gap: "16px",
-          marginTop: "24px",
-        }}
-      >
+      <div style={kpiGridStyle}>
         <KpiCard title="Card Points" value={String(profile.card_points || 0)} />
         <KpiCard title="Abos" value={String(subscriptions.length)} />
         <KpiCard title="Coin-Käufe" value={String(coinPurchases.length)} />
-        <KpiCard title="Boost-Pack-Käufe" value={String(boostPackPurchases.length)} />
+        <KpiCard
+          title="Boost-Pack-Käufe"
+          value={String(boostPackPurchases.length)}
+        />
         <KpiCard
           title="Abo-Umsatz"
           value={formatMoney(totalSubscriptionRevenue)}
         />
-        <KpiCard
-          title="Coin-Umsatz"
-          value={formatMoney(totalCoinRevenue)}
-        />
+        <KpiCard title="Coin-Umsatz" value={formatMoney(totalCoinRevenue)} />
         <KpiCard
           title="Boost Coins ausgegeben"
           value={String(totalBoostCoinsSpent)}
@@ -322,8 +337,11 @@ export default function UserDetailPage() {
       </div>
 
       <div style={cardStyle}>
-        <h3 style={{ marginTop: 0 }}>Profil</h3>
-        <div style={infoGridStyle}>
+        <div style={sectionHeaderStyle}>
+          <h3 style={sectionTitleStyle}>Profil</h3>
+        </div>
+
+        <div style={profileGridStyle}>
           <InfoItem label="User ID" value={profile.id} />
           <InfoItem label="Username" value={profile.username || "—"} />
           <InfoItem label="Registriert am" value={formatDate(profile.created_at)} />
@@ -396,19 +414,17 @@ export default function UserDetailPage() {
 function KpiCard({ title, value }: { title: string; value: string }) {
   return (
     <div style={kpiCardStyle}>
-      <p style={{ margin: 0, fontSize: "14px", color: "#6b7280" }}>{title}</p>
-      <h3 style={{ margin: "10px 0 0 0", fontSize: "24px", color: "#111827" }}>
-        {value}
-      </h3>
+      <p style={kpiTitleStyle}>{title}</p>
+      <h3 style={kpiValueStyle}>{value}</h3>
     </div>
   );
 }
 
 function InfoItem({ label, value }: { label: string; value: string }) {
   return (
-    <div>
-      <p style={{ margin: 0, fontSize: "13px", color: "#6b7280" }}>{label}</p>
-      <p style={{ margin: "6px 0 0 0", fontWeight: "bold" }}>{value}</p>
+    <div style={infoItemStyle}>
+      <p style={infoLabelStyle}>{label}</p>
+      <p style={infoValueStyle}>{value}</p>
     </div>
   );
 }
@@ -424,47 +440,97 @@ function SectionTable({
 }) {
   return (
     <div style={cardStyle}>
-      <h3 style={{ marginTop: 0 }}>{title}</h3>
+      <div style={sectionHeaderStyle}>
+        <h3 style={sectionTitleStyle}>{title}</h3>
+        <span style={sectionCountStyle}>{rows.length} Einträge</span>
+      </div>
 
       {rows.length === 0 ? (
-        <p>Keine Daten vorhanden.</p>
+        <p style={emptyTextStyle}>Keine Daten vorhanden.</p>
       ) : (
-        <div style={{ overflowX: "auto" }}>
-          <table
-            style={{
-              width: "100%",
-              borderCollapse: "collapse",
-              minWidth: "900px",
-            }}
+        <>
+          <div className="user-detail-mobile-list" style={mobileListStyle}>
+            {rows.map((row, rowIndex) => (
+              <div key={rowIndex} style={mobileCardStyle}>
+                <div style={mobileInfoGridStyle}>
+                  {headers.map((header, cellIndex) => (
+                    <InfoItem
+                      key={`${rowIndex}-${cellIndex}`}
+                      label={header}
+                      value={row[cellIndex] || "—"}
+                    />
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div
+            className="user-detail-desktop-table"
+            style={desktopTableWrapperStyle}
           >
-            <thead>
-              <tr style={{ background: "#f9fafb", textAlign: "left" }}>
-                {headers.map((header) => (
-                  <th key={header} style={tableHeaderStyle}>
-                    {header}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((row, rowIndex) => (
-                <tr key={rowIndex} style={{ borderTop: "1px solid #e5e7eb" }}>
-                  {row.map((cell, cellIndex) => (
-                    <td key={`${rowIndex}-${cellIndex}`} style={tableCellStyle}>
-                      {cell}
-                    </td>
+            <table
+              style={{
+                width: "100%",
+                borderCollapse: "collapse",
+                minWidth: "900px",
+              }}
+            >
+              <thead>
+                <tr style={{ background: "#111814", textAlign: "left" }}>
+                  {headers.map((header) => (
+                    <th key={header} style={tableHeaderStyle}>
+                      {header}
+                    </th>
                   ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {rows.map((row, rowIndex) => (
+                  <tr key={rowIndex} style={{ borderTop: "1px solid #27312d" }}>
+                    {row.map((cell, cellIndex) => (
+                      <td key={`${rowIndex}-${cellIndex}`} style={tableCellStyle}>
+                        {cell}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
     </div>
   );
 }
 
-const topBarStyle: CSSProperties = {
+const pageStyle: CSSProperties = {
+  width: "100%",
+};
+
+const pageTitleStyle: CSSProperties = {
+  marginTop: 0,
+  marginBottom: "8px",
+  fontSize: "30px",
+  color: "#e7f1eb",
+};
+
+const pageSubtitleStyle: CSSProperties = {
+  marginTop: 0,
+  color: "#94a39b",
+  lineHeight: 1.5,
+};
+
+const heroCardStyle: CSSProperties = {
+  background: "linear-gradient(135deg, #14532d 0%, #0f172a 100%)",
+  border: "1px solid #2f5f45",
+  borderRadius: "20px",
+  padding: "20px",
+  boxShadow: "0 8px 30px rgba(0,0,0,0.22)",
+  marginBottom: "20px",
+};
+
+const heroTopStyle: CSSProperties = {
   display: "flex",
   justifyContent: "space-between",
   alignItems: "flex-start",
@@ -472,70 +538,230 @@ const topBarStyle: CSSProperties = {
   flexWrap: "wrap",
 };
 
-const infoGridStyle: CSSProperties = {
-  display: "grid",
-  gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-  gap: "16px",
+const heroLabelStyle: CSSProperties = {
+  fontSize: "14px",
+  color: "rgba(255,255,255,0.75)",
+  marginBottom: "8px",
 };
 
-const cardStyle: CSSProperties = {
-  background: "white",
-  borderRadius: "12px",
-  padding: "20px",
-  boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
-  marginTop: "24px",
+const heroTitleStyle: CSSProperties = {
+  margin: 0,
+  fontSize: "32px",
+  fontWeight: 800,
+  color: "white",
+  lineHeight: 1.1,
+  wordBreak: "break-word",
+};
+
+const heroSubtitleStyle: CSSProperties = {
+  marginTop: "10px",
+  marginBottom: 0,
+  color: "#bbf7d0",
+  fontSize: "15px",
+  fontWeight: 600,
+  lineHeight: 1.5,
+};
+
+const heroButtonGridStyle: CSSProperties = {
+  display: "grid",
+  gridTemplateColumns: "1fr",
+  gap: "10px",
+  width: "100%",
+  maxWidth: "220px",
+};
+
+const heroMetaGridStyle: CSSProperties = {
+  display: "grid",
+  gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+  gap: "12px",
+  marginTop: "16px",
+};
+
+const heroMetaCardStyle: CSSProperties = {
+  background: "rgba(255,255,255,0.08)",
+  border: "1px solid rgba(255,255,255,0.12)",
+  borderRadius: "14px",
+  padding: "14px",
+};
+
+const heroMetaLabelStyle: CSSProperties = {
+  display: "block",
+  fontSize: "13px",
+  color: "rgba(255,255,255,0.72)",
+  marginBottom: "6px",
+};
+
+const heroMetaValueStyle: CSSProperties = {
+  color: "white",
+  fontSize: "16px",
+  wordBreak: "break-word",
+};
+
+const kpiGridStyle: CSSProperties = {
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+  gap: "14px",
+  marginBottom: "20px",
 };
 
 const kpiCardStyle: CSSProperties = {
-  background: "white",
-  padding: "20px",
+  background: "#171f1c",
+  padding: "18px",
+  borderRadius: "16px",
+  border: "1px solid #27312d",
+  boxShadow: "0 8px 30px rgba(0,0,0,0.16)",
+};
+
+const kpiTitleStyle: CSSProperties = {
+  margin: 0,
+  fontSize: "14px",
+  color: "#94a39b",
+};
+
+const kpiValueStyle: CSSProperties = {
+  margin: "10px 0 0 0",
+  fontSize: "24px",
+  color: "#e7f1eb",
+  wordBreak: "break-word",
+};
+
+const cardStyle: CSSProperties = {
+  background: "#171f1c",
+  borderRadius: "16px",
+  padding: "18px",
+  border: "1px solid #27312d",
+  boxShadow: "0 8px 30px rgba(0,0,0,0.16)",
+  marginTop: "20px",
+};
+
+const sectionHeaderStyle: CSSProperties = {
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+  gap: "12px",
+  flexWrap: "wrap",
+  marginBottom: "16px",
+};
+
+const sectionTitleStyle: CSSProperties = {
+  margin: 0,
+  color: "#e7f1eb",
+};
+
+const sectionCountStyle: CSSProperties = {
+  color: "#94a39b",
+  fontSize: "14px",
+};
+
+const emptyTextStyle: CSSProperties = {
+  color: "#94a39b",
+  margin: 0,
+};
+
+const profileGridStyle: CSSProperties = {
+  display: "grid",
+  gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+  gap: "12px",
+};
+
+const infoItemStyle: CSSProperties = {
+  background: "#101714",
+  border: "1px solid #27312d",
   borderRadius: "12px",
-  boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+  padding: "12px",
+};
+
+const infoLabelStyle: CSSProperties = {
+  margin: 0,
+  fontSize: "12px",
+  color: "#94a39b",
+  marginBottom: "6px",
+};
+
+const infoValueStyle: CSSProperties = {
+  margin: 0,
+  fontWeight: 700,
+  color: "#e7f1eb",
+  wordBreak: "break-word",
+  fontSize: "14px",
+};
+
+const mobileListStyle: CSSProperties = {
+  display: "grid",
+  gap: "14px",
+};
+
+const mobileCardStyle: CSSProperties = {
+  background: "#101714",
+  border: "1px solid #27312d",
+  borderRadius: "16px",
+  padding: "16px",
+};
+
+const mobileInfoGridStyle: CSSProperties = {
+  display: "grid",
+  gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+  gap: "12px",
+};
+
+const desktopTableWrapperStyle: CSSProperties = {
+  overflowX: "auto",
+  marginTop: "18px",
+  display: "none",
 };
 
 const tableHeaderStyle: CSSProperties = {
   padding: "12px",
   fontSize: "14px",
-  fontWeight: "bold",
-  color: "#374151",
-  borderBottom: "1px solid #e5e7eb",
+  fontWeight: 700,
+  color: "#cfe0d6",
+  borderBottom: "1px solid #27312d",
 };
 
 const tableCellStyle: CSSProperties = {
   padding: "12px",
   fontSize: "14px",
-  color: "#111827",
+  color: "#e7f1eb",
   verticalAlign: "top",
 };
 
 const primaryButtonStyle: CSSProperties = {
-  padding: "10px 14px",
-  borderRadius: "8px",
-  border: "1px solid #111827",
-  background: "#111827",
-  color: "white",
+  minHeight: "44px",
+  padding: "12px 14px",
+  borderRadius: "12px",
+  border: "1px solid #22c55e",
+  background: "#22c55e",
+  color: "#08130c",
   cursor: "pointer",
+  fontWeight: 700,
 };
 
 const secondaryButtonStyle: CSSProperties = {
-  padding: "10px 14px",
-  borderRadius: "8px",
-  border: "1px solid #d1d5db",
-  background: "white",
-  color: "#111827",
+  minHeight: "44px",
+  padding: "12px 14px",
+  borderRadius: "12px",
+  border: "1px solid #27312d",
+  background: "#0f1512",
+  color: "#e7f1eb",
   cursor: "pointer",
+  fontWeight: 700,
 };
 
 const backButtonStyle: CSSProperties = {
-  padding: "10px 14px",
-  borderRadius: "8px",
-  border: "1px solid #d1d5db",
-  background: "white",
-  color: "#111827",
+  minHeight: "44px",
+  padding: "12px 14px",
+  borderRadius: "12px",
+  border: "1px solid #27312d",
+  background: "#171f1c",
+  color: "#e7f1eb",
   textDecoration: "none",
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  fontWeight: 700,
 };
 
-const backLinkStyle: CSSProperties = {
-  color: "#111827",
+const backTextLinkStyle: CSSProperties = {
+  color: "#86efac",
   textDecoration: "underline",
 };
