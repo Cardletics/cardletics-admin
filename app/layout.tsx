@@ -1,9 +1,8 @@
 import "./globals.css";
-import Sidebar from "../components/Sidebar";
 
 export const metadata = {
-  title: "Cardletics Admin",
-  description: "Admin Dashboard for Cardletics",
+  title: "Cardletics",
+  description: "Cardletics Website",
 };
 
 export default function RootLayout({
@@ -13,12 +12,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="de">
-      <body>
-        <div className="admin-app">
-          <Sidebar />
-          <main className="admin-main">{children}</main>
-        </div>
-      </body>
+      <body>{children}</body>
     </html>
   );
 }

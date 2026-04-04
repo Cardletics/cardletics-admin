@@ -4,11 +4,11 @@ import { useEffect, useMemo, useState } from "react";
 import type { CSSProperties } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { supabase } from "../../../lib/supabase";
+import { supabase } from "../../../../lib/supabase";
 import {
   exportUserDetailsToExcel,
   exportUserDetailsToPdf,
-} from "../../../lib/exportHelpers";
+} from "../../../../lib/exportHelpers";
 
 type Profile = {
   id: string;
@@ -265,7 +265,7 @@ export default function UserDetailPage() {
       <div style={pageStyle}>
         <h1 style={pageTitleStyle}>User Details</h1>
         <p style={pageSubtitleStyle}>Kein User gefunden.</p>
-        <Link href="/users" style={backTextLinkStyle}>
+        <Link href="/admin/users" style={backTextLinkStyle}>
           Zurück zu Users
         </Link>
       </div>
@@ -292,7 +292,7 @@ export default function UserDetailPage() {
             <button onClick={handlePdfExport} style={secondaryButtonStyle}>
               Export PDF
             </button>
-            <Link href="/users" style={backButtonStyle}>
+            <Link href="/admin/users" style={backButtonStyle}>
               Zurück
             </Link>
           </div>

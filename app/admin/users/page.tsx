@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { supabase } from "../../lib/supabase";
+import { supabase } from "../../../lib/supabase";
 
 type Profile = {
   id: string;
@@ -168,7 +168,7 @@ export default function UsersPage() {
                       </div>
                     </div>
 
-                    <Link href={`/users/${user.id}`} style={detailsButtonStyle}>
+                    <Link href={`/admin/users/${user.id}`} style={detailsButtonStyle}>
                       Details
                     </Link>
                   </div>
@@ -229,7 +229,7 @@ export default function UsersPage() {
                         {user.card_points !== null ? user.card_points : 0}
                       </td>
                       <td style={tableCellStyle}>
-                        <Link href={`/users/${user.id}`} style={tableButtonStyle}>
+                        <Link href={`/admin/users/${user.id}`} style={tableButtonStyle}>
                           Details
                         </Link>
                       </td>

@@ -5,12 +5,12 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const navItems = [
-  { href: "/", label: "Dashboard" },
-  { href: "/users", label: "Users" },
-  { href: "/subscriptions", label: "Subscriptions" },
-  { href: "/revenue", label: "Revenue" },
-  { href: "/analytics", label: "Analytics" },
-  { href: "/game-data", label: "Game Data" },
+  { href: "/admin", label: "Dashboard" },
+  { href: "/admin/users", label: "Users" },
+  { href: "/admin/subscriptions", label: "Subscriptions" },
+  { href: "/admin/revenue", label: "Revenue" },
+  { href: "/admin/analytics", label: "Analytics" },
+  { href: "/admin/game-data", label: "Game Data" },
 ];
 
 export default function Sidebar() {
@@ -18,7 +18,7 @@ export default function Sidebar() {
   const [menuOpen, setMenuOpen] = useState(false);
 
   function isActive(path: string) {
-    return pathname === path;
+    return pathname.startsWith(path);
   }
 
   function closeMenu() {
@@ -27,7 +27,6 @@ export default function Sidebar() {
 
   return (
     <>
-      {/* Mobile Topbar */}
       <header className="mobile-topbar">
         <button
           type="button"
@@ -41,7 +40,6 @@ export default function Sidebar() {
         <div className="mobile-topbar-title">Cardletics Admin</div>
       </header>
 
-      {/* Desktop Sidebar */}
       <aside className="desktop-sidebar">
         <div className="sidebar-logo">Cardletics Admin</div>
 
@@ -58,12 +56,10 @@ export default function Sidebar() {
         </nav>
       </aside>
 
-      {/* Mobile Drawer Overlay */}
       {menuOpen && (
         <div className="mobile-drawer-overlay" onClick={closeMenu} />
       )}
 
-      {/* Mobile Drawer */}
       <aside className={`mobile-drawer ${menuOpen ? "open" : ""}`}>
         <div className="mobile-drawer-header">
           <div className="mobile-drawer-title">Menü</div>
