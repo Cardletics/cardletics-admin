@@ -39,10 +39,7 @@ export function proxy(request: NextRequest) {
 
   const [inputUser, inputPassword] = decodedCredentials.split(":");
 
-  const isValid =
-    inputUser === username && inputPassword === password;
-
-  if (isValid) {
+  if (inputUser === username && inputPassword === password) {
     return NextResponse.next();
   }
 
