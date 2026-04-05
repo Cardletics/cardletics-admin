@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-export default function ImpressumPage() {
+export default function DatenschutzPage() {
   return (
     <main style={pageStyle}>
       <div style={cardStyle}>
@@ -8,54 +8,111 @@ export default function ImpressumPage() {
           ← Zurück zur Startseite
         </Link>
 
-        <h1 style={titleStyle}>Impressum</h1>
+        <h1 style={titleStyle}>Datenschutzerklärung</h1>
 
-        <section style={sectionStyle}>
-          <h2 style={headingStyle}>Angaben gemäß § 5 DDG</h2>
-          <p style={textStyle}>
-            Cardletics
-            <br />
-            Oppenheimer Straße 26
-            <br />
-            55130 Mainz
-            <br />
-            Deutschland
-          </p>
-        </section>
+        <Section
+          title="1. Verantwortlicher"
+          text={`Verantwortlich für die Verarbeitung personenbezogener Daten auf dieser Website und im Zusammenhang mit dem Angebot von Cardletics ist:
 
-        <section style={sectionStyle}>
-          <h2 style={headingStyle}>Kontakt</h2>
-          <p style={textStyle}>
-            E-Mail: Info@cardletics.com
-          </p>
-        </section>
+Cardletics
+Oppenheimer Straße 26
+55130 Mainz
+Deutschland
 
-        <section style={sectionStyle}>
-          <h2 style={headingStyle}>Unternehmensform</h2>
-          <p style={textStyle}>Einzelunternehmen</p>
-        </section>
+E-Mail: Info@cardletics.com`}
+        />
 
-        <section style={sectionStyle}>
-          <h2 style={headingStyle}>Verantwortlich für den Inhalt</h2>
-          <p style={textStyle}>
-            Cardletics
-            <br />
-            Oppenheimer Straße 26
-            <br />
-            55130 Mainz
-          </p>
-        </section>
+        <Section
+          title="2. Allgemeine Hinweise"
+          text="Wir verarbeiten personenbezogene Daten der Nutzer nur, soweit dies zur Bereitstellung einer funktionsfähigen Website, der mobilen App, unserer Inhalte und Leistungen sowie zur Bearbeitung von Anfragen erforderlich ist."
+        />
 
-        <section style={sectionStyle}>
-          <h2 style={headingStyle}>Hinweis</h2>
-          <p style={textStyle}>
-            Sollten weitere gesetzlich erforderliche Angaben, etwa eine
-            Umsatzsteuer-Identifikationsnummer oder Registerdaten, vorliegen,
-            sollten diese hier ergänzt werden.
-          </p>
-        </section>
+        <Section
+          title="3. Hosting"
+          text="Diese Website wird über Vercel bereitgestellt. Dabei können technische Verbindungsdaten verarbeitet werden, die für die Auslieferung und Sicherheit der Website erforderlich sind."
+        />
+
+        <Section
+          title="4. Backend und Datenverarbeitung"
+          text="Für Datenbank- und Backend-Funktionen nutzen wir Supabase. Im Rahmen der Nutzung der App und ihrer Funktionen können personenbezogene Daten, Nutzungsdaten, Login-Daten sowie appbezogene Inhalte verarbeitet werden."
+        />
+
+        <Section
+          title="5. Registrierung und Login"
+          text="Für die Nutzung bestimmter Funktionen der App kann eine Registrierung per E-Mail erforderlich sein. Dabei verarbeiten wir insbesondere E-Mail-Adresse, Login-Daten sowie Informationen, die im Rahmen der Kontonutzung bereitgestellt werden."
+        />
+
+        <Section
+          title="6. Kontaktaufnahme"
+          text="Wenn du uns kontaktierst, zum Beispiel per E-Mail oder über ein Kontaktformular, verarbeiten wir deine Angaben zur Bearbeitung deiner Anfrage und für mögliche Anschlussfragen."
+        />
+
+        <Section
+          title="7. In-App-Käufe und Abonnements"
+          text="In-App-Käufe und Abonnements werden über Apple App Store und Google Play abgewickelt. Im Zusammenhang mit diesen Käufen erhalten wir gegebenenfalls transaktionsbezogene Informationen, soweit dies für die Bereitstellung, Zuordnung, Abrechnung oder Verwaltung der Leistungen erforderlich ist."
+        />
+
+        <Section
+          title="8. Virtuelle Inhalte, Coins und interne Börse"
+          text="Im Rahmen der App können virtuelle Inhalte wie Karten, Coins, Sammlungen, Teams, Awards und Transaktionen innerhalb einer internen Börse verarbeitet und gespeichert werden, soweit dies für die Spiel- und Plattformfunktionen erforderlich ist."
+        />
+
+        <Section
+          title="9. Zwecke der Verarbeitung"
+          text={`Die Verarbeitung erfolgt insbesondere zu folgenden Zwecken:
+
+- Bereitstellung der Website und App
+- Nutzerverwaltung
+- Login und Authentifizierung
+- Abwicklung von In-App-Käufen und Abonnements
+- Bereitstellung spielbezogener Funktionen
+- Kommunikation mit Nutzern
+- technische Sicherheit und Stabilität`}
+        />
+
+        <Section
+          title="10. Rechtsgrundlagen"
+          text="Die Verarbeitung personenbezogener Daten erfolgt insbesondere auf Grundlage der Vertragserfüllung, vorvertraglicher Maßnahmen, berechtigter Interessen sowie – soweit erforderlich – auf Grundlage einer Einwilligung."
+        />
+
+        <Section
+          title="11. Speicherdauer"
+          text="Wir speichern personenbezogene Daten nur so lange, wie dies für die jeweiligen Zwecke erforderlich ist oder gesetzliche Aufbewahrungspflichten bestehen."
+        />
+
+        <Section
+          title="12. Betroffenenrechte"
+          text={`Du hast im Rahmen der gesetzlichen Vorgaben insbesondere folgende Rechte:
+
+- Auskunft
+- Berichtigung
+- Löschung
+- Einschränkung der Verarbeitung
+- Datenübertragbarkeit
+- Widerspruch gegen bestimmte Verarbeitungen
+- Widerruf erteilter Einwilligungen mit Wirkung für die Zukunft`}
+        />
+
+        <Section
+          title="13. Beschwerderecht"
+          text="Du hast das Recht, dich bei einer Datenschutz-Aufsichtsbehörde über die Verarbeitung deiner personenbezogenen Daten zu beschweren."
+        />
+
+        <Section
+          title="14. Hinweis"
+          text="Diese Datenschutzerklärung ist eine vorbereitete Fassung auf Basis der derzeit bekannten Angaben. Vor Live-Schaltung sollte sie rechtlich geprüft und bei Änderungen der eingesetzten Dienste oder Prozesse aktualisiert werden."
+        />
       </div>
     </main>
+  );
+}
+
+function Section({ title, text }: { title: string; text: string }) {
+  return (
+    <section style={sectionStyle}>
+      <h2 style={headingStyle}>{title}</h2>
+      <p style={textStyle}>{text}</p>
+    </section>
   );
 }
 
