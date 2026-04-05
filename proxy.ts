@@ -7,10 +7,14 @@ export function proxy(request: NextRequest) {
   const username = process.env.ADMIN_BASIC_AUTH_USERNAME;
   const password = process.env.ADMIN_BASIC_AUTH_PASSWORD;
 
+  // 🔥 DEBUG BLOCK
   if (!username || !password) {
-    return new NextResponse("Admin auth env vars missing", {
-      status: 500,
-    });
+    return new NextResponse(
+      `Admin auth env vars missing | username=${String(Boolean(username))} | password=${String(Boolean(password))}`,
+      {
+        status: 500,
+      }
+    );
   }
 
   if (!authHeader || !authHeader.startsWith("Basic ")) {
