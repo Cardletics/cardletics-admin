@@ -8,7 +8,10 @@ export default function HomePage() {
 
   return (
     <main style={pageStyle}>
-      <a href="mailto:Info@cardletics.com?subject=Affiliate%20Programm" style={affiliateSideButtonStyle}>
+      <a
+        href="mailto:Info@cardletics.com?subject=Affiliate%20Programm"
+        style={affiliateSideButtonStyle}
+      >
         Affiliate
       </a>
 
@@ -209,7 +212,9 @@ export default function HomePage() {
         <div style={affiliatePanelStyle}>
           <div style={affiliateTextColStyle}>
             <div style={sectionEyebrowStyle}>Affiliate Programm</div>
-            <h2 style={sectionTitleStyle}>Creator, Partner und Communities einbinden</h2>
+            <h2 style={sectionTitleStyle}>
+              Creator, Partner und Communities einbinden
+            </h2>
             <p style={sectionTextStyle}>
               Cardletics soll auch durch Partner, Creator und Communities wachsen.
               Deshalb gibt es ein Affiliate-Programm, über das später Empfehlungen,
@@ -257,7 +262,9 @@ export default function HomePage() {
             <div style={helpPanelHeaderStyle}>
               <div>
                 <div style={helpTitleStyle}>Cardletics Hilfe</div>
-                <div style={helpSubtitleStyle}>Schnelle Antworten auf typische Fragen</div>
+                <div style={helpSubtitleStyle}>
+                  Schnelle Antworten auf typische Fragen
+                </div>
               </div>
 
               <button
@@ -341,11 +348,7 @@ function ScreenshotCard({
   return (
     <div style={screenshotCardStyle}>
       <div style={screenshotRealWrapStyle}>
-        <img
-          src={fileName}
-          alt={title}
-          style={screenshotImageStyle}
-        />
+        <img src={fileName} alt={title} style={screenshotImageStyle} />
       </div>
 
       <div style={screenshotTextWrapStyle}>
@@ -458,20 +461,24 @@ const logoWrapperStyle: React.CSSProperties = {
 };
 
 const logoOuterStyle: React.CSSProperties = {
-  width: "164px",
-  height: "164px",
-  borderRadius: "36px",
-  background: "linear-gradient(135deg, #22c55e 0%, #0ea5e9 100%)",
-  padding: "7px",
-  boxShadow: "0 22px 70px rgba(34,197,94,0.32)",
+  width: "180px",
+  height: "180px",
+  borderRadius: "40px",
+  background:
+    "linear-gradient(135deg, #22c55e 0%, #4ade80 35%, #0ea5e9 100%)",
+  padding: "8px",
+  boxShadow:
+    "0 25px 80px rgba(34,197,94,0.45), inset 0 0 40px rgba(255,255,255,0.08)",
 };
 
 const logoInnerStyle: React.CSSProperties = {
   width: "100%",
   height: "100%",
-  borderRadius: "30px",
+  borderRadius: "32px",
   overflow: "hidden",
-  background: "#07100c",
+  background:
+    "linear-gradient(180deg, rgba(255,255,255,0.08), rgba(0,0,0,0.25))",
+  backdropFilter: "blur(6px)",
 };
 
 const heroBadgeStyle: React.CSSProperties = {
