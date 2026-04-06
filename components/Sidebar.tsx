@@ -18,6 +18,10 @@ export default function Sidebar() {
   const [menuOpen, setMenuOpen] = useState(false);
 
   function isActive(path: string) {
+    if (path === "/admin") {
+      return pathname === "/admin";
+    }
+
     return pathname.startsWith(path);
   }
 
@@ -63,6 +67,7 @@ export default function Sidebar() {
       <aside className={`mobile-drawer ${menuOpen ? "open" : ""}`}>
         <div className="mobile-drawer-header">
           <div className="mobile-drawer-title">Menü</div>
+
           <button
             type="button"
             className="menu-button"
