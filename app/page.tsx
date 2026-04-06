@@ -1,21 +1,30 @@
+"use client";
+
 import Image from "next/image";
+import { useState } from "react";
 
 export default function HomePage() {
+  const [helpOpen, setHelpOpen] = useState(false);
+
   return (
     <main style={pageStyle}>
+      <a href="mailto:Info@cardletics.com?subject=Affiliate%20Programm" style={affiliateSideButtonStyle}>
+        Affiliate
+      </a>
+
       <section style={heroSectionStyle}>
         <div style={heroGlowOneStyle} />
         <div style={heroGlowTwoStyle} />
 
         <div style={heroInnerStyle}>
           <div style={logoWrapperStyle}>
-            <div style={logoCardStyle}>
+            <div style={logoOuterStyle}>
               <div style={logoInnerStyle}>
                 <Image
                   src="/bg_app.png"
                   alt="Cardletics Logo"
-                  width={160}
-                  height={160}
+                  width={170}
+                  height={170}
                   style={{
                     width: "100%",
                     height: "100%",
@@ -30,128 +39,168 @@ export default function HomePage() {
           <div style={heroBadgeStyle}>Track • Collect • Battle • Trade</div>
 
           <h1 style={titleStyle}>
-            Verfolge Sport.
+            Sportdaten werden
             <br />
-            Verdiene Karten.
+            zu Karten, Teams
             <br />
-            Werde zur Collection-Legende.
+            und echtem Progress.
           </h1>
 
           <p style={subtitleStyle}>
-            Cardletics verbindet echte Aktivität mit digitalem Sammelkarten-Gameplay.
-            Laufe, trainiere und bewege dich im Alltag, um Karten zu erhalten,
-            Kollektionen zu vervollständigen, Teams aufzubauen, Battles zu spielen
-            und über die interne Börse zu handeln.
+            Cardletics verbindet echte Bewegung mit digitalem Sammelkarten-Gameplay.
+            Laufe, trainiere und bleibe aktiv, um Karten zu verdienen, Sammlungen
+            zu vervollständigen, Teams aufzubauen, Kämpfe zu bestreiten und über
+            die interne Börse zu handeln.
           </p>
 
           <div style={buttonRowStyle}>
             <div style={buttonStyle}>App Store – bald verfügbar</div>
             <div style={buttonSecondaryStyle}>Google Play – bald verfügbar</div>
-            <a href="mailto:Info@cardletics.com" style={affiliateButtonStyle}>
-              Affiliate Programm
-            </a>
           </div>
 
           <p style={heroHintStyle}>
-            Für Partner, Creator, Communities und zukünftige Affiliate-Nutzer.
-            Später können Affiliates ihre Performance und Einnahmen direkt im
-            System einsehen.
+            Cardletics ist kostenlos nutzbar und kann optional durch Abos, Coins
+            und weitere Inhalte erweitert werden.
           </p>
         </div>
       </section>
 
-      <section style={statsStripSectionStyle}>
+      <section style={sectionStyle}>
         <div style={statsStripStyle}>
-          <StatBox label="Sportdaten" value="Realtime Motivation" />
+          <StatBox label="Tracking" value="Bewegung wird Progress" />
           <StatBox label="Karten" value="Selten, sammelbar, handelbar" />
-          <StatBox label="Battles" value="Teams & Strategie" />
+          <StatBox label="Teams" value="Strategie & Battles" />
           <StatBox label="Marketplace" value="Interne Börse" />
         </div>
       </section>
 
       <section style={sectionStyle}>
         <div style={sectionHeaderStyle}>
-          <div style={sectionEyebrowStyle}>Gameplay</div>
-          <h2 style={sectionTitleStyle}>So fühlt sich Cardletics an</h2>
+          <div style={sectionEyebrowStyle}>Was ist Cardletics?</div>
+          <h2 style={sectionTitleStyle}>Eine App, die Aktivität spielbar macht</h2>
           <p style={sectionTextStyle}>
-            Die App kombiniert Fitness, Sammeln, Taktik und Progression in einer
-            modernen Mobile Experience.
+            Statt nur Schritte oder Läufe zu zählen, macht Cardletics aus deiner
+            Aktivität ein System aus Karten, Belohnungen, Sammlung, Status und
+            Strategie. So wird Bewegung langfristig motivierender und sichtbarer.
           </p>
         </div>
 
         <div style={featureGridStyle}>
           <FeatureCard
             title="Sport wird belohnt"
-            text="Deine Aktivität wird zu echtem Spielfortschritt."
+            text="Deine echte Aktivität im Alltag und beim Training wird zur Grundlage deines Fortschritts."
           />
           <FeatureCard
             title="Karten mit Seltenheit"
-            text="Erhalte Karten, stelle sie aus und baue deine Sammlung aus."
+            text="Du erhältst digitale Karten, kannst sie sammeln, präsentieren und ihre Seltenheit nutzen."
           />
           <FeatureCard
-            title="Teams & Kämpfe"
-            text="Nutze Karten strategisch und optimiere deine Aufstellung."
+            title="Teams bauen"
+            text="Kombiniere Karten sinnvoll und stelle dein eigenes Team für Kämpfe zusammen."
           />
           <FeatureCard
             title="Interne Börse"
-            text="Handle Karten innerhalb des Systems und erweitere deine Collection."
+            text="Karten können innerhalb des Systems gehandelt werden."
           />
           <FeatureCard
-            title="Coins & Abos"
-            text="Kostenlose Nutzung mit optionalen Premium-Elementen."
+            title="Kollektionen vervollständigen"
+            text="Arbeite auf vollständige Sets hin und sammle besondere Auszeichnungen."
           />
           <FeatureCard
             title="Awards & Prestige"
-            text="Belohne Beständigkeit, Fortschritt und besondere Leistungen."
+            text="Besondere Leistungen, Serien und Fortschritte werden sichtbar belohnt."
           />
         </div>
       </section>
 
       <section style={sectionStyle}>
-        <div style={sectionHeaderStyle}>
-          <div style={sectionEyebrowStyle}>App Preview</div>
-          <h2 style={sectionTitleStyle}>Später mit echten Screenshots</h2>
-          <p style={sectionTextStyle}>
-            Diese Bereiche sind bereits für deine App-Screens vorbereitet.
-          </p>
-        </div>
-
-        <div style={screensGridStyle}>
-          <ScreenshotPlaceholder
-            title="Homescreen"
-            text="Dashboard, Navigation und Startbereich der App"
-          />
-          <ScreenshotPlaceholder
-            title="Karte im Detail"
-            text="Eine einzelne Karte mit Werten, Seltenheit und Design"
-          />
-          <ScreenshotPlaceholder
-            title="3 Karten aufgefächert"
-            text="Collection-/Showcase-Look mit nebeneinander dargestellten Karten"
-          />
-          <ScreenshotPlaceholder
-            title="Sport / Lauffortschritt"
-            text="Aktivität, Fortschritt, Ziele und Motivation"
-          />
-        </div>
-      </section>
-
-      <section style={sectionStyle}>
-        <div style={showcasePanelStyle}>
-          <div style={showcaseTextStyle}>
-            <div style={sectionEyebrowStyle}>Warum Cardletics?</div>
-            <h2 style={sectionTitleStyle}>Mehr als nur Tracking</h2>
+        <div style={howItWorksPanelStyle}>
+          <div style={sectionHeaderStyle}>
+            <div style={sectionEyebrowStyle}>App erklärt</div>
+            <h2 style={sectionTitleStyle}>So nutzt man Cardletics</h2>
             <p style={sectionTextStyle}>
-              Cardletics macht Bewegung emotionaler, sichtbarer und spielerischer.
-              Nutzer bekommen nicht nur Zahlen, sondern Fortschritt, Besitzgefühl,
-              Sammlung, Status und strategische Möglichkeiten.
+              Damit sofort klar ist, wie die App funktioniert, zeigt diese Seite
+              den Ablauf einfach und verständlich.
             </p>
           </div>
 
-          <div style={showcaseCardsStyle}>
-            <MiniGameCard emoji="⚡" title="Rare Drop" text="Aktivität zahlt sich aus" />
-            <MiniGameCard emoji="🏆" title="Awards" text="Erfolge sichtbar machen" />
-            <MiniGameCard emoji="🛡️" title="Battle Team" text="Strategie statt nur Statistik" />
+          <div style={stepsGridStyle}>
+            <StepCard
+              number="1"
+              title="Aktivität tracken"
+              text="Du bewegst dich im echten Leben. Sport und Aktivität werden als Grundlage für deinen Fortschritt genutzt."
+            />
+            <StepCard
+              number="2"
+              title="Karten verdienen"
+              text="Für Aktivität, Fortschritt und besondere Leistungen erhältst du digitale Karten."
+            />
+            <StepCard
+              number="3"
+              title="Sammeln und optimieren"
+              text="Du vervollständigst Kollektionen, sammelst seltene Karten und verbesserst deine Auswahl."
+            />
+            <StepCard
+              number="4"
+              title="Team bauen und kämpfen"
+              text="Mit deinen Karten stellst du Teams zusammen und trittst in Battles gegen andere an."
+            />
+          </div>
+        </div>
+      </section>
+
+      <section style={sectionStyle}>
+        <div style={screensSectionStyle}>
+          <div style={sectionHeaderStyle}>
+            <div style={sectionEyebrowStyle}>Screenshots</div>
+            <h2 style={sectionTitleStyle}>Einblicke in die App</h2>
+            <p style={sectionTextStyle}>
+              Diese Bereiche sind bereits mit festen Dateinamen vorbereitet.
+              Sobald du die Bilder in `public` ablegst, erscheinen sie automatisch.
+            </p>
+          </div>
+
+          <div style={screensGridStyle}>
+            <ScreenshotCard
+              title="Homescreen"
+              text="Startbereich, Hauptnavigation und Überblick"
+              fileName="/home-screen.png"
+            />
+            <ScreenshotCard
+              title="Battle Screen"
+              text="Teamkampf, Strategie und Battle-Ansicht"
+              fileName="/battle-screen.png"
+            />
+            <ScreenshotCard
+              title="Karte im Detail"
+              text="Einzelne Karte mit Werten, Design und Seltenheit"
+              fileName="/card-detail.png"
+            />
+            <ScreenshotCard
+              title="Awards"
+              text="Belohnungen, Erfolge und freigeschaltete Meilensteine"
+              fileName="/awards-screen.png"
+            />
+            <ScreenshotCard
+              title="Pack Opening"
+              text="Packs öffnen und neue Karten erhalten"
+              fileName="/pack-opening.png"
+            />
+            <ScreenshotCard
+              title="Collection"
+              text="Sammlung, Sets und Vervollständigung"
+              fileName="/collection-screen.png"
+            />
+            <ScreenshotCard
+              title="Börse / Marketplace"
+              text="Interner Handel mit Karten"
+              fileName="/marketplace-screen.png"
+            />
+            <ScreenshotCard
+              title="Shop"
+              text="Coins, Angebote und weitere In-App-Käufe"
+              fileName="/shop-screen.png"
+            />
           </div>
         </div>
       </section>
@@ -159,12 +208,12 @@ export default function HomePage() {
       <section style={sectionStyle}>
         <div style={affiliatePanelStyle}>
           <div style={affiliateTextColStyle}>
-            <div style={sectionEyebrowStyle}>Affiliate & Partnerschaften</div>
-            <h2 style={sectionTitleStyle}>Affiliate-Programm für Wachstum</h2>
+            <div style={sectionEyebrowStyle}>Affiliate Programm</div>
+            <h2 style={sectionTitleStyle}>Creator, Partner und Communities einbinden</h2>
             <p style={sectionTextStyle}>
-              Cardletics wird auch ein Affiliate-Programm unterstützen. Creator,
-              Communities und Partner sollen perspektivisch Nutzer empfehlen und
-              ihre Ergebnisse transparent nachverfolgen können.
+              Cardletics soll auch durch Partner, Creator und Communities wachsen.
+              Deshalb gibt es ein Affiliate-Programm, über das später Empfehlungen,
+              Performance und mögliche Einnahmen sichtbar gemacht werden können.
             </p>
             <p style={affiliateSmallTextStyle}>
               Später kann hier zusätzlich ein direkter Link zum Affiliate-Bereich
@@ -172,12 +221,12 @@ export default function HomePage() {
             </p>
           </div>
 
-          <div style={affiliateActionsStyle}>
-            <a href="mailto:Info@cardletics.com" style={buttonStyle}>
+          <div style={affiliateActionWrapStyle}>
+            <a
+              href="mailto:Info@cardletics.com?subject=Affiliate%20Programm"
+              style={buttonStyle}
+            >
               Affiliate anfragen
-            </a>
-            <a href="#" style={buttonSecondaryStyle}>
-              Bereich bald verfügbar
             </a>
           </div>
         </div>
@@ -201,6 +250,54 @@ export default function HomePage() {
           </a>
         </div>
       </footer>
+
+      <div style={helpWidgetWrapStyle}>
+        {helpOpen && (
+          <div style={helpPanelStyle}>
+            <div style={helpPanelHeaderStyle}>
+              <div>
+                <div style={helpTitleStyle}>Cardletics Hilfe</div>
+                <div style={helpSubtitleStyle}>Schnelle Antworten auf typische Fragen</div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setHelpOpen(false)}
+                style={helpCloseButtonStyle}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div style={helpQuestionListStyle}>
+              <QuickQuestion
+                text="Wie funktioniert Cardletics?"
+                answer="Du trackst Aktivität, erhältst Karten, sammelst Kollektionen, baust Teams und kannst Kämpfe bestreiten."
+              />
+              <QuickQuestion
+                text="Ist die App kostenlos?"
+                answer="Ja, die App ist grundsätzlich kostenlos nutzbar. Zusätzlich sind optionale Abos und In-App-Käufe möglich."
+              />
+              <QuickQuestion
+                text="Kann man Karten handeln?"
+                answer="Ja, Karten können innerhalb einer internen Börse gehandelt werden."
+              />
+              <QuickQuestion
+                text="Wie läuft das Affiliate-Programm?"
+                answer="Das Affiliate-Programm ist für Partner, Creator und Communities gedacht. Details und Tracking können später direkt im System sichtbar gemacht werden."
+              />
+            </div>
+          </div>
+        )}
+
+        <button
+          type="button"
+          onClick={() => setHelpOpen((prev) => !prev)}
+          style={helpLauncherStyle}
+        >
+          Hilfe
+        </button>
+      </div>
     </main>
   );
 }
@@ -214,52 +311,64 @@ function FeatureCard({ title, text }: { title: string; text: string }) {
   );
 }
 
-function ScreenshotPlaceholder({
+function StepCard({
+  number,
   title,
   text,
 }: {
+  number: string;
   title: string;
   text: string;
 }) {
   return (
+    <div style={stepCardStyle}>
+      <div style={stepNumberStyle}>{number}</div>
+      <h3 style={stepTitleStyle}>{title}</h3>
+      <p style={stepTextStyle}>{text}</p>
+    </div>
+  );
+}
+
+function ScreenshotCard({
+  title,
+  text,
+  fileName,
+}: {
+  title: string;
+  text: string;
+  fileName: string;
+}) {
+  return (
     <div style={screenshotCardStyle}>
-      <div style={screenshotMockStyle}>
-        <div style={screenshotMockTopStyle} />
-        <div style={screenshotMockBodyStyle}>
-          <div style={screenshotMockLineStrongStyle} />
-          <div style={screenshotMockLineStyle} />
-          <div style={screenshotMockLineStyle} />
-          <div style={screenshotMockGridStyle}>
-            <div style={screenshotMockMiniCardStyle} />
-            <div style={screenshotMockMiniCardStyle} />
-            <div style={screenshotMockMiniCardStyle} />
-          </div>
-        </div>
+      <div style={screenshotRealWrapStyle}>
+        <img
+          src={fileName}
+          alt={title}
+          style={screenshotImageStyle}
+        />
       </div>
 
       <div style={screenshotTextWrapStyle}>
         <h3 style={screenshotTitleStyle}>{title}</h3>
         <p style={screenshotTextStyle}>{text}</p>
+        <p style={screenshotFileHintStyle}>{fileName}</p>
       </div>
     </div>
   );
 }
 
-function MiniGameCard({
-  emoji,
-  title,
+function QuickQuestion({
   text,
+  answer,
 }: {
-  emoji: string;
-  title: string;
   text: string;
+  answer: string;
 }) {
   return (
-    <div style={miniGameCardStyle}>
-      <div style={miniGameEmojiStyle}>{emoji}</div>
-      <div style={miniGameTitleStyle}>{title}</div>
-      <div style={miniGameTextStyle}>{text}</div>
-    </div>
+    <details style={quickQuestionStyle}>
+      <summary style={quickQuestionSummaryStyle}>{text}</summary>
+      <p style={quickQuestionAnswerStyle}>{answer}</p>
+    </details>
   );
 }
 
@@ -275,20 +384,38 @@ function StatBox({ label, value }: { label: string; value: string }) {
 const pageStyle: React.CSSProperties = {
   minHeight: "100vh",
   background:
-    "radial-gradient(circle at top, rgba(34,197,94,0.12), transparent 28%), linear-gradient(180deg, #0b0f0d 0%, #0d120f 100%)",
+    "radial-gradient(circle at top, rgba(34,197,94,0.12), transparent 28%), linear-gradient(180deg, #09100d 0%, #0c120f 100%)",
   color: "white",
   fontFamily: "Arial, sans-serif",
   padding: "20px",
+  position: "relative",
+};
+
+const affiliateSideButtonStyle: React.CSSProperties = {
+  position: "fixed",
+  right: "16px",
+  top: "50%",
+  transform: "translateY(-50%)",
+  zIndex: 30,
+  writingMode: "vertical-rl",
+  textOrientation: "mixed",
+  padding: "16px 10px",
+  borderRadius: "16px",
+  background: "linear-gradient(180deg, #22c55e 0%, #14532d 100%)",
+  color: "#ffffff",
+  textDecoration: "none",
+  fontWeight: 700,
+  boxShadow: "0 10px 30px rgba(34,197,94,0.25)",
 };
 
 const heroSectionStyle: React.CSSProperties = {
   position: "relative",
   maxWidth: "1200px",
   margin: "0 auto",
-  borderRadius: "32px",
+  borderRadius: "34px",
   overflow: "hidden",
   background:
-    "linear-gradient(135deg, rgba(20,83,45,0.55) 0%, rgba(15,23,42,0.92) 100%)",
+    "linear-gradient(135deg, rgba(26,128,87,0.45) 0%, rgba(18,30,58,0.92) 100%)",
   border: "1px solid #2b3b33",
   boxShadow: "0 20px 60px rgba(0,0,0,0.28)",
 };
@@ -300,8 +427,8 @@ const heroGlowOneStyle: React.CSSProperties = {
   width: "220px",
   height: "220px",
   borderRadius: "999px",
-  background: "rgba(34,197,94,0.18)",
-  filter: "blur(50px)",
+  background: "rgba(34,197,94,0.22)",
+  filter: "blur(55px)",
 };
 
 const heroGlowTwoStyle: React.CSSProperties = {
@@ -311,17 +438,17 @@ const heroGlowTwoStyle: React.CSSProperties = {
   width: "260px",
   height: "260px",
   borderRadius: "999px",
-  background: "rgba(59,130,246,0.12)",
-  filter: "blur(60px)",
+  background: "rgba(59,130,246,0.18)",
+  filter: "blur(65px)",
 };
 
 const heroInnerStyle: React.CSSProperties = {
   position: "relative",
   zIndex: 1,
-  maxWidth: "860px",
+  maxWidth: "880px",
   margin: "0 auto",
   textAlign: "center",
-  padding: "56px 24px",
+  padding: "58px 24px",
 };
 
 const logoWrapperStyle: React.CSSProperties = {
@@ -330,21 +457,21 @@ const logoWrapperStyle: React.CSSProperties = {
   marginBottom: "22px",
 };
 
-const logoCardStyle: React.CSSProperties = {
-  width: "152px",
-  height: "152px",
-  borderRadius: "34px",
-  background: "linear-gradient(135deg, #22c55e, #0f172a)",
-  padding: "6px",
-  boxShadow: "0 20px 60px rgba(34,197,94,0.35)",
+const logoOuterStyle: React.CSSProperties = {
+  width: "164px",
+  height: "164px",
+  borderRadius: "36px",
+  background: "linear-gradient(135deg, #22c55e 0%, #0ea5e9 100%)",
+  padding: "7px",
+  boxShadow: "0 22px 70px rgba(34,197,94,0.32)",
 };
 
 const logoInnerStyle: React.CSSProperties = {
   width: "100%",
   height: "100%",
-  borderRadius: "28px",
+  borderRadius: "30px",
   overflow: "hidden",
-  background: "#08110c",
+  background: "#07100c",
 };
 
 const heroBadgeStyle: React.CSSProperties = {
@@ -410,20 +537,6 @@ const buttonSecondaryStyle: React.CSSProperties = {
   textDecoration: "none",
 };
 
-const affiliateButtonStyle: React.CSSProperties = {
-  display: "inline-flex",
-  alignItems: "center",
-  justifyContent: "center",
-  minHeight: "48px",
-  padding: "12px 18px",
-  background: "linear-gradient(135deg, #14532d, #22c55e)",
-  borderRadius: "14px",
-  color: "#ffffff",
-  fontWeight: 700,
-  textDecoration: "none",
-  border: "1px solid rgba(255,255,255,0.08)",
-};
-
 const heroHintStyle: React.CSSProperties = {
   marginTop: "16px",
   fontSize: "14px",
@@ -431,9 +544,9 @@ const heroHintStyle: React.CSSProperties = {
   lineHeight: 1.6,
 };
 
-const statsStripSectionStyle: React.CSSProperties = {
+const sectionStyle: React.CSSProperties = {
   maxWidth: "1200px",
-  margin: "18px auto 0 auto",
+  margin: "28px auto 0 auto",
 };
 
 const statsStripStyle: React.CSSProperties = {
@@ -460,11 +573,6 @@ const statValueStyle: React.CSSProperties = {
   color: "#e7f1eb",
   fontSize: "16px",
   lineHeight: 1.5,
-};
-
-const sectionStyle: React.CSSProperties = {
-  maxWidth: "1200px",
-  margin: "28px auto 0 auto",
 };
 
 const sectionHeaderStyle: React.CSSProperties = {
@@ -521,6 +629,60 @@ const featureTextStyle: React.CSSProperties = {
   fontSize: "15px",
 };
 
+const howItWorksPanelStyle: React.CSSProperties = {
+  background:
+    "linear-gradient(135deg, rgba(20,83,45,0.18) 0%, rgba(15,23,42,0.18) 100%)",
+  border: "1px solid #27312d",
+  borderRadius: "24px",
+  padding: "22px",
+};
+
+const stepsGridStyle: React.CSSProperties = {
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+  gap: "14px",
+};
+
+const stepCardStyle: React.CSSProperties = {
+  background: "#141b18",
+  border: "1px solid #27312d",
+  borderRadius: "18px",
+  padding: "18px",
+};
+
+const stepNumberStyle: React.CSSProperties = {
+  width: "36px",
+  height: "36px",
+  borderRadius: "999px",
+  background: "#22c55e",
+  color: "#08130c",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  fontWeight: 800,
+  marginBottom: "12px",
+};
+
+const stepTitleStyle: React.CSSProperties = {
+  margin: "0 0 8px 0",
+  fontSize: "18px",
+  color: "#ffffff",
+};
+
+const stepTextStyle: React.CSSProperties = {
+  margin: 0,
+  color: "#94a39b",
+  lineHeight: 1.6,
+  fontSize: "14px",
+};
+
+const screensSectionStyle: React.CSSProperties = {
+  background: "#111714",
+  border: "1px solid #27312d",
+  borderRadius: "24px",
+  padding: "22px",
+};
+
 const screensGridStyle: React.CSSProperties = {
   display: "grid",
   gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
@@ -534,52 +696,19 @@ const screenshotCardStyle: React.CSSProperties = {
   padding: "16px",
 };
 
-const screenshotMockStyle: React.CSSProperties = {
-  borderRadius: "24px",
+const screenshotRealWrapStyle: React.CSSProperties = {
+  borderRadius: "20px",
+  overflow: "hidden",
   background: "#0f1512",
   border: "1px solid #27312d",
-  padding: "12px",
   minHeight: "320px",
-  boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.03)",
 };
 
-const screenshotMockTopStyle: React.CSSProperties = {
-  width: "72px",
-  height: "8px",
-  borderRadius: "999px",
-  background: "#27312d",
-  margin: "0 auto 14px auto",
-};
-
-const screenshotMockBodyStyle: React.CSSProperties = {
-  display: "grid",
-  gap: "10px",
-};
-
-const screenshotMockLineStrongStyle: React.CSSProperties = {
-  height: "26px",
-  borderRadius: "10px",
-  background: "#1e2a25",
-};
-
-const screenshotMockLineStyle: React.CSSProperties = {
-  height: "16px",
-  borderRadius: "8px",
-  background: "#1a2320",
-};
-
-const screenshotMockGridStyle: React.CSSProperties = {
-  display: "grid",
-  gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-  gap: "8px",
-  marginTop: "10px",
-};
-
-const screenshotMockMiniCardStyle: React.CSSProperties = {
-  height: "120px",
-  borderRadius: "14px",
-  background: "linear-gradient(180deg, #173524 0%, #101714 100%)",
-  border: "1px solid #284233",
+const screenshotImageStyle: React.CSSProperties = {
+  width: "100%",
+  height: "320px",
+  objectFit: "cover",
+  display: "block",
 };
 
 const screenshotTextWrapStyle: React.CSSProperties = {
@@ -599,50 +728,10 @@ const screenshotTextStyle: React.CSSProperties = {
   fontSize: "14px",
 };
 
-const showcasePanelStyle: React.CSSProperties = {
-  display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
-  gap: "18px",
-  background:
-    "linear-gradient(135deg, rgba(20,83,45,0.2) 0%, rgba(15,23,42,0.28) 100%)",
-  border: "1px solid #27312d",
-  borderRadius: "24px",
-  padding: "22px",
-};
-
-const showcaseTextStyle: React.CSSProperties = {
-  alignSelf: "center",
-};
-
-const showcaseCardsStyle: React.CSSProperties = {
-  display: "grid",
-  gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-  gap: "12px",
-};
-
-const miniGameCardStyle: React.CSSProperties = {
-  background: "#141b18",
-  border: "1px solid #27312d",
-  borderRadius: "18px",
-  padding: "16px",
-  textAlign: "center",
-};
-
-const miniGameEmojiStyle: React.CSSProperties = {
-  fontSize: "26px",
-  marginBottom: "8px",
-};
-
-const miniGameTitleStyle: React.CSSProperties = {
-  fontSize: "16px",
-  fontWeight: 700,
-  color: "#ffffff",
-  marginBottom: "6px",
-};
-
-const miniGameTextStyle: React.CSSProperties = {
-  fontSize: "13px",
-  color: "#94a39b",
+const screenshotFileHintStyle: React.CSSProperties = {
+  margin: "10px 0 0 0",
+  color: "#6f847b",
+  fontSize: "12px",
   lineHeight: 1.5,
 };
 
@@ -652,7 +741,7 @@ const affiliatePanelStyle: React.CSSProperties = {
   alignItems: "center",
   gap: "20px",
   flexWrap: "wrap",
-  background: "#171f1c",
+  background: "linear-gradient(180deg, #171f1c 0%, #121816 100%)",
   border: "1px solid #27312d",
   borderRadius: "24px",
   padding: "24px",
@@ -669,7 +758,7 @@ const affiliateSmallTextStyle: React.CSSProperties = {
   lineHeight: 1.6,
 };
 
-const affiliateActionsStyle: React.CSSProperties = {
+const affiliateActionWrapStyle: React.CSSProperties = {
   display: "flex",
   gap: "12px",
   flexWrap: "wrap",
@@ -710,4 +799,89 @@ const footerLinksStyle: React.CSSProperties = {
 const footerLinkStyle: React.CSSProperties = {
   color: "#cfe0d6",
   textDecoration: "none",
+};
+
+const helpWidgetWrapStyle: React.CSSProperties = {
+  position: "fixed",
+  right: "18px",
+  bottom: "18px",
+  zIndex: 40,
+};
+
+const helpLauncherStyle: React.CSSProperties = {
+  minHeight: "52px",
+  padding: "12px 18px",
+  borderRadius: "999px",
+  border: "1px solid #2c3b34",
+  background: "#171f1c",
+  color: "#ffffff",
+  fontWeight: 700,
+  cursor: "pointer",
+  boxShadow: "0 14px 30px rgba(0,0,0,0.22)",
+};
+
+const helpPanelStyle: React.CSSProperties = {
+  width: "min(360px, calc(100vw - 36px))",
+  marginBottom: "12px",
+  background: "#111714",
+  border: "1px solid #27312d",
+  borderRadius: "20px",
+  padding: "16px",
+  boxShadow: "0 18px 40px rgba(0,0,0,0.32)",
+};
+
+const helpPanelHeaderStyle: React.CSSProperties = {
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "flex-start",
+  gap: "12px",
+  marginBottom: "14px",
+};
+
+const helpTitleStyle: React.CSSProperties = {
+  fontSize: "18px",
+  fontWeight: 700,
+  color: "#ffffff",
+  marginBottom: "4px",
+};
+
+const helpSubtitleStyle: React.CSSProperties = {
+  fontSize: "13px",
+  color: "#94a39b",
+  lineHeight: 1.5,
+};
+
+const helpCloseButtonStyle: React.CSSProperties = {
+  width: "38px",
+  height: "38px",
+  borderRadius: "12px",
+  border: "1px solid #27312d",
+  background: "#171f1c",
+  color: "#ffffff",
+  cursor: "pointer",
+};
+
+const helpQuestionListStyle: React.CSSProperties = {
+  display: "grid",
+  gap: "10px",
+};
+
+const quickQuestionStyle: React.CSSProperties = {
+  background: "#171f1c",
+  border: "1px solid #27312d",
+  borderRadius: "14px",
+  padding: "12px",
+};
+
+const quickQuestionSummaryStyle: React.CSSProperties = {
+  cursor: "pointer",
+  fontWeight: 700,
+  color: "#e7f1eb",
+};
+
+const quickQuestionAnswerStyle: React.CSSProperties = {
+  margin: "10px 0 0 0",
+  color: "#94a39b",
+  lineHeight: 1.6,
+  fontSize: "14px",
 };
