@@ -1,25 +1,59 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function HomePage() {
   const [helpOpen, setHelpOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    function handleResize() {
+      setIsMobile(window.innerWidth < 768);
+    }
+
+    handleResize();
+    window.addEventListener("resize", handleResize);
+
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   return (
     <main style={pageStyle}>
-      <a href="mailto:Info@cardletics.com?subject=Affiliate%20Programm" style={affiliateSideButtonStyle}>
-        Affiliate
-      </a>
+      {!isMobile && (
+        <a
+          href="mailto:Info@cardletics.com?subject=Affiliate%20Programm"
+          style={affiliateSideButtonStyle}
+        >
+          Affiliate
+        </a>
+      )}
 
       <section style={heroSectionStyle}>
         <div style={heroGlowOneStyle} />
         <div style={heroGlowTwoStyle} />
 
-        <div style={heroInnerStyle}>
-          <div style={logoWrapperStyle}>
-            <div style={logoOuterStyle}>
-              <div style={logoInnerStyle}>
+        <div
+          style={{
+            ...heroInnerStyle,
+            padding: isMobile ? "40px 18px 30px 18px" : "58px 24px",
+          }}
+        >
+          <div style={{ ...logoWrapperStyle, marginBottom: isMobile ? "18px" : "22px" }}>
+            <div
+              style={{
+                ...logoOuterStyle,
+                width: isMobile ? "138px" : "180px",
+                height: isMobile ? "138px" : "180px",
+                borderRadius: isMobile ? "32px" : "40px",
+              }}
+            >
+              <div
+                style={{
+                  ...logoInnerStyle,
+                  borderRadius: isMobile ? "24px" : "32px",
+                }}
+              >
                 <Image
                   src="/bg_app.png"
                   alt="Cardletics Logo"
@@ -38,7 +72,14 @@ export default function HomePage() {
 
           <div style={heroBadgeStyle}>Track • Collect • Battle • Trade</div>
 
-          <h1 style={titleStyle}>
+          <h1
+            style={{
+              ...titleStyle,
+              fontSize: isMobile ? "36px" : "clamp(40px, 7vw, 72px)",
+              lineHeight: isMobile ? 1.06 : 1.02,
+              marginBottom: isMobile ? "14px" : "18px",
+            }}
+          >
             Sportdaten werden
             <br />
             zu Karten, Teams
@@ -46,19 +87,49 @@ export default function HomePage() {
             und echtem Progress.
           </h1>
 
-          <p style={subtitleStyle}>
+          <p
+            style={{
+              ...subtitleStyle,
+              fontSize: isMobile ? "16px" : "18px",
+              marginBottom: isMobile ? "22px" : "28px",
+            }}
+          >
             Cardletics verbindet echte Bewegung mit digitalem Sammelkarten-Gameplay.
             Laufe, trainiere und bleibe aktiv, um Karten zu verdienen, Sammlungen
             zu vervollständigen, Teams aufzubauen, Kämpfe zu bestreiten und über
             die interne Börse zu handeln.
           </p>
 
-          <div style={buttonRowStyle}>
-            <div style={buttonStyle}>App Store – bald verfügbar</div>
-            <div style={buttonSecondaryStyle}>Google Play – bald verfügbar</div>
+          <div
+            style={{
+              ...buttonRowStyle,
+              flexDirection: isMobile ? "column" : "row",
+              alignItems: "center",
+            }}
+          >
+            <div style={{ ...buttonStyle, width: isMobile ? "100%" : "auto" }}>
+              App Store – bald verfügbar
+            </div>
+            <div style={{ ...buttonSecondaryStyle, width: isMobile ? "100%" : "auto" }}>
+              Google Play – bald verfügbar
+            </div>
+
+            {isMobile && (
+              <a
+                href="mailto:Info@cardletics.com?subject=Affiliate%20Programm"
+                style={{ ...affiliateInlineButtonStyle, width: "100%" }}
+              >
+                Affiliate Programm
+              </a>
+            )}
           </div>
 
-          <p style={heroHintStyle}>
+          <p
+            style={{
+              ...heroHintStyle,
+              fontSize: isMobile ? "13px" : "14px",
+            }}
+          >
             Cardletics ist kostenlos nutzbar und kann optional durch Abos, Coins
             und weitere Inhalte erweitert werden.
           </p>
@@ -66,7 +137,14 @@ export default function HomePage() {
       </section>
 
       <section style={sectionStyle}>
-        <div style={statsStripStyle}>
+        <div
+          style={{
+            ...statsStripStyle,
+            gridTemplateColumns: isMobile
+              ? "repeat(2, minmax(0, 1fr))"
+              : "repeat(auto-fit, minmax(220px, 1fr))",
+          }}
+        >
           <StatBox label="Tracking" value="Bewegung wird Progress" />
           <StatBox label="Karten" value="Selten, sammelbar, handelbar" />
           <StatBox label="Teams" value="Strategie & Battles" />
@@ -77,7 +155,14 @@ export default function HomePage() {
       <section style={sectionStyle}>
         <div style={sectionHeaderStyle}>
           <div style={sectionEyebrowStyle}>Was ist Cardletics?</div>
-          <h2 style={sectionTitleStyle}>Eine App, die Aktivität spielbar macht</h2>
+          <h2
+            style={{
+              ...sectionTitleStyle,
+              fontSize: isMobile ? "28px" : "clamp(28px, 4vw, 42px)",
+            }}
+          >
+            Eine App, die Aktivität spielbar macht
+          </h2>
           <p style={sectionTextStyle}>
             Statt nur Schritte oder Läufe zu zählen, macht Cardletics aus deiner
             Aktivität ein System aus Karten, Belohnungen, Sammlung, Status und
@@ -85,7 +170,14 @@ export default function HomePage() {
           </p>
         </div>
 
-        <div style={featureGridStyle}>
+        <div
+          style={{
+            ...featureGridStyle,
+            gridTemplateColumns: isMobile
+              ? "1fr"
+              : "repeat(auto-fit, minmax(240px, 1fr))",
+          }}
+        >
           <FeatureCard
             title="Sport wird belohnt"
             text="Deine echte Aktivität im Alltag und beim Training wird zur Grundlage deines Fortschritts."
@@ -114,17 +206,36 @@ export default function HomePage() {
       </section>
 
       <section style={sectionStyle}>
-        <div style={howItWorksPanelStyle}>
+        <div
+          style={{
+            ...howItWorksPanelStyle,
+            padding: isMobile ? "18px" : "22px",
+          }}
+        >
           <div style={sectionHeaderStyle}>
             <div style={sectionEyebrowStyle}>App erklärt</div>
-            <h2 style={sectionTitleStyle}>So nutzt man Cardletics</h2>
+            <h2
+              style={{
+                ...sectionTitleStyle,
+                fontSize: isMobile ? "28px" : "clamp(28px, 4vw, 42px)",
+              }}
+            >
+              So nutzt man Cardletics
+            </h2>
             <p style={sectionTextStyle}>
               Damit sofort klar ist, wie die App funktioniert, zeigt diese Seite
               den Ablauf einfach und verständlich.
             </p>
           </div>
 
-          <div style={stepsGridStyle}>
+          <div
+            style={{
+              ...stepsGridStyle,
+              gridTemplateColumns: isMobile
+                ? "1fr"
+                : "repeat(auto-fit, minmax(220px, 1fr))",
+            }}
+          >
             <StepCard
               number="1"
               title="Aktivität tracken"
@@ -150,17 +261,36 @@ export default function HomePage() {
       </section>
 
       <section style={sectionStyle}>
-        <div style={screensSectionStyle}>
+        <div
+          style={{
+            ...screensSectionStyle,
+            padding: isMobile ? "18px" : "22px",
+          }}
+        >
           <div style={sectionHeaderStyle}>
             <div style={sectionEyebrowStyle}>Screenshots</div>
-            <h2 style={sectionTitleStyle}>Einblicke in die App</h2>
+            <h2
+              style={{
+                ...sectionTitleStyle,
+                fontSize: isMobile ? "28px" : "clamp(28px, 4vw, 42px)",
+              }}
+            >
+              Einblicke in die App
+            </h2>
             <p style={sectionTextStyle}>
               Diese Bereiche sind bereits mit festen Dateinamen vorbereitet.
               Sobald du die Bilder in `public` ablegst, erscheinen sie automatisch.
             </p>
           </div>
 
-          <div style={screensGridStyle}>
+          <div
+            style={{
+              ...screensGridStyle,
+              gridTemplateColumns: isMobile
+                ? "1fr"
+                : "repeat(auto-fit, minmax(250px, 1fr))",
+            }}
+          >
             <ScreenshotCard
               title="Homescreen"
               text="Startbereich, Hauptnavigation und Überblick"
@@ -206,10 +336,24 @@ export default function HomePage() {
       </section>
 
       <section style={sectionStyle}>
-        <div style={affiliatePanelStyle}>
+        <div
+          style={{
+            ...affiliatePanelStyle,
+            flexDirection: isMobile ? "column" : "row",
+            alignItems: isMobile ? "flex-start" : "center",
+            padding: isMobile ? "18px" : "24px",
+          }}
+        >
           <div style={affiliateTextColStyle}>
             <div style={sectionEyebrowStyle}>Affiliate Programm</div>
-            <h2 style={sectionTitleStyle}>Creator, Partner und Communities einbinden</h2>
+            <h2
+              style={{
+                ...sectionTitleStyle,
+                fontSize: isMobile ? "28px" : "clamp(28px, 4vw, 42px)",
+              }}
+            >
+              Creator, Partner und Communities einbinden
+            </h2>
             <p style={sectionTextStyle}>
               Cardletics soll auch durch Partner, Creator und Communities wachsen.
               Deshalb gibt es ein Affiliate-Programm, über das später Empfehlungen,
@@ -224,7 +368,7 @@ export default function HomePage() {
           <div style={affiliateActionWrapStyle}>
             <a
               href="mailto:Info@cardletics.com?subject=Affiliate%20Programm"
-              style={buttonStyle}
+              style={{ ...buttonStyle, width: isMobile ? "100%" : "auto" }}
             >
               Affiliate anfragen
             </a>
@@ -232,13 +376,25 @@ export default function HomePage() {
         </div>
       </section>
 
-      <footer style={footerStyle}>
+      <footer
+        style={{
+          ...footerStyle,
+          flexDirection: isMobile ? "column" : "row",
+          alignItems: isMobile ? "flex-start" : "center",
+        }}
+      >
         <div style={footerBrandStyle}>
           <div style={footerBrandTitleStyle}>Cardletics</div>
           <div style={footerBrandTextStyle}>www.cardletics.com</div>
         </div>
 
-        <div style={footerLinksStyle}>
+        <div
+          style={{
+            ...footerLinksStyle,
+            flexDirection: isMobile ? "column" : "row",
+            gap: isMobile ? "8px" : "14px",
+          }}
+        >
           <a href="/impressum" style={footerLinkStyle}>
             Impressum
           </a>
@@ -251,13 +407,26 @@ export default function HomePage() {
         </div>
       </footer>
 
-      <div style={helpWidgetWrapStyle}>
+      <div
+        style={{
+          ...helpWidgetWrapStyle,
+          right: isMobile ? "14px" : "18px",
+          bottom: isMobile ? "14px" : "18px",
+        }}
+      >
         {helpOpen && (
-          <div style={helpPanelStyle}>
+          <div
+            style={{
+              ...helpPanelStyle,
+              width: isMobile ? "calc(100vw - 28px)" : "min(360px, calc(100vw - 36px))",
+            }}
+          >
             <div style={helpPanelHeaderStyle}>
               <div>
                 <div style={helpTitleStyle}>Cardletics Hilfe</div>
-                <div style={helpSubtitleStyle}>Schnelle Antworten auf typische Fragen</div>
+                <div style={helpSubtitleStyle}>
+                  Schnelle Antworten auf typische Fragen
+                </div>
               </div>
 
               <button
@@ -293,7 +462,11 @@ export default function HomePage() {
         <button
           type="button"
           onClick={() => setHelpOpen((prev) => !prev)}
-          style={helpLauncherStyle}
+          style={{
+            ...helpLauncherStyle,
+            minHeight: isMobile ? "46px" : "52px",
+            padding: isMobile ? "10px 16px" : "12px 18px",
+          }}
         >
           Hilfe
         </button>
@@ -341,11 +514,7 @@ function ScreenshotCard({
   return (
     <div style={screenshotCardStyle}>
       <div style={screenshotRealWrapStyle}>
-        <img
-          src={fileName}
-          alt={title}
-          style={screenshotImageStyle}
-        />
+        <img src={fileName} alt={title} style={screenshotImageStyle} />
       </div>
 
       <div style={screenshotTextWrapStyle}>
@@ -408,6 +577,20 @@ const affiliateSideButtonStyle: React.CSSProperties = {
   boxShadow: "0 10px 30px rgba(34,197,94,0.25)",
 };
 
+const affiliateInlineButtonStyle: React.CSSProperties = {
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  minHeight: "48px",
+  padding: "12px 18px",
+  background: "linear-gradient(135deg, #22c55e 0%, #14532d 100%)",
+  borderRadius: "14px",
+  color: "#ffffff",
+  fontWeight: 700,
+  textDecoration: "none",
+  boxShadow: "0 10px 24px rgba(34,197,94,0.22)",
+};
+
 const heroSectionStyle: React.CSSProperties = {
   position: "relative",
   maxWidth: "1200px",
@@ -448,30 +631,32 @@ const heroInnerStyle: React.CSSProperties = {
   maxWidth: "880px",
   margin: "0 auto",
   textAlign: "center",
-  padding: "58px 24px",
 };
 
 const logoWrapperStyle: React.CSSProperties = {
   display: "flex",
   justifyContent: "center",
-  marginBottom: "22px",
 };
 
 const logoOuterStyle: React.CSSProperties = {
-  width: "164px",
-  height: "164px",
-  borderRadius: "36px",
-  background: "linear-gradient(135deg, #22c55e 0%, #0ea5e9 100%)",
-  padding: "7px",
-  boxShadow: "0 22px 70px rgba(34,197,94,0.32)",
+  width: "180px",
+  height: "180px",
+  borderRadius: "40px",
+  background:
+    "linear-gradient(135deg, #22c55e 0%, #4ade80 35%, #0ea5e9 100%)",
+  padding: "8px",
+  boxShadow:
+    "0 25px 80px rgba(34,197,94,0.45), inset 0 0 40px rgba(255,255,255,0.08)",
 };
 
 const logoInnerStyle: React.CSSProperties = {
   width: "100%",
   height: "100%",
-  borderRadius: "30px",
+  borderRadius: "32px",
   overflow: "hidden",
-  background: "#07100c",
+  background:
+    "linear-gradient(180deg, rgba(255,255,255,0.08), rgba(0,0,0,0.25))",
+  backdropFilter: "blur(6px)",
 };
 
 const heroBadgeStyle: React.CSSProperties = {
@@ -487,17 +672,12 @@ const heroBadgeStyle: React.CSSProperties = {
 };
 
 const titleStyle: React.CSSProperties = {
-  fontSize: "clamp(40px, 7vw, 72px)",
-  lineHeight: 1.02,
-  margin: "0 0 18px 0",
   color: "#ffffff",
   letterSpacing: "-0.03em",
 };
 
 const subtitleStyle: React.CSSProperties = {
   maxWidth: "760px",
-  margin: "0 auto 28px auto",
-  fontSize: "18px",
   color: "#c3d1ca",
   lineHeight: 1.7,
 };
@@ -539,7 +719,6 @@ const buttonSecondaryStyle: React.CSSProperties = {
 
 const heroHintStyle: React.CSSProperties = {
   marginTop: "16px",
-  fontSize: "14px",
   color: "#9db0a7",
   lineHeight: 1.6,
 };
@@ -551,7 +730,6 @@ const sectionStyle: React.CSSProperties = {
 
 const statsStripStyle: React.CSSProperties = {
   display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
   gap: "12px",
 };
 
@@ -591,7 +769,6 @@ const sectionEyebrowStyle: React.CSSProperties = {
 
 const sectionTitleStyle: React.CSSProperties = {
   margin: "0 0 8px 0",
-  fontSize: "clamp(28px, 4vw, 42px)",
   color: "#ffffff",
 };
 
@@ -604,7 +781,6 @@ const sectionTextStyle: React.CSSProperties = {
 
 const featureGridStyle: React.CSSProperties = {
   display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
   gap: "14px",
 };
 
@@ -634,12 +810,10 @@ const howItWorksPanelStyle: React.CSSProperties = {
     "linear-gradient(135deg, rgba(20,83,45,0.18) 0%, rgba(15,23,42,0.18) 100%)",
   border: "1px solid #27312d",
   borderRadius: "24px",
-  padding: "22px",
 };
 
 const stepsGridStyle: React.CSSProperties = {
   display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
   gap: "14px",
 };
 
@@ -680,12 +854,10 @@ const screensSectionStyle: React.CSSProperties = {
   background: "#111714",
   border: "1px solid #27312d",
   borderRadius: "24px",
-  padding: "22px",
 };
 
 const screensGridStyle: React.CSSProperties = {
   display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
   gap: "16px",
 };
 
@@ -738,13 +910,11 @@ const screenshotFileHintStyle: React.CSSProperties = {
 const affiliatePanelStyle: React.CSSProperties = {
   display: "flex",
   justifyContent: "space-between",
-  alignItems: "center",
   gap: "20px",
   flexWrap: "wrap",
   background: "linear-gradient(180deg, #171f1c 0%, #121816 100%)",
   border: "1px solid #27312d",
   borderRadius: "24px",
-  padding: "24px",
 };
 
 const affiliateTextColStyle: React.CSSProperties = {
@@ -770,8 +940,6 @@ const footerStyle: React.CSSProperties = {
   paddingTop: "20px",
   borderTop: "1px solid #27312d",
   display: "flex",
-  justifyContent: "space-between",
-  flexWrap: "wrap",
   gap: "16px",
 };
 
@@ -792,7 +960,6 @@ const footerBrandTextStyle: React.CSSProperties = {
 
 const footerLinksStyle: React.CSSProperties = {
   display: "flex",
-  gap: "14px",
   flexWrap: "wrap",
 };
 
@@ -803,14 +970,10 @@ const footerLinkStyle: React.CSSProperties = {
 
 const helpWidgetWrapStyle: React.CSSProperties = {
   position: "fixed",
-  right: "18px",
-  bottom: "18px",
   zIndex: 40,
 };
 
 const helpLauncherStyle: React.CSSProperties = {
-  minHeight: "52px",
-  padding: "12px 18px",
   borderRadius: "999px",
   border: "1px solid #2c3b34",
   background: "#171f1c",
@@ -821,7 +984,6 @@ const helpLauncherStyle: React.CSSProperties = {
 };
 
 const helpPanelStyle: React.CSSProperties = {
-  width: "min(360px, calc(100vw - 36px))",
   marginBottom: "12px",
   background: "#111714",
   border: "1px solid #27312d",
