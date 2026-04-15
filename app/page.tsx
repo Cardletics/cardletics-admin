@@ -62,8 +62,8 @@ export default function HomePage() {
                 <Image
                   src="/bg_app.png"
                   alt="Cardletics Logo"
-                  width={170}
-                  height={170}
+                  width={180}
+                  height={180}
                   style={{
                     width: "100%",
                     height: "100%",
@@ -115,6 +115,7 @@ export default function HomePage() {
             <div style={{ ...buttonStyle, width: isMobile ? "100%" : "auto" }}>
               App Store – bald verfügbar
             </div>
+
             <div
               style={{
                 ...buttonSecondaryStyle,
@@ -277,6 +278,18 @@ export default function HomePage() {
             padding: isMobile ? "18px" : "22px",
           }}
         >
+          <div style={sectionHeaderStyle}>
+            <div style={sectionEyebrowStyle}>Screenshots</div>
+            <h2
+              style={{
+                ...sectionTitleStyle,
+                fontSize: isMobile ? "28px" : "clamp(28px, 4vw, 42px)",
+              }}
+            >
+              Einblicke in die App
+            </h2>
+          </div>
+
           <div
             style={{
               ...screensGridStyle,
@@ -285,14 +298,46 @@ export default function HomePage() {
                 : "repeat(auto-fit, minmax(240px, 1fr))",
             }}
           >
-            <ScreenshotCard fileName="/home-screen.png" />
-            <ScreenshotCard fileName="/battle-screen.png" />
-            <ScreenshotCard fileName="/card-detail.png" />
-            <ScreenshotCard fileName="/awards-screen.png" />
-            <ScreenshotCard fileName="/pack-opening.png" />
-            <ScreenshotCard fileName="/collection-screen.png" />
-            <ScreenshotCard fileName="/marketplace-screen.png" />
-            <ScreenshotCard fileName="/shop-screen.png" />
+            <ScreenshotCard
+              title="Homescreen"
+              text="Startbereich, Hauptnavigation und Überblick"
+              fileName="/home-screen.png"
+            />
+            <ScreenshotCard
+              title="Battle Screen"
+              text="Teamkampf, Strategie und Battle-Ansicht"
+              fileName="/battle-screen.png"
+            />
+            <ScreenshotCard
+              title="Karte im Detail"
+              text="Einzelne Karte mit Werten, Design und Seltenheit"
+              fileName="/card-detail.png"
+            />
+            <ScreenshotCard
+              title="Awards"
+              text="Belohnungen, Erfolge und freigeschaltete Meilensteine"
+              fileName="/awards-screen.png"
+            />
+            <ScreenshotCard
+              title="Pack Opening"
+              text="Packs öffnen und neue Karten erhalten"
+              fileName="/pack-opening.png"
+            />
+            <ScreenshotCard
+              title="Collection"
+              text="Sammlung, Sets und Vervollständigung"
+              fileName="/collection-screen.png"
+            />
+            <ScreenshotCard
+              title="Börse / Marketplace"
+              text="Interner Handel mit Karten"
+              fileName="/marketplace-screen.png"
+            />
+            <ScreenshotCard
+              title="Shop"
+              text="Coins, Angebote und weitere In-App-Käufe"
+              fileName="/shop-screen.png"
+            />
           </div>
         </div>
       </section>
@@ -466,16 +511,29 @@ function StepCard({
   );
 }
 
-function ScreenshotCard({ fileName }: { fileName: string }) {
+function ScreenshotCard({
+  title,
+  text,
+  fileName,
+}: {
+  title: string;
+  text: string;
+  fileName: string;
+}) {
   return (
     <div style={screenshotCardStyle}>
       <div style={phoneFrameOuterStyle}>
         <div style={phoneFrameInnerStyle}>
           <div style={phoneNotchStyle} />
           <div style={screenshotRealWrapStyle}>
-            <img src={fileName} alt="App Screenshot" style={screenshotImageStyle} />
+            <img src={fileName} alt={title} style={screenshotImageStyle} />
           </div>
         </div>
+      </div>
+
+      <div style={screenshotTextWrapStyle}>
+        <h3 style={screenshotTitleStyle}>{title}</h3>
+        <p style={screenshotTextStyle}>{text}</p>
       </div>
     </div>
   );
@@ -597,10 +655,11 @@ const logoOuterStyle: React.CSSProperties = {
   width: "180px",
   height: "180px",
   borderRadius: "40px",
-  background: "#000000",
+  background:
+    "linear-gradient(135deg, #22c55e 0%, #4ade80 35%, #0ea5e9 100%)",
   padding: "8px",
   boxShadow:
-    "0 25px 80px rgba(0,0,0,0.5), inset 0 0 40px rgba(255,255,255,0.05)",
+    "0 25px 80px rgba(34,197,94,0.45), inset 0 0 40px rgba(255,255,255,0.08)",
 };
 
 const logoInnerStyle: React.CSSProperties = {
@@ -822,21 +881,21 @@ const screenshotCardStyle: React.CSSProperties = {
 
 const phoneFrameOuterStyle: React.CSSProperties = {
   width: "100%",
-  maxWidth: "340px",
+  maxWidth: "350px",
   margin: "0 auto",
-  padding: "7px",
-  borderRadius: "34px",
+  padding: "8px",
+  borderRadius: "36px",
   background:
-    "linear-gradient(180deg, #2a3340 0%, #0b0f13 55%, #1f2937 100%)",
+    "linear-gradient(180deg, #364152 0%, #0b0f13 55%, #1f2937 100%)",
   boxShadow:
-    "0 26px 55px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.08)",
+    "0 28px 60px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1)",
 };
 
 const phoneFrameInnerStyle: React.CSSProperties = {
   position: "relative",
-  borderRadius: "28px",
+  borderRadius: "30px",
   background: "#000000",
-  padding: "14px 10px 10px 10px",
+  padding: "14px 8px 8px 8px",
   overflow: "hidden",
 };
 
@@ -857,17 +916,34 @@ const screenshotRealWrapStyle: React.CSSProperties = {
   position: "relative",
   width: "100%",
   aspectRatio: "1080 / 2070",
-  borderRadius: "22px",
+  borderRadius: "24px",
   overflow: "hidden",
-  background: "#0f1512",
-  border: "1px solid #1f2937",
+  background: "#000000",
 };
 
 const screenshotImageStyle: React.CSSProperties = {
   width: "100%",
   height: "100%",
   objectFit: "cover",
+  objectPosition: "center top",
   display: "block",
+};
+
+const screenshotTextWrapStyle: React.CSSProperties = {
+  marginTop: "14px",
+};
+
+const screenshotTitleStyle: React.CSSProperties = {
+  margin: "0 0 6px 0",
+  fontSize: "18px",
+  color: "#ffffff",
+};
+
+const screenshotTextStyle: React.CSSProperties = {
+  margin: 0,
+  color: "#94a39b",
+  lineHeight: 1.6,
+  fontSize: "14px",
 };
 
 const affiliatePanelStyle: React.CSSProperties = {
