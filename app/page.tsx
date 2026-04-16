@@ -64,12 +64,13 @@ export default function HomePage() {
                   alt="Cardletics Logo"
                   width={180}
                   height={180}
+                  priority
                   style={{
                     width: "100%",
                     height: "100%",
                     objectFit: "cover",
+                    display: "block",
                   }}
-                  priority
                 />
               </div>
             </div>
