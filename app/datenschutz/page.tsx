@@ -1,4 +1,5 @@
 import type { CSSProperties } from "react";
+import Link from "next/link";
 
 export default function PrivacyPage() {
   return (
@@ -7,10 +8,13 @@ export default function PrivacyPage() {
         <div style={heroStyle}>
           <span style={eyebrowStyle}>Datenschutz</span>
           <h1 style={titleStyle}>Datenschutzerklärung</h1>
-          <p style={subtitleStyle}>
-            Für die Website und die App Cardletics.
-          </p>
+          <p style={subtitleStyle}>Für die Website und die App Cardletics.</p>
           <p style={metaStyle}>Stand: 27.04.2026</p>
+          <div style={heroActionsStyle}>
+            <Link href="/" style={backButtonStyle}>
+              Zurück zur Startseite
+            </Link>
+          </div>
         </div>
 
         <Section title="1. Verantwortlicher">
@@ -238,9 +242,7 @@ export default function PrivacyPage() {
             insbesondere Name, E-Mail-Adresse, Betreff und Nachricht, zur
             Bearbeitung deiner Anfrage.
           </p>
-          <p>
-            Support erfolgt derzeit per E-Mail.
-          </p>
+          <p>Support erfolgt derzeit per E-Mail.</p>
         </Section>
 
         <Section title="11. Hosting, Infrastruktur und eingesetzte Dienste">
@@ -471,6 +473,26 @@ const metaStyle: CSSProperties = {
   margin: 0,
   color: "#9fceb0",
   fontSize: "14px",
+};
+
+const heroActionsStyle: CSSProperties = {
+  marginTop: "18px",
+  display: "flex",
+  flexWrap: "wrap",
+  gap: "10px",
+};
+
+const backButtonStyle: CSSProperties = {
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  minHeight: "44px",
+  padding: "10px 14px",
+  borderRadius: "12px",
+  background: "#22c55e",
+  color: "#08130c",
+  fontWeight: 700,
+  textDecoration: "none",
 };
 
 const sectionStyle: CSSProperties = {
