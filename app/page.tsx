@@ -1,7 +1,6 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
 import { useEffect, useState } from "react";
 
 export default function HomePage() {
@@ -23,60 +22,12 @@ export default function HomePage() {
     <main style={pageStyle}>
       {!isMobile && (
         <a
-          href="mailto:info@cardletics.com?subject=Affiliate%20Programm"
+          href="mailto:Info@cardletics.com?subject=Affiliate%20Programm"
           style={affiliateSideButtonStyle}
         >
           Affiliate
         </a>
       )}
-
-      <section style={topbarWrapStyle}>
-        <div style={topbarStyle}>
-          <Link href="/" style={brandLinkStyle}>
-            <div style={brandIconStyle}>
-              <Image
-                src="/bg_app.png"
-                alt="Cardletics"
-                width={44}
-                height={44}
-                style={{
-                  width: "100%",
-                  height: "100%",
-                  objectFit: "cover",
-                  borderRadius: 12,
-                  display: "block",
-                }}
-              />
-            </div>
-
-            <div>
-              <div style={brandTitleStyle}>CARDLETICS</div>
-              <div style={brandSubtitleStyle}>Track • Collect • Battle • Trade</div>
-            </div>
-          </Link>
-
-          <div
-            style={{
-              ...topbarNavStyle,
-              flexDirection: isMobile ? "column" : "row",
-              width: isMobile ? "100%" : "auto",
-            }}
-          >
-            <Link href="/datenschutz" style={topbarButtonStyle}>
-              Datenschutz
-            </Link>
-            <Link href="/impressum" style={topbarButtonSecondaryStyle}>
-              Impressum
-            </Link>
-            <a
-              href="mailto:info@cardletics.com?subject=Cardletics%20Anfrage"
-              style={topbarButtonSecondaryStyle}
-            >
-              Kontakt
-            </a>
-          </div>
-        </div>
-      </section>
 
       <section style={heroSectionStyle}>
         <div style={heroGlowOneStyle} />
@@ -177,7 +128,7 @@ export default function HomePage() {
 
             {isMobile && (
               <a
-                href="mailto:info@cardletics.com?subject=Affiliate%20Programm"
+                href="mailto:Info@cardletics.com?subject=Affiliate%20Programm"
                 style={{ ...affiliateInlineButtonStyle, width: "100%" }}
               >
                 Affiliate Programm
@@ -424,7 +375,7 @@ export default function HomePage() {
 
           <div style={affiliateActionWrapStyle}>
             <a
-              href="mailto:info@cardletics.com?subject=Affiliate%20Programm"
+              href="mailto:Info@cardletics.com?subject=Affiliate%20Programm"
               style={{ ...buttonStyle, width: isMobile ? "100%" : "auto" }}
             >
               Affiliate anfragen
@@ -432,6 +383,37 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      <footer
+        style={{
+          ...footerStyle,
+          flexDirection: isMobile ? "column" : "row",
+          alignItems: isMobile ? "flex-start" : "center",
+        }}
+      >
+        <div style={footerBrandStyle}>
+          <div style={footerBrandTitleStyle}>Cardletics</div>
+          <div style={footerBrandTextStyle}>www.cardletics.com</div>
+        </div>
+
+        <div
+          style={{
+            ...footerLinksStyle,
+            flexDirection: isMobile ? "column" : "row",
+            gap: isMobile ? "8px" : "14px",
+          }}
+        >
+          <a href="/impressum" style={footerLinkStyle}>
+            Impressum
+          </a>
+          <a href="/datenschutz" style={footerLinkStyle}>
+            Datenschutz
+          </a>
+          <a href="/agb" style={footerLinkStyle}>
+            AGB
+          </a>
+        </div>
+      </footer>
 
       <div
         style={{
@@ -590,87 +572,6 @@ const pageStyle: React.CSSProperties = {
   fontFamily: "Arial, sans-serif",
   padding: "20px",
   position: "relative",
-};
-
-const topbarWrapStyle: React.CSSProperties = {
-  maxWidth: "1200px",
-  margin: "0 auto 18px auto",
-};
-
-const topbarStyle: React.CSSProperties = {
-  display: "flex",
-  justifyContent: "space-between",
-  alignItems: "center",
-  gap: "16px",
-  flexWrap: "wrap",
-  background: "rgba(18,24,21,0.88)",
-  border: "1px solid #27312d",
-  borderRadius: "22px",
-  padding: "14px 16px",
-  boxShadow: "0 10px 30px rgba(0,0,0,0.2)",
-  backdropFilter: "blur(10px)",
-};
-
-const brandLinkStyle: React.CSSProperties = {
-  display: "flex",
-  alignItems: "center",
-  gap: "12px",
-  textDecoration: "none",
-};
-
-const brandIconStyle: React.CSSProperties = {
-  width: "44px",
-  height: "44px",
-  borderRadius: "14px",
-  overflow: "hidden",
-  boxShadow: "0 8px 20px rgba(34,197,94,0.25)",
-  flexShrink: 0,
-};
-
-const brandTitleStyle: React.CSSProperties = {
-  color: "#ffffff",
-  fontSize: "18px",
-  fontWeight: 900,
-  letterSpacing: "0.08em",
-};
-
-const brandSubtitleStyle: React.CSSProperties = {
-  color: "#94a39b",
-  fontSize: "12px",
-  marginTop: "4px",
-};
-
-const topbarNavStyle: React.CSSProperties = {
-  display: "flex",
-  gap: "10px",
-  flexWrap: "wrap",
-};
-
-const topbarButtonStyle: React.CSSProperties = {
-  display: "inline-flex",
-  alignItems: "center",
-  justifyContent: "center",
-  minHeight: "42px",
-  padding: "10px 14px",
-  borderRadius: "12px",
-  background: "#22c55e",
-  color: "#08130c",
-  fontWeight: 800,
-  textDecoration: "none",
-};
-
-const topbarButtonSecondaryStyle: React.CSSProperties = {
-  display: "inline-flex",
-  alignItems: "center",
-  justifyContent: "center",
-  minHeight: "42px",
-  padding: "10px 14px",
-  borderRadius: "12px",
-  background: "#171f1c",
-  border: "1px solid #2d3b35",
-  color: "#e7f1eb",
-  fontWeight: 700,
-  textDecoration: "none",
 };
 
 const affiliateSideButtonStyle: React.CSSProperties = {
@@ -1071,6 +972,40 @@ const affiliateActionWrapStyle: React.CSSProperties = {
   display: "flex",
   gap: "12px",
   flexWrap: "wrap",
+};
+
+const footerStyle: React.CSSProperties = {
+  maxWidth: "1200px",
+  margin: "36px auto 0 auto",
+  paddingTop: "20px",
+  borderTop: "1px solid #27312d",
+  display: "flex",
+  gap: "16px",
+};
+
+const footerBrandStyle: React.CSSProperties = {
+  display: "grid",
+  gap: "4px",
+};
+
+const footerBrandTitleStyle: React.CSSProperties = {
+  fontWeight: 700,
+  color: "#ffffff",
+};
+
+const footerBrandTextStyle: React.CSSProperties = {
+  color: "#94a39b",
+  fontSize: "14px",
+};
+
+const footerLinksStyle: React.CSSProperties = {
+  display: "flex",
+  flexWrap: "wrap",
+};
+
+const footerLinkStyle: React.CSSProperties = {
+  color: "#cfe0d6",
+  textDecoration: "none",
 };
 
 const helpWidgetWrapStyle: React.CSSProperties = {
