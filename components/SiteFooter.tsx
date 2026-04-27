@@ -25,6 +25,9 @@ export default function SiteFooter() {
             <Link href="/datenschutz" style={linkStyle}>
               Datenschutz
             </Link>
+            <Link href="/agb" style={linkStyle}>
+              AGB
+            </Link>
             <a href="mailto:info@cardletics.com" style={linkStyle}>
               Kontakt
             </a>
@@ -34,12 +37,7 @@ export default function SiteFooter() {
         <div style={dividerStyle} />
 
         <div style={bottomRowStyle}>
-          <span style={smallTextStyle}>
-            © {new Date().getFullYear()} Cardletics · Sascha Leineweber
-          </span>
-          <span style={smallTextStyle}>
-            Oppenheimer Str. 26 · 55130 Mainz
-          </span>
+          <span style={smallTextStyle}>Cardletics since 2025</span>
         </div>
       </div>
     </footer>
@@ -120,7 +118,7 @@ const dividerStyle: CSSProperties = {
 
 const bottomRowStyle: CSSProperties = {
   display: "flex",
-  justifyContent: "space-between",
+  justifyContent: "center",
   alignItems: "center",
   gap: "12px",
   flexWrap: "wrap",

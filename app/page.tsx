@@ -3,9 +3,16 @@
 import Image from "next/image";
 import { useEffect, useState } from "react";
 
+type ScreenshotItem = {
+  title: string;
+  text: string;
+  fileName: string;
+};
+
 export default function HomePage() {
   const [helpOpen, setHelpOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [selectedShot, setSelectedShot] = useState<ScreenshotItem | null>(null);
 
   useEffect(() => {
     function handleResize() {
@@ -17,6 +24,24 @@ export default function HomePage() {
 
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  useEffect(() => {
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setSelectedShot(null);
+      }
+    }
+
+    if (selectedShot) {
+      window.addEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = "hidden";
+    }
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = "";
+    };
+  }, [selectedShot]);
 
   return (
     <main style={pageStyle}>
@@ -303,41 +328,49 @@ export default function HomePage() {
               title="Homescreen"
               text="Startbereich, Hauptnavigation und Überblick"
               fileName="/home-screen.png"
+              onOpen={setSelectedShot}
             />
             <ScreenshotCard
               title="Battle Screen"
               text="Teamkampf, Strategie und Battle-Ansicht"
               fileName="/battle-screen.png"
+              onOpen={setSelectedShot}
             />
             <ScreenshotCard
               title="Karte im Detail"
               text="Einzelne Karte mit Werten, Design und Seltenheit"
               fileName="/card-detail.png"
+              onOpen={setSelectedShot}
             />
             <ScreenshotCard
               title="Awards"
               text="Belohnungen, Erfolge und freigeschaltete Meilensteine"
               fileName="/awards-screen.png"
+              onOpen={setSelectedShot}
             />
             <ScreenshotCard
               title="Pack Opening"
               text="Packs öffnen und neue Karten erhalten"
               fileName="/pack-opening.png"
+              onOpen={setSelectedShot}
             />
             <ScreenshotCard
               title="Collection"
               text="Sammlung, Sets und Vervollständigung"
               fileName="/collection-screen.png"
+              onOpen={setSelectedShot}
             />
             <ScreenshotCard
               title="Börse / Marketplace"
               text="Interner Handel mit Karten"
               fileName="/marketplace-screen.png"
+              onOpen={setSelectedShot}
             />
             <ScreenshotCard
               title="Shop"
               text="Coins, Angebote und weitere In-App-Käufe"
               fileName="/shop-screen.png"
+              onOpen={setSelectedShot}
             />
           </div>
         </div>
@@ -383,37 +416,6 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-
-      <footer
-        style={{
-          ...footerStyle,
-          flexDirection: isMobile ? "column" : "row",
-          alignItems: isMobile ? "flex-start" : "center",
-        }}
-      >
-        <div style={footerBrandStyle}>
-          <div style={footerBrandTitleStyle}>Cardletics</div>
-          <div style={footerBrandTextStyle}>www.cardletics.com</div>
-        </div>
-
-        <div
-          style={{
-            ...footerLinksStyle,
-            flexDirection: isMobile ? "column" : "row",
-            gap: isMobile ? "8px" : "14px",
-          }}
-        >
-          <a href="/impressum" style={footerLinkStyle}>
-            Impressum
-          </a>
-          <a href="/datenschutz" style={footerLinkStyle}>
-            Datenschutz
-          </a>
-          <a href="/agb" style={footerLinkStyle}>
-            AGB
-          </a>
-        </div>
-      </footer>
 
       <div
         style={{
@@ -481,6 +483,10 @@ export default function HomePage() {
           Hilfe
         </button>
       </div>
+
+      {selectedShot && (
+        <Lightbox item={selectedShot} onClose={() => setSelectedShot(null)} />
+      )}
     </main>
   );
 }
@@ -516,25 +522,62 @@ function ScreenshotCard({
   title,
   text,
   fileName,
+  onOpen,
 }: {
   title: string;
   text: string;
   fileName: string;
+  onOpen: (item: ScreenshotItem) => void;
 }) {
   return (
     <div style={screenshotCardStyle}>
-      <div style={phoneFrameOuterStyle}>
-        <div style={phoneFrameInnerStyle}>
-          <div style={phoneNotchStyle} />
-          <div style={screenshotRealWrapStyle}>
-            <img src={fileName} alt={title} style={screenshotImageStyle} />
+      <button
+        type="button"
+        onClick={() => onOpen({ title, text, fileName })}
+        style={screenshotButtonStyle}
+      >
+        <div style={phoneFrameOuterStyle}>
+          <div style={phoneFrameInnerStyle}>
+            <div style={phoneNotchStyle} />
+            <div style={screenshotRealWrapStyle}>
+              <img src={fileName} alt={title} style={screenshotImageStyle} />
+            </div>
           </div>
         </div>
-      </div>
+      </button>
 
       <div style={screenshotTextWrapStyle}>
         <h3 style={screenshotTitleStyle}>{title}</h3>
         <p style={screenshotTextStyle}>{text}</p>
+      </div>
+    </div>
+  );
+}
+
+function Lightbox({
+  item,
+  onClose,
+}: {
+  item: ScreenshotItem;
+  onClose: () => void;
+}) {
+  return (
+    <div style={lightboxOverlayStyle} onClick={onClose}>
+      <div style={lightboxShellStyle} onClick={(e) => e.stopPropagation()}>
+        <button type="button" onClick={onClose} style={lightboxCloseStyle}>
+          ✕
+        </button>
+
+        <div style={lightboxContentStyle}>
+          <div style={lightboxPhoneWrapStyle}>
+            <img src={item.fileName} alt={item.title} style={lightboxImageStyle} />
+          </div>
+
+          <div style={lightboxTextStyle}>
+            <h3 style={lightboxTitleStyle}>{item.title}</h3>
+            <p style={lightboxDescStyle}>{item.text}</p>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -880,6 +923,15 @@ const screenshotCardStyle: React.CSSProperties = {
   padding: "16px",
 };
 
+const screenshotButtonStyle: React.CSSProperties = {
+  display: "block",
+  width: "100%",
+  padding: 0,
+  border: "none",
+  background: "transparent",
+  cursor: "zoom-in",
+};
+
 const phoneFrameOuterStyle: React.CSSProperties = {
   width: "100%",
   maxWidth: "350px",
@@ -974,40 +1026,6 @@ const affiliateActionWrapStyle: React.CSSProperties = {
   flexWrap: "wrap",
 };
 
-const footerStyle: React.CSSProperties = {
-  maxWidth: "1200px",
-  margin: "36px auto 0 auto",
-  paddingTop: "20px",
-  borderTop: "1px solid #27312d",
-  display: "flex",
-  gap: "16px",
-};
-
-const footerBrandStyle: React.CSSProperties = {
-  display: "grid",
-  gap: "4px",
-};
-
-const footerBrandTitleStyle: React.CSSProperties = {
-  fontWeight: 700,
-  color: "#ffffff",
-};
-
-const footerBrandTextStyle: React.CSSProperties = {
-  color: "#94a39b",
-  fontSize: "14px",
-};
-
-const footerLinksStyle: React.CSSProperties = {
-  display: "flex",
-  flexWrap: "wrap",
-};
-
-const footerLinkStyle: React.CSSProperties = {
-  color: "#cfe0d6",
-  textDecoration: "none",
-};
-
 const helpWidgetWrapStyle: React.CSSProperties = {
   position: "fixed",
   zIndex: 40,
@@ -1086,4 +1104,81 @@ const quickQuestionAnswerStyle: React.CSSProperties = {
   color: "#94a39b",
   lineHeight: 1.6,
   fontSize: "14px",
+};
+
+const lightboxOverlayStyle: React.CSSProperties = {
+  position: "fixed",
+  inset: 0,
+  zIndex: 200,
+  background: "rgba(5, 10, 8, 0.88)",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  padding: "20px",
+  boxSizing: "border-box",
+};
+
+const lightboxShellStyle: React.CSSProperties = {
+  position: "relative",
+  width: "100%",
+  maxWidth: "560px",
+};
+
+const lightboxCloseStyle: React.CSSProperties = {
+  position: "absolute",
+  top: "-10px",
+  right: "-4px",
+  zIndex: 2,
+  width: "42px",
+  height: "42px",
+  borderRadius: "999px",
+  border: "1px solid rgba(255,255,255,0.14)",
+  background: "#171f1c",
+  color: "#ffffff",
+  cursor: "pointer",
+  fontSize: "16px",
+  fontWeight: 700,
+  boxShadow: "0 10px 24px rgba(0,0,0,0.28)",
+};
+
+const lightboxContentStyle: React.CSSProperties = {
+  background: "#101714",
+  border: "1px solid #27312d",
+  borderRadius: "24px",
+  padding: "18px",
+  boxShadow: "0 18px 48px rgba(0,0,0,0.35)",
+};
+
+const lightboxPhoneWrapStyle: React.CSSProperties = {
+  width: "100%",
+  maxWidth: "380px",
+  margin: "0 auto",
+  borderRadius: "28px",
+  overflow: "hidden",
+  background: "#000000",
+  boxShadow: "0 18px 40px rgba(0,0,0,0.35)",
+};
+
+const lightboxImageStyle: React.CSSProperties = {
+  width: "100%",
+  height: "auto",
+  display: "block",
+};
+
+const lightboxTextStyle: React.CSSProperties = {
+  marginTop: "16px",
+  textAlign: "center",
+};
+
+const lightboxTitleStyle: React.CSSProperties = {
+  margin: "0 0 6px 0",
+  fontSize: "22px",
+  color: "#ffffff",
+};
+
+const lightboxDescStyle: React.CSSProperties = {
+  margin: 0,
+  color: "#94a39b",
+  lineHeight: 1.6,
+  fontSize: "15px",
 };
