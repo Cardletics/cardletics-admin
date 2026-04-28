@@ -32,7 +32,7 @@ export default function ImpressumPage() {
 
         <Section title="2. Kontakt">
           <p>
-            E-Mail: <a href="mailto:info@cardletics.com" style={linkStyle}>info@cardletics.com</a>
+            E-Mail: <a href="/kontakt" style={linkStyle}>info@cardletics.com</a>
           </p>
           <p>
             Website: <a href="https://www.cardletics.com" style={linkStyle}>www.cardletics.com</a>

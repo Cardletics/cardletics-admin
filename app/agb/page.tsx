@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-export default function DatenschutzPage() {
+export default function AgbPage() {
   return (
     <main style={pageStyle}>
       <div style={cardStyle}>
@@ -8,99 +8,189 @@ export default function DatenschutzPage() {
           ← Zurück zur Startseite
         </Link>
 
-        <h1 style={titleStyle}>Datenschutzerklärung</h1>
+        <h1 style={titleStyle}>Allgemeine Geschäftsbedingungen (AGB)</h1>
+        <p style={introStyle}>
+          Diese AGB gelten für die Nutzung der Website und der mobilen App
+          „Cardletics“ sowie für damit verbundene digitale Inhalte, Funktionen,
+          virtuelle Güter, Abonnements und In-App-Käufe.
+        </p>
 
         <Section
-          title="1. Verantwortlicher"
-          text={`Verantwortlich für die Verarbeitung personenbezogener Daten auf dieser Website und im Zusammenhang mit dem Angebot von Cardletics ist:
+          title="1. Anbieter"
+          text={`Anbieter des Angebots ist:
 
 Cardletics
-Oppenheimer Straße 26
+Sascha Leineweber
+Oppenheimer Str. 26
 55130 Mainz
 Deutschland
 
-E-Mail: Info@cardletics.com`}
+E-Mail: info@cardletics.com`}
         />
 
         <Section
-          title="2. Allgemeine Hinweise"
-          text="Wir verarbeiten personenbezogene Daten der Nutzer nur, soweit dies zur Bereitstellung einer funktionsfähigen Website, der mobilen App, unserer Inhalte und Leistungen sowie zur Bearbeitung von Anfragen erforderlich ist."
+          title="2. Geltungsbereich"
+          text={`Diese AGB gelten für alle Verträge zwischen Cardletics und Nutzern über die Nutzung der Website, der App und der darin angebotenen digitalen Inhalte und Funktionen.
+
+Sie gelten insbesondere für:
+- die Registrierung und Nutzung eines Nutzerkontos
+- kostenlose und kostenpflichtige Funktionen
+- In-App-Käufe und Abonnements
+- virtuelle Inhalte wie Karten, Coins, Packs, Awards, Sammlungen und Teams
+- interne Handels- und Marketplace-Funktionen`}
         />
 
         <Section
-          title="3. Hosting"
-          text="Diese Website wird über Vercel bereitgestellt. Dabei können technische Verbindungsdaten verarbeitet werden, die für die Auslieferung und Sicherheit der Website erforderlich sind."
+          title="3. Vertragsgegenstand"
+          text={`Cardletics stellt ein digitales Angebot im Bereich Sport, Aktivität, Sammelkarten, Spiel- und Fortschrittsmechaniken bereit.
+
+Zum Leistungsumfang können insbesondere gehören:
+- Nutzerkonto und Profil
+- Erfassung und Auswertung sportbezogener Aktivitäten
+- Vergabe, Anzeige und Verwaltung digitaler Karten
+- Sammlungen, Teams, Ausstellung und Awards
+- interne Marketplace- und Handelsfunktionen
+- virtuelle Coins und weitere digitale Inhalte
+- kostenlose sowie kostenpflichtige Zusatzfunktionen`}
         />
 
         <Section
-          title="4. Backend und Datenverarbeitung"
-          text="Für Datenbank- und Backend-Funktionen nutzen wir Supabase. Im Rahmen der Nutzung der App und ihrer Funktionen können personenbezogene Daten, Nutzungsdaten, Login-Daten sowie appbezogene Inhalte verarbeitet werden."
+          title="4. Registrierung und Nutzerkonto"
+          text={`Für die Nutzung bestimmter Funktionen ist die Erstellung eines Nutzerkontos erforderlich.
+
+Eine Registrierung ist derzeit insbesondere per E-Mail sowie – soweit angeboten – über Apple oder Google möglich. Nutzer sind verpflichtet, ihre Zugangsdaten vertraulich zu behandeln und unbefugte Zugriffe unverzüglich zu melden.
+
+Es besteht kein Anspruch auf Registrierung oder dauerhafte Freischaltung eines Nutzerkontos.`}
         />
 
         <Section
-          title="5. Registrierung und Login"
-          text="Für die Nutzung bestimmter Funktionen der App kann eine Registrierung per E-Mail erforderlich sein. Dabei verarbeiten wir insbesondere E-Mail-Adresse, Login-Daten sowie Informationen, die im Rahmen der Kontonutzung bereitgestellt werden."
+          title="5. Nutzungsvoraussetzungen"
+          text={`Die Nutzung von Cardletics ist grundsätzlich kostenlos möglich. Für einzelne Funktionen, digitale Inhalte oder Erweiterungen können zusätzliche Voraussetzungen gelten, zum Beispiel ein aktives Nutzerkonto, eine Gerätekompatibilität, eine Internetverbindung oder eine gesonderte Buchung.
+
+Soweit kostenpflichtige Leistungen angeboten werden, werden Preis, Laufzeit und wesentliche Bedingungen vor Vertragsschluss angezeigt.`}
         />
 
         <Section
-          title="6. Kontaktaufnahme"
-          text="Wenn du uns kontaktierst, zum Beispiel per E-Mail oder über ein Kontaktformular, verarbeiten wir deine Angaben zur Bearbeitung deiner Anfrage und für mögliche Anschlussfragen."
+          title="6. Digitale Inhalte und virtuelle Güter"
+          text={`Cardletics kann digitale Inhalte und virtuelle Güter bereitstellen, darunter insbesondere Karten, Coins, Packs, Sammlungen, Awards, Hintergründe, Teams oder sonstige spielbezogene Inhalte.
+
+Virtuelle Güter:
+- sind ausschließlich innerhalb von Cardletics nutzbar,
+- haben keinen Anspruch auf Auszahlung in Geld,
+- sind grundsätzlich nicht auf externe Plattformen übertragbar,
+- vermitteln kein Eigentum im sachenrechtlichen Sinn, sondern nur ein einfaches, widerrufliches Nutzungsrecht innerhalb des Angebots, soweit technisch vorgesehen.`}
         />
 
         <Section
-          title="7. In-App-Käufe und Abonnements"
-          text="In-App-Käufe und Abonnements werden über Apple App Store und Google Play abgewickelt. Im Zusammenhang mit diesen Käufen erhalten wir gegebenenfalls transaktionsbezogene Informationen, soweit dies für die Bereitstellung, Zuordnung, Abrechnung oder Verwaltung der Leistungen erforderlich ist."
+          title="7. Coins und interne Währung"
+          text={`Coins oder vergleichbare virtuelle Währungen dienen ausschließlich der Nutzung innerhalb von Cardletics.
+
+Coins:
+- können gegebenenfalls im Rahmen der App erworben oder freigeschaltet werden,
+- haben keinen Geldwert außerhalb von Cardletics,
+- sind nicht verzinslich,
+- sind grundsätzlich nicht auszahlbar oder in gesetzliche Zahlungsmittel umtauschbar.
+
+Soweit gesetzlich zulässig, besteht bei Verlust oder Sperrung eines Kontos kein Anspruch auf Erstattung rein virtueller Guthaben, wenn die Maßnahme auf einem Verstoß gegen diese AGB beruht.`}
         />
 
         <Section
-          title="8. Virtuelle Inhalte, Coins und interne Börse"
-          text="Im Rahmen der App können virtuelle Inhalte wie Karten, Coins, Sammlungen, Teams, Awards und Transaktionen innerhalb einer internen Börse verarbeitet und gespeichert werden, soweit dies für die Spiel- und Plattformfunktionen erforderlich ist."
+          title="8. In-App-Käufe und Abonnements"
+          text={`Kostenpflichtige digitale Inhalte, Coins, Packs oder Abonnements können über die jeweils unterstützten Plattformen, insbesondere Apple App Store und Google Play, angeboten werden.
+
+Die Abwicklung von Zahlungen, Verlängerungen, Kündigungen und Erstattungen kann ganz oder teilweise den Bedingungen der jeweiligen Plattformbetreiber unterliegen. Maßgeblich sind insoweit ergänzend die Nutzungs- und Zahlungsbedingungen von Apple oder Google.
+
+Abonnements können sich – je nach gewähltem Modell – automatisch verlängern, wenn sie nicht rechtzeitig über die jeweilige Plattform gekündigt werden.`}
         />
 
         <Section
-          title="9. Zwecke der Verarbeitung"
-          text={`Die Verarbeitung erfolgt insbesondere zu folgenden Zwecken:
+          title="9. Widerruf bei digitalen Inhalten"
+          text={`Soweit Verbrauchern ein gesetzliches Widerrufsrecht zusteht, wird hierüber gesondert belehrt.
 
-- Bereitstellung der Website und App
-- Nutzerverwaltung
-- Login und Authentifizierung
-- Abwicklung von In-App-Käufen und Abonnements
-- Bereitstellung spielbezogener Funktionen
-- Kommunikation mit Nutzern
-- technische Sicherheit und Stabilität`}
+Bei Verträgen über digitale Inhalte oder digitale Dienstleistungen kann das Widerrufsrecht vorzeitig erlöschen, wenn der Nutzer ausdrücklich zustimmt, dass mit der Vertragserfüllung vor Ablauf der Widerrufsfrist begonnen wird, und bestätigt, dass er dadurch sein Widerrufsrecht verliert, soweit dies gesetzlich vorgesehen ist.`}
         />
 
         <Section
-          title="10. Rechtsgrundlagen"
-          text="Die Verarbeitung personenbezogener Daten erfolgt insbesondere auf Grundlage der Vertragserfüllung, vorvertraglicher Maßnahmen, berechtigter Interessen sowie – soweit erforderlich – auf Grundlage einer Einwilligung."
+          title="10. Marketplace und interne Handelsfunktionen"
+          text={`Cardletics kann interne Marketplace-, Tausch- oder Handelsfunktionen für digitale Inhalte bereitstellen.
+
+Dabei gilt:
+- der Handel erfolgt ausschließlich innerhalb des Cardletics-Systems,
+- ein Anspruch auf jederzeitige Verfügbarkeit bestimmter Handelsfunktionen besteht nicht,
+- Cardletics kann Regeln, Gebühren, Limits oder technische Voraussetzungen für interne Handelsfunktionen festlegen oder ändern, soweit dies sachlich gerechtfertigt ist,
+- bei Missbrauch, Manipulation, Betrugsverdacht oder Verstößen gegen diese AGB können Angebote, Transaktionen oder Accounts eingeschränkt oder gesperrt werden.`}
         />
 
         <Section
-          title="11. Speicherdauer"
-          text="Wir speichern personenbezogene Daten nur so lange, wie dies für die jeweiligen Zwecke erforderlich ist oder gesetzliche Aufbewahrungspflichten bestehen."
+          title="11. Gesundheits- und Aktivitätsfunktionen"
+          text={`Soweit Cardletics Bewegungs-, Fitness- oder Gesundheitsdaten verarbeitet, geschieht dies ausschließlich im Rahmen der bereitgestellten App-Funktionen und auf Basis gesonderter Einwilligungen bzw. Gerätefreigaben, soweit erforderlich.
+
+Die App ist kein medizinisches Produkt und ersetzt keine ärztliche, therapeutische oder gesundheitliche Beratung.`}
         />
 
         <Section
-          title="12. Betroffenenrechte"
-          text={`Du hast im Rahmen der gesetzlichen Vorgaben insbesondere folgende Rechte:
+          title="12. Pflichten der Nutzer"
+          text={`Nutzer verpflichten sich insbesondere,
+- wahrheitsgemäße Angaben zu machen,
+- keine technischen Schutzmaßnahmen zu umgehen,
+- keine Manipulationen, Bots, Exploits oder vergleichbare missbräuchliche Mechanismen einzusetzen,
+- keine rechtswidrigen, beleidigenden oder schädlichen Inhalte einzustellen,
+- keine unbefugten Zugriffe auf Systeme, Daten oder Konten zu versuchen.
 
-- Auskunft
-- Berichtigung
-- Löschung
-- Einschränkung der Verarbeitung
-- Datenübertragbarkeit
-- Widerspruch gegen bestimmte Verarbeitungen
-- Widerruf erteilter Einwilligungen mit Wirkung für die Zukunft`}
+Bei Verstößen kann Cardletics Inhalte entfernen, Funktionen einschränken, Accounts sperren oder Verträge außerordentlich beenden.`}
         />
 
         <Section
-          title="13. Beschwerderecht"
-          text="Du hast das Recht, dich bei einer Datenschutz-Aufsichtsbehörde über die Verarbeitung deiner personenbezogenen Daten zu beschweren."
+          title="13. Verfügbarkeit und Änderungen"
+          text={`Cardletics bemüht sich um eine möglichst störungsfreie Verfügbarkeit der Website, App und Funktionen. Eine ununterbrochene oder jederzeit fehlerfreie Verfügbarkeit kann jedoch nicht garantiert werden.
+
+Cardletics ist berechtigt, Funktionen, Inhalte, digitale Güter, Abomodelle, Spielmechaniken und interne Systeme weiterzuentwickeln, anzupassen oder einzustellen, soweit hierfür ein berechtigtes Interesse besteht und Nutzer hierdurch nicht unangemessen benachteiligt werden.`}
         />
 
         <Section
-          title="14. Keine abschließende Rechtsprüfung"
-          text="Diese Datenschutzerklärung ist eine vorbereitete Fassung auf Basis der derzeit bekannten Angaben. Vor Live-Schaltung sollte sie rechtlich geprüft und bei Änderungen der eingesetzten Dienste oder Prozesse aktualisiert werden."
+          title="14. Sperrung und Kündigung"
+          text={`Nutzer können ihr Konto im Rahmen der technischen und vertraglichen Möglichkeiten kündigen oder löschen lassen.
+
+Cardletics kann Nutzerkonten sperren oder kündigen, wenn ein wichtiger Grund vorliegt, insbesondere bei:
+- Verstößen gegen diese AGB
+- Manipulation, Betrug oder Missbrauch
+- unzulässiger Mehrfachnutzung
+- Gefährdung von Sicherheit oder Integrität des Angebots
+
+Konten können außerdem nach drei Jahren Inaktivität gelöscht werden. Gesetzliche Aufbewahrungspflichten bleiben unberührt.`}
+        />
+
+        <Section
+          title="15. Haftung"
+          text={`Cardletics haftet unbeschränkt bei Vorsatz und grober Fahrlässigkeit sowie bei Schäden aus der Verletzung des Lebens, des Körpers oder der Gesundheit.
+
+Bei einfach fahrlässiger Verletzung wesentlicher Vertragspflichten ist die Haftung auf den vorhersehbaren, vertragstypischen Schaden begrenzt. Im Übrigen ist die Haftung für einfach fahrlässige Pflichtverletzungen ausgeschlossen, soweit gesetzlich zulässig.
+
+Zwingende gesetzliche Haftungsregelungen bleiben unberührt.`}
+        />
+
+        <Section
+          title="16. Geistiges Eigentum"
+          text={`Alle Inhalte, Designs, Marken, Grafiken, Texte, Datenbanken, Spielmechaniken und sonstigen Bestandteile von Cardletics sind urheber-, marken- oder sonst rechtlich geschützt, soweit nicht anders gekennzeichnet.
+
+Nutzern wird ausschließlich das zur vertragsgemäßen Nutzung erforderliche, einfache, nicht übertragbare Nutzungsrecht eingeräumt.`}
+        />
+
+        <Section
+          title="17. Anwendbares Recht"
+          text={`Es gilt das Recht der Bundesrepublik Deutschland unter Ausschluss des UN-Kaufrechts, soweit dem keine zwingenden Verbraucherschutzvorschriften entgegenstehen.`}
+        />
+
+        <Section
+          title="18. Streitbeilegung"
+          text={`Die Europäische Kommission stellt eine Plattform zur Online-Streitbeilegung bereit. Cardletics ist weder verpflichtet noch bereit, an einem Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen, sofern keine gesetzliche Pflicht besteht.`}
+        />
+
+        <Section
+          title="19. Schlussbestimmungen"
+          text={`Sollten einzelne Bestimmungen dieser AGB ganz oder teilweise unwirksam sein oder werden, bleibt die Wirksamkeit der übrigen Bestimmungen unberührt.
+
+Diese AGB sind eine sorgfältig formulierte Ausgangsfassung für Cardletics. Vor Live-Schaltung und insbesondere bei kostenpflichtigen Angeboten, Marketplace-Funktionen oder Änderungen des Geschäftsmodells sollte eine rechtliche Prüfung erfolgen.`}
         />
       </div>
     </main>
@@ -142,9 +232,16 @@ const backLinkStyle: React.CSSProperties = {
 
 const titleStyle: React.CSSProperties = {
   marginTop: 0,
-  marginBottom: "20px",
+  marginBottom: "10px",
   fontSize: "38px",
   color: "#ffffff",
+};
+
+const introStyle: React.CSSProperties = {
+  marginTop: 0,
+  marginBottom: "22px",
+  color: "#b7c6be",
+  lineHeight: 1.7,
 };
 
 const sectionStyle: React.CSSProperties = {

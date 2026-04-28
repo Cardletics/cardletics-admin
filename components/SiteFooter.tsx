@@ -28,7 +28,7 @@ export default function SiteFooter() {
             <Link href="/agb" style={linkStyle}>
               AGB
             </Link>
-            <a href="mailto:info@cardletics.com" style={linkStyle}>
+            <a href="/kontakt" style={linkStyle}>
               Kontakt
             </a>
           </nav>
@@ -37,7 +37,8 @@ export default function SiteFooter() {
         <div style={dividerStyle} />
 
         <div style={bottomRowStyle}>
-          <span style={smallTextStyle}>Cardletics since 2025</span>
+          <span style={smallTextStyle}>since 2025</span>
+          <span style={smallTextStyle}>(c) Cardletics</span>
         </div>
       </div>
     </footer>
@@ -118,9 +119,10 @@ const dividerStyle: CSSProperties = {
 
 const bottomRowStyle: CSSProperties = {
   display: "flex",
+  flexDirection: "column",
   justifyContent: "center",
   alignItems: "center",
-  gap: "12px",
+  gap: "4px",
   flexWrap: "wrap",
 };
 
