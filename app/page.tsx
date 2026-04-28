@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 type ScreenshotItem = {
   title: string;
@@ -641,9 +641,43 @@ function Lightbox({
   onPrev: () => void;
   onNext: () => void;
 }) {
+  const touchStartX = useRef<number | null>(null);
+  const touchEndX = useRef<number | null>(null);
+
+  function handleTouchStart(e: React.TouchEvent<HTMLDivElement>) {
+    touchEndX.current = null;
+    touchStartX.current = e.changedTouches[0].clientX;
+  }
+
+  function handleTouchMove(e: React.TouchEvent<HTMLDivElement>) {
+    touchEndX.current = e.changedTouches[0].clientX;
+  }
+
+  function handleTouchEnd() {
+    if (touchStartX.current === null) return;
+
+    const endX = touchEndX.current ?? touchStartX.current;
+    const deltaX = touchStartX.current - endX;
+    const minSwipeDistance = 50;
+
+    if (Math.abs(deltaX) < minSwipeDistance) return;
+
+    if (deltaX > 0) {
+      onNext();
+    } else {
+      onPrev();
+    }
+  }
+
   return (
     <div style={lightboxOverlayStyle} onClick={onClose}>
-      <div style={lightboxShellStyle} onClick={(e) => e.stopPropagation()}>
+      <div
+        style={lightboxShellStyle}
+        onClick={(e) => e.stopPropagation()}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+      >
         <button
           type="button"
           onClick={onClose}
@@ -675,6 +709,8 @@ function Lightbox({
           <div style={lightboxPhoneWrapStyle}>
             <img src={item.fileName} alt={item.title} style={lightboxImageStyle} />
           </div>
+
+          <div style={lightboxSwipeHintStyle}>← Wischen zum Wechseln →</div>
 
           <div style={lightboxTextStyle}>
             <h3 style={lightboxTitleStyle}>{item.title}</h3>
@@ -1237,6 +1273,7 @@ const lightboxShellStyle: React.CSSProperties = {
   position: "relative",
   width: "100%",
   maxWidth: "620px",
+  touchAction: "pan-y",
 };
 
 const lightboxCloseStyle: React.CSSProperties = {
@@ -1301,6 +1338,14 @@ const lightboxImageStyle: React.CSSProperties = {
   width: "100%",
   height: "auto",
   display: "block",
+};
+
+const lightboxSwipeHintStyle: React.CSSProperties = {
+  marginTop: "10px",
+  textAlign: "center",
+  color: "#86efac",
+  fontSize: "13px",
+  fontWeight: 700,
 };
 
 const lightboxTextStyle: React.CSSProperties = {
