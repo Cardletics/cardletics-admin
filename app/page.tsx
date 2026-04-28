@@ -564,7 +564,12 @@ function Lightbox({
   return (
     <div style={lightboxOverlayStyle} onClick={onClose}>
       <div style={lightboxShellStyle} onClick={(e) => e.stopPropagation()}>
-        <button type="button" onClick={onClose} style={lightboxCloseStyle}>
+        <button
+          type="button"
+          onClick={onClose}
+          style={lightboxCloseStyle}
+          aria-label="Schließen"
+        >
           ✕
         </button>
 
@@ -576,6 +581,14 @@ function Lightbox({
           <div style={lightboxTextStyle}>
             <h3 style={lightboxTitleStyle}>{item.title}</h3>
             <p style={lightboxDescStyle}>{item.text}</p>
+
+            <button
+              type="button"
+              onClick={onClose}
+              style={lightboxBackButtonStyle}
+            >
+              Zurück
+            </button>
           </div>
         </div>
       </div>
@@ -1126,19 +1139,22 @@ const lightboxShellStyle: React.CSSProperties = {
 
 const lightboxCloseStyle: React.CSSProperties = {
   position: "absolute",
-  top: "-10px",
-  right: "-4px",
-  zIndex: 2,
-  width: "42px",
-  height: "42px",
+  top: "12px",
+  right: "12px",
+  zIndex: 3,
+  width: "44px",
+  height: "44px",
   borderRadius: "999px",
   border: "1px solid rgba(255,255,255,0.14)",
-  background: "#171f1c",
+  background: "rgba(23,31,28,0.96)",
   color: "#ffffff",
   cursor: "pointer",
-  fontSize: "16px",
+  fontSize: "18px",
   fontWeight: 700,
   boxShadow: "0 10px 24px rgba(0,0,0,0.28)",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
 };
 
 const lightboxContentStyle: React.CSSProperties = {
@@ -1181,4 +1197,17 @@ const lightboxDescStyle: React.CSSProperties = {
   color: "#94a39b",
   lineHeight: 1.6,
   fontSize: "15px",
+};
+
+const lightboxBackButtonStyle: React.CSSProperties = {
+  marginTop: "16px",
+  minHeight: "46px",
+  padding: "12px 18px",
+  borderRadius: "14px",
+  border: "1px solid #2d3b35",
+  background: "#22c55e",
+  color: "#08130c",
+  fontWeight: 800,
+  cursor: "pointer",
+  boxShadow: "0 10px 24px rgba(34,197,94,0.22)",
 };
