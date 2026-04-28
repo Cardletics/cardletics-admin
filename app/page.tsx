@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 type ScreenshotItem = {
   title: string;
@@ -12,7 +12,56 @@ type ScreenshotItem = {
 export default function HomePage() {
   const [helpOpen, setHelpOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const [selectedShot, setSelectedShot] = useState<ScreenshotItem | null>(null);
+  const [selectedShotIndex, setSelectedShotIndex] = useState<number | null>(null);
+
+  const screenshots = useMemo<ScreenshotItem[]>(
+    () => [
+      {
+        title: "Homescreen",
+        text: "Startbereich, Hauptnavigation und Überblick",
+        fileName: "/home-screen.png",
+      },
+      {
+        title: "Battle Screen",
+        text: "Teamkampf, Strategie und Battle-Ansicht",
+        fileName: "/battle-screen.png",
+      },
+      {
+        title: "Karte im Detail",
+        text: "Einzelne Karte mit Werten, Design und Seltenheit",
+        fileName: "/card-detail.png",
+      },
+      {
+        title: "Awards",
+        text: "Belohnungen, Erfolge und freigeschaltete Meilensteine",
+        fileName: "/awards-screen.png",
+      },
+      {
+        title: "Pack Opening",
+        text: "Packs öffnen und neue Karten erhalten",
+        fileName: "/pack-opening.png",
+      },
+      {
+        title: "Collection",
+        text: "Sammlung, Sets und Vervollständigung",
+        fileName: "/collection-screen.png",
+      },
+      {
+        title: "Börse / Marketplace",
+        text: "Interner Handel mit Karten",
+        fileName: "/marketplace-screen.png",
+      },
+      {
+        title: "Shop",
+        text: "Coins, Angebote und weitere In-App-Käufe",
+        fileName: "/shop-screen.png",
+      },
+    ],
+    []
+  );
+
+  const selectedShot =
+    selectedShotIndex !== null ? screenshots[selectedShotIndex] : null;
 
   useEffect(() => {
     function handleResize() {
@@ -27,12 +76,28 @@ export default function HomePage() {
 
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
+      if (selectedShotIndex === null) return;
+
       if (event.key === "Escape") {
-        setSelectedShot(null);
+        setSelectedShotIndex(null);
+      }
+
+      if (event.key === "ArrowLeft") {
+        setSelectedShotIndex((prev) => {
+          if (prev === null) return null;
+          return prev === 0 ? screenshots.length - 1 : prev - 1;
+        });
+      }
+
+      if (event.key === "ArrowRight") {
+        setSelectedShotIndex((prev) => {
+          if (prev === null) return null;
+          return prev === screenshots.length - 1 ? 0 : prev + 1;
+        });
       }
     }
 
-    if (selectedShot) {
+    if (selectedShotIndex !== null) {
       window.addEventListener("keydown", handleKeyDown);
       document.body.style.overflow = "hidden";
     }
@@ -41,7 +106,7 @@ export default function HomePage() {
       window.removeEventListener("keydown", handleKeyDown);
       document.body.style.overflow = "";
     };
-  }, [selectedShot]);
+  }, [selectedShotIndex, screenshots.length]);
 
   return (
     <main style={pageStyle}>
@@ -328,49 +393,49 @@ export default function HomePage() {
               title="Homescreen"
               text="Startbereich, Hauptnavigation und Überblick"
               fileName="/home-screen.png"
-              onOpen={setSelectedShot}
+              onOpen={() => setSelectedShotIndex(0)}
             />
             <ScreenshotCard
               title="Battle Screen"
               text="Teamkampf, Strategie und Battle-Ansicht"
               fileName="/battle-screen.png"
-              onOpen={setSelectedShot}
+              onOpen={() => setSelectedShotIndex(1)}
             />
             <ScreenshotCard
               title="Karte im Detail"
               text="Einzelne Karte mit Werten, Design und Seltenheit"
               fileName="/card-detail.png"
-              onOpen={setSelectedShot}
+              onOpen={() => setSelectedShotIndex(2)}
             />
             <ScreenshotCard
               title="Awards"
               text="Belohnungen, Erfolge und freigeschaltete Meilensteine"
               fileName="/awards-screen.png"
-              onOpen={setSelectedShot}
+              onOpen={() => setSelectedShotIndex(3)}
             />
             <ScreenshotCard
               title="Pack Opening"
               text="Packs öffnen und neue Karten erhalten"
               fileName="/pack-opening.png"
-              onOpen={setSelectedShot}
+              onOpen={() => setSelectedShotIndex(4)}
             />
             <ScreenshotCard
               title="Collection"
               text="Sammlung, Sets und Vervollständigung"
               fileName="/collection-screen.png"
-              onOpen={setSelectedShot}
+              onOpen={() => setSelectedShotIndex(5)}
             />
             <ScreenshotCard
               title="Börse / Marketplace"
               text="Interner Handel mit Karten"
               fileName="/marketplace-screen.png"
-              onOpen={setSelectedShot}
+              onOpen={() => setSelectedShotIndex(6)}
             />
             <ScreenshotCard
               title="Shop"
               text="Coins, Angebote und weitere In-App-Käufe"
               fileName="/shop-screen.png"
-              onOpen={setSelectedShot}
+              onOpen={() => setSelectedShotIndex(7)}
             />
           </div>
         </div>
@@ -484,8 +549,23 @@ export default function HomePage() {
         </button>
       </div>
 
-      {selectedShot && (
-        <Lightbox item={selectedShot} onClose={() => setSelectedShot(null)} />
+      {selectedShot && selectedShotIndex !== null && (
+        <Lightbox
+          item={selectedShot}
+          onClose={() => setSelectedShotIndex(null)}
+          onPrev={() =>
+            setSelectedShotIndex((prev) => {
+              if (prev === null) return null;
+              return prev === 0 ? screenshots.length - 1 : prev - 1;
+            })
+          }
+          onNext={() =>
+            setSelectedShotIndex((prev) => {
+              if (prev === null) return null;
+              return prev === screenshots.length - 1 ? 0 : prev + 1;
+            })
+          }
+        />
       )}
     </main>
   );
@@ -527,15 +607,11 @@ function ScreenshotCard({
   title: string;
   text: string;
   fileName: string;
-  onOpen: (item: ScreenshotItem) => void;
+  onOpen: () => void;
 }) {
   return (
     <div style={screenshotCardStyle}>
-      <button
-        type="button"
-        onClick={() => onOpen({ title, text, fileName })}
-        style={screenshotButtonStyle}
-      >
+      <button type="button" onClick={onOpen} style={screenshotButtonStyle}>
         <div style={phoneFrameOuterStyle}>
           <div style={phoneFrameInnerStyle}>
             <div style={phoneNotchStyle} />
@@ -557,9 +633,13 @@ function ScreenshotCard({
 function Lightbox({
   item,
   onClose,
+  onPrev,
+  onNext,
 }: {
   item: ScreenshotItem;
   onClose: () => void;
+  onPrev: () => void;
+  onNext: () => void;
 }) {
   return (
     <div style={lightboxOverlayStyle} onClick={onClose}>
@@ -573,6 +653,24 @@ function Lightbox({
           ✕
         </button>
 
+        <button
+          type="button"
+          onClick={onPrev}
+          style={{ ...lightboxArrowStyle, left: "12px" }}
+          aria-label="Vorheriger Screenshot"
+        >
+          ‹
+        </button>
+
+        <button
+          type="button"
+          onClick={onNext}
+          style={{ ...lightboxArrowStyle, right: "12px" }}
+          aria-label="Nächster Screenshot"
+        >
+          ›
+        </button>
+
         <div style={lightboxContentStyle}>
           <div style={lightboxPhoneWrapStyle}>
             <img src={item.fileName} alt={item.title} style={lightboxImageStyle} />
@@ -582,13 +680,17 @@ function Lightbox({
             <h3 style={lightboxTitleStyle}>{item.title}</h3>
             <p style={lightboxDescStyle}>{item.text}</p>
 
-            <button
-              type="button"
-              onClick={onClose}
-              style={lightboxBackButtonStyle}
-            >
-              Zurück
-            </button>
+            <div style={lightboxBottomButtonsStyle}>
+              <button type="button" onClick={onPrev} style={lightboxMiniButtonStyle}>
+                ‹ Zurück
+              </button>
+              <button type="button" onClick={onClose} style={lightboxBackButtonStyle}>
+                Schließen
+              </button>
+              <button type="button" onClick={onNext} style={lightboxMiniButtonStyle}>
+                Weiter ›
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -1134,14 +1236,14 @@ const lightboxOverlayStyle: React.CSSProperties = {
 const lightboxShellStyle: React.CSSProperties = {
   position: "relative",
   width: "100%",
-  maxWidth: "560px",
+  maxWidth: "620px",
 };
 
 const lightboxCloseStyle: React.CSSProperties = {
   position: "absolute",
   top: "12px",
   right: "12px",
-  zIndex: 3,
+  zIndex: 5,
   width: "44px",
   height: "44px",
   borderRadius: "999px",
@@ -1150,6 +1252,26 @@ const lightboxCloseStyle: React.CSSProperties = {
   color: "#ffffff",
   cursor: "pointer",
   fontSize: "18px",
+  fontWeight: 700,
+  boxShadow: "0 10px 24px rgba(0,0,0,0.28)",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+};
+
+const lightboxArrowStyle: React.CSSProperties = {
+  position: "absolute",
+  top: "50%",
+  transform: "translateY(-50%)",
+  zIndex: 4,
+  width: "46px",
+  height: "46px",
+  borderRadius: "999px",
+  border: "1px solid rgba(255,255,255,0.14)",
+  background: "rgba(23,31,28,0.96)",
+  color: "#ffffff",
+  cursor: "pointer",
+  fontSize: "28px",
   fontWeight: 700,
   boxShadow: "0 10px 24px rgba(0,0,0,0.28)",
   display: "flex",
@@ -1199,8 +1321,15 @@ const lightboxDescStyle: React.CSSProperties = {
   fontSize: "15px",
 };
 
-const lightboxBackButtonStyle: React.CSSProperties = {
+const lightboxBottomButtonsStyle: React.CSSProperties = {
   marginTop: "16px",
+  display: "flex",
+  gap: "10px",
+  justifyContent: "center",
+  flexWrap: "wrap",
+};
+
+const lightboxBackButtonStyle: React.CSSProperties = {
   minHeight: "46px",
   padding: "12px 18px",
   borderRadius: "14px",
@@ -1210,4 +1339,15 @@ const lightboxBackButtonStyle: React.CSSProperties = {
   fontWeight: 800,
   cursor: "pointer",
   boxShadow: "0 10px 24px rgba(34,197,94,0.22)",
+};
+
+const lightboxMiniButtonStyle: React.CSSProperties = {
+  minHeight: "46px",
+  padding: "12px 18px",
+  borderRadius: "14px",
+  border: "1px solid #2d3b35",
+  background: "#171f1c",
+  color: "#e7f1eb",
+  fontWeight: 700,
+  cursor: "pointer",
 };
