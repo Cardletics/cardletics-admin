@@ -799,22 +799,22 @@ const translations: Record<LanguageKey, Translation> = {
   },
 };
 
-const languageOptions: { key: LanguageKey; label: string }[] = [
-  { key: "de", label: "Deutsch" },
-  { key: "en", label: "English" },
-  { key: "es", label: "Español" },
-  { key: "fr", label: "Français" },
-  { key: "pt", label: "Português" },
-  { key: "zh", label: "中文" },
-  { key: "hi", label: "हिन्दी" },
-  { key: "ar", label: "العربية" },
-  { key: "bn", label: "বাংলা" },
-  { key: "ru", label: "Русский" },
-  { key: "ja", label: "日本語" },
-  { key: "tr", label: "Türkçe" },
-  { key: "vi", label: "Tiếng Việt" },
-  { key: "id", label: "Bahasa Indonesia" },
-  { key: "ur", label: "اردو" },
+const languageOptions: { key: LanguageKey; label: string; flag: string; short: string }[] = [
+  { key: "de", label: "Deutsch", flag: "🇩🇪", short: "DE" },
+  { key: "en", label: "English", flag: "🇬🇧", short: "EN" },
+  { key: "es", label: "Español", flag: "🇪🇸", short: "ES" },
+  { key: "fr", label: "Français", flag: "🇫🇷", short: "FR" },
+  { key: "pt", label: "Português", flag: "🇵🇹", short: "PT" },
+  { key: "zh", label: "中文", flag: "🇨🇳", short: "ZH" },
+  { key: "hi", label: "हिन्दी", flag: "🇮🇳", short: "HI" },
+  { key: "ar", label: "العربية", flag: "🇸🇦", short: "AR" },
+  { key: "bn", label: "বাংলা", flag: "🇧🇩", short: "BN" },
+  { key: "ru", label: "Русский", flag: "🇷🇺", short: "RU" },
+  { key: "ja", label: "日本語", flag: "🇯🇵", short: "JA" },
+  { key: "tr", label: "Türkçe", flag: "🇹🇷", short: "TR" },
+  { key: "vi", label: "Tiếng Việt", flag: "🇻🇳", short: "VI" },
+  { key: "id", label: "Bahasa Indonesia", flag: "🇮🇩", short: "ID" },
+  { key: "ur", label: "اردو", flag: "🇵🇰", short: "UR" },
 ];
 
 export default function HomePage() {
@@ -871,24 +871,6 @@ export default function HomePage() {
 
   return (
     <main style={{ ...pageStyle, direction: dir }}>
-      <div style={languageBarStyle}>
-        <label style={languageLabelStyle} htmlFor="language-select">
-          Sprache
-        </label>
-        <select
-          id="language-select"
-          value={language}
-          onChange={(e) => setLanguage(e.target.value as LanguageKey)}
-          style={languageSelectStyle}
-        >
-          {languageOptions.map((option) => (
-            <option key={option.key} value={option.key}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-      </div>
-
       {!isMobile && (
         <a href="mailto:Info@cardletics.com?subject=Affiliate%20Programm" style={affiliateSideButtonStyle}>
           {t.affiliate}
@@ -898,6 +880,28 @@ export default function HomePage() {
       <section style={heroSectionStyle}>
         <div style={heroGlowOneStyle} />
         <div style={heroGlowTwoStyle} />
+
+        <div style={languageBarStyle}>
+          <span style={languageFlagStyle} aria-hidden="true">
+            {languageOptions.find((option) => option.key === language)?.flag ?? "🌐"}
+          </span>
+          <label style={languageLabelStyle} htmlFor="language-select">
+            Sprache
+          </label>
+          <select
+            id="language-select"
+            value={language}
+            onChange={(e) => setLanguage(e.target.value as LanguageKey)}
+            style={languageSelectStyle}
+            aria-label="Sprache auswählen"
+          >
+            {languageOptions.map((option) => (
+              <option key={option.key} value={option.key}>
+                {`${option.flag} ${option.label}`}
+              </option>
+            ))}
+          </select>
+        </div>
 
         <div style={{ ...heroInnerStyle, padding: isMobile ? "40px 18px 30px 18px" : "58px 24px" }}>
           <div style={{ ...logoWrapperStyle, marginBottom: isMobile ? "18px" : "22px" }}>
@@ -1038,29 +1042,45 @@ export default function HomePage() {
 }
 
 const languageBarStyle: React.CSSProperties = {
-  maxWidth: "1200px",
-  margin: "0 auto 14px auto",
+  position: "absolute",
+  top: "14px",
+  right: "14px",
+  zIndex: 5,
   display: "flex",
-  justifyContent: "flex-end",
   alignItems: "center",
-  gap: "10px",
+  gap: "6px",
+  padding: "5px 7px",
+  borderRadius: "999px",
+  background: "rgba(8, 19, 12, 0.72)",
+  border: "1px solid rgba(134,239,172,0.20)",
+  backdropFilter: "blur(10px)",
+  boxShadow: "0 10px 24px rgba(0,0,0,0.22)",
+};
+
+const languageFlagStyle: React.CSSProperties = {
+  fontSize: "15px",
+  lineHeight: 1,
 };
 
 const languageLabelStyle: React.CSSProperties = {
   color: "#86efac",
-  fontSize: "13px",
-  fontWeight: 800,
+  fontSize: "10px",
+  fontWeight: 900,
+  letterSpacing: "0.03em",
 };
 
 const languageSelectStyle: React.CSSProperties = {
-  minHeight: "40px",
-  borderRadius: "12px",
-  border: "1px solid #27312d",
+  minHeight: "26px",
+  maxWidth: "126px",
+  borderRadius: "999px",
+  border: "1px solid rgba(255,255,255,0.10)",
   background: "#111714",
   color: "#ffffff",
-  padding: "8px 12px",
-  fontWeight: 800,
+  padding: "3px 8px",
+  fontSize: "11px",
+  fontWeight: 900,
   outline: "none",
+  cursor: "pointer",
 };
 
 function FeatureCard({ title, text }: { title: string; text: string }) {
