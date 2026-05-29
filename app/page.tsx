@@ -56,6 +56,26 @@ export default function HomePage() {
         text: "Coins, Angebote und weitere In-App-Käufe",
         fileName: "/shop-screen.png",
       },
+      {
+        title: "Bewegung im Detail",
+        text: "Fortschritt, Aktivitätswerte und sportliche Entwicklung im Überblick",
+        fileName: "/movement-detail-screen.png",
+      },
+      {
+        title: "Umgebung",
+        text: "Spieler in deiner Nähe entdecken und auf dem Radar anzeigen",
+        fileName: "/nearby-screen.png",
+      },
+      {
+        title: "Events",
+        text: "Aktionen, Challenges und besondere In-App-Events entdecken",
+        fileName: "/events-screen.png",
+      },
+      {
+        title: "Freunde",
+        text: "Freundesliste, Anfragen, Chats und Gruppen verwalten",
+        fileName: "/friends-screen.png",
+      },
     ],
     []
   );
@@ -389,54 +409,15 @@ export default function HomePage() {
                 : "repeat(auto-fit, minmax(240px, 1fr))",
             }}
           >
-            <ScreenshotCard
-              title="Homescreen"
-              text="Startbereich, Hauptnavigation und Überblick"
-              fileName="/home-screen.png"
-              onOpen={() => setSelectedShotIndex(0)}
-            />
-            <ScreenshotCard
-              title="Battle Screen"
-              text="Teamkampf, Strategie und Battle-Ansicht"
-              fileName="/battle-screen.png"
-              onOpen={() => setSelectedShotIndex(1)}
-            />
-            <ScreenshotCard
-              title="Karte im Detail"
-              text="Einzelne Karte mit Werten, Design und Seltenheit"
-              fileName="/card-detail.png"
-              onOpen={() => setSelectedShotIndex(2)}
-            />
-            <ScreenshotCard
-              title="Awards"
-              text="Belohnungen, Erfolge und freigeschaltete Meilensteine"
-              fileName="/awards-screen.png"
-              onOpen={() => setSelectedShotIndex(3)}
-            />
-            <ScreenshotCard
-              title="Pack Opening"
-              text="Packs öffnen und neue Karten erhalten"
-              fileName="/pack-opening.png"
-              onOpen={() => setSelectedShotIndex(4)}
-            />
-            <ScreenshotCard
-              title="Collection"
-              text="Sammlung, Sets und Vervollständigung"
-              fileName="/collection-screen.png"
-              onOpen={() => setSelectedShotIndex(5)}
-            />
-            <ScreenshotCard
-              title="Börse / Marketplace"
-              text="Interner Handel mit Karten"
-              fileName="/marketplace-screen.png"
-              onOpen={() => setSelectedShotIndex(6)}
-            />
-            <ScreenshotCard
-              title="Shop"
-              text="Coins, Angebote und weitere In-App-Käufe"
-              fileName="/shop-screen.png"
-              onOpen={() => setSelectedShotIndex(7)}
-            />
+            {screenshots.map((shot, index) => (
+              <ScreenshotCard
+                key={shot.fileName}
+                title={shot.title}
+                text={shot.text}
+                fileName={shot.fileName}
+                onOpen={() => setSelectedShotIndex(index)}
+              />
+            ))}
           </div>
         </div>
       </section>
