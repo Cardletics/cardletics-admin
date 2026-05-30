@@ -660,23 +660,11 @@ const languageOptions: { key: LanguageKey; label: string; countryCode: string }[
   { key: "ur", label: "اردو", countryCode: "pk" },
 ];
 
-const footerTranslations: Record<LanguageKey, { tagline: string; impressum: string; privacy: string; terms: string; contact: string }> = {
-  de: { tagline: "Tracken • Sammeln • Kämpfen • Handeln", impressum: "Impressum", privacy: "Datenschutz", terms: "AGB", contact: "Kontakt" },
-  en: { tagline: "Track • Collect • Battle • Trade", impressum: "Legal notice", privacy: "Privacy", terms: "Terms", contact: "Contact" },
-  es: { tagline: "Registrar • Coleccionar • Combatir • Comerciar", impressum: "Aviso legal", privacy: "Privacidad", terms: "Condiciones", contact: "Contacto" },
-  fr: { tagline: "Suivre • Collectionner • Combattre • Échanger", impressum: "Mentions légales", privacy: "Confidentialité", terms: "CGU", contact: "Contact" },
-  pt: { tagline: "Acompanhar • Colecionar • Batalhar • Trocar", impressum: "Aviso legal", privacy: "Privacidade", terms: "Termos", contact: "Contato" },
-  zh: { tagline: "记录 • 收集 • 对战 • 交易", impressum: "法律声明", privacy: "隐私", terms: "条款", contact: "联系" },
-  hi: { tagline: "ट्रैक • संग्रह • मुकाबला • व्यापार", impressum: "कानूनी सूचना", privacy: "गोपनीयता", terms: "शर्तें", contact: "संपर्क" },
-  ar: { tagline: "تتبع • اجمع • قاتل • تداول", impressum: "إشعار قانوني", privacy: "الخصوصية", terms: "الشروط", contact: "اتصال" },
-  bn: { tagline: "ট্র্যাক • সংগ্রহ • লড়াই • ট্রেড", impressum: "আইনি তথ্য", privacy: "গোপনীয়তা", terms: "শর্তাবলি", contact: "যোগাযোগ" },
-  ru: { tagline: "Отслеживай • Собирай • Сражайся • Торгуй", impressum: "Правовая информация", privacy: "Конфиденциальность", terms: "Условия", contact: "Контакты" },
-  ja: { tagline: "記録 • 収集 • バトル • 取引", impressum: "法的表示", privacy: "プライバシー", terms: "利用規約", contact: "お問い合わせ" },
-  tr: { tagline: "Takip et • Topla • Savaş • Takas et", impressum: "Yasal bilgiler", privacy: "Gizlilik", terms: "Şartlar", contact: "İletişim" },
-  vi: { tagline: "Theo dõi • Sưu tầm • Đấu • Giao dịch", impressum: "Thông tin pháp lý", privacy: "Quyền riêng tư", terms: "Điều khoản", contact: "Liên hệ" },
-  id: { tagline: "Lacak • Koleksi • Bertarung • Berdagang", impressum: "Informasi hukum", privacy: "Privasi", terms: "Syarat", contact: "Kontak" },
-  ur: { tagline: "ٹریک • جمع • مقابلہ • تجارت", impressum: "قانونی نوٹس", privacy: "رازداری", terms: "شرائط", contact: "رابطہ" },
-};
+const LANGUAGE_STORAGE_KEY = "cardletics_language";
+
+function isLanguageKey(value: string | null): value is LanguageKey {
+  return !!value && languageOptions.some((option) => option.key === value);
+}
 
 function FlagIcon({ countryCode, alt }: { countryCode: string; alt: string }) {
   return (
@@ -697,13 +685,39 @@ export default function HomePage() {
   const [selectedShotIndex, setSelectedShotIndex] = useState<number | null>(null);
   const [language, setLanguage] = useState<LanguageKey>("de");
   const [languageMenuOpen, setLanguageMenuOpen] = useState(false);
+  const languageDidMountRef = useRef(false);
 
   const t = translations[language];
   const screenshots = useMemo<ScreenshotItem[]>(() => t.screenshots, [t]);
   const selectedShot = selectedShotIndex !== null ? screenshots[selectedShotIndex] : null;
   const dir = language === "ar" || language === "ur" ? "rtl" : "ltr";
   const selectedLanguage = languageOptions.find((option) => option.key === language) ?? languageOptions[0];
-  const footer = footerTranslations[language];
+
+
+  useEffect(() => {
+    try {
+      const savedLanguage = window.localStorage.getItem(LANGUAGE_STORAGE_KEY);
+      if (isLanguageKey(savedLanguage)) {
+        setLanguage(savedLanguage);
+      }
+    } catch {
+      // localStorage can be unavailable in private modes.
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!languageDidMountRef.current) {
+      languageDidMountRef.current = true;
+      return;
+    }
+
+    try {
+      window.localStorage.setItem(LANGUAGE_STORAGE_KEY, language);
+      window.dispatchEvent(new CustomEvent("cardletics-language-change", { detail: language }));
+    } catch {
+      // Ignore storage errors.
+    }
+  }, [language]);
 
   useEffect(() => {
     function handleResize() {
@@ -758,7 +772,14 @@ export default function HomePage() {
         <div style={heroGlowOneStyle} />
         <div style={heroGlowTwoStyle} />
 
-        <div style={{ ...languageBarStyle, top: isMobile ? "12px" : "14px", right: isMobile ? "12px" : "14px" }}>
+        <div
+          style={{
+            ...languageBarStyle,
+            top: isMobile ? "12px" : "14px",
+            right: isMobile ? "12px" : "14px",
+            left: isMobile ? "auto" : undefined,
+          }}
+        >
           <button
             type="button"
             style={languageButtonStyle}
@@ -891,19 +912,6 @@ export default function HomePage() {
       </section>
 
 
-      <footer style={footerStyle}>
-        <div style={footerBrandStyle}>
-          <strong>Cardletics</strong>
-          <span>{footer.tagline}</span>
-        </div>
-        <nav style={footerLinksStyle}>
-          <a href="/impressum" style={footerLinkStyle}>{footer.impressum}</a>
-          <a href="/datenschutz" style={footerLinkStyle}>{footer.privacy}</a>
-          <a href="/agb" style={footerLinkStyle}>{footer.terms}</a>
-          <a href="/kontakt" style={footerLinkStyle}>{footer.contact}</a>
-        </nav>
-      </footer>
-
       <div style={{ ...helpWidgetWrapStyle, right: isMobile ? "14px" : "18px", bottom: isMobile ? "14px" : "18px" }}>
         {helpOpen && (
           <div style={{ ...helpPanelStyle, width: isMobile ? "calc(100vw - 28px)" : "min(360px, calc(100vw - 36px))" }}>
@@ -951,11 +959,11 @@ const languageBarStyle: React.CSSProperties = {
 };
 
 const languageButtonStyle: React.CSSProperties = {
-  minHeight: "34px",
+  minHeight: "32px",
   display: "inline-flex",
   alignItems: "center",
   gap: "8px",
-  padding: "6px 10px",
+  padding: "5px 9px",
   borderRadius: "999px",
   background: "rgba(8, 19, 12, 0.78)",
   border: "1px solid rgba(134,239,172,0.22)",
@@ -977,7 +985,7 @@ const languageMenuStyle: React.CSSProperties = {
   position: "absolute",
   top: "40px",
   right: 0,
-  width: "190px",
+  width: "185px",
   maxHeight: "280px",
   overflowY: "auto",
   padding: "6px",
@@ -1846,38 +1854,3 @@ const lightboxMiniButtonStyle: React.CSSProperties = {
   cursor: "pointer",
 };
 
-const footerStyle: React.CSSProperties = {
-  maxWidth: "1200px",
-  margin: "28px auto 0 auto",
-  padding: "18px",
-  borderRadius: "20px",
-  background: "#111714",
-  border: "1px solid #27312d",
-  display: "flex",
-  justifyContent: "space-between",
-  alignItems: "center",
-  gap: "14px",
-  flexWrap: "wrap",
-};
-
-const footerBrandStyle: React.CSSProperties = {
-  display: "grid",
-  gap: "4px",
-  color: "#ffffff",
-};
-
-const footerLinksStyle: React.CSSProperties = {
-  display: "flex",
-  gap: "10px",
-  flexWrap: "wrap",
-};
-
-const footerLinkStyle: React.CSSProperties = {
-  color: "#86efac",
-  textDecoration: "none",
-  fontWeight: 800,
-  padding: "8px 10px",
-  borderRadius: "999px",
-  background: "rgba(34,197,94,0.08)",
-  border: "1px solid rgba(134,239,172,0.18)",
-};
