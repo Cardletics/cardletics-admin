@@ -193,7 +193,8 @@ Nutzern wird ausschließlich das zur vertragsgemäßen Nutzung erforderliche, ei
 Diese AGB sind eine sorgfältig formulierte Ausgangsfassung für Cardletics. Vor Live-Schaltung und insbesondere bei kostenpflichtigen Angeboten, Marketplace-Funktionen oder Änderungen des Geschäftsmodells sollte eine rechtliche Prüfung erfolgen.`}
         />
       </div>
-    </main>
+          <PageFooter />
+</main>
   );
 }
 
@@ -203,6 +204,24 @@ function Section({ title, text }: { title: string; text: string }) {
       <h2 style={headingStyle}>{title}</h2>
       <p style={textStyle}>{text}</p>
     </section>
+  );
+}
+
+
+function PageFooter() {
+  return (
+    <footer style={footerStyle}>
+      <div style={footerBrandStyle}>
+        <strong>Cardletics</strong>
+        <span>Track • Collect • Battle • Trade</span>
+      </div>
+      <nav style={footerLinksStyle}>
+        <Link href="/impressum" style={footerLinkStyle}>Impressum</Link>
+        <Link href="/datenschutz" style={footerLinkStyle}>Datenschutz</Link>
+        <Link href="/agb" style={footerLinkStyle}>AGB</Link>
+        <Link href="/kontakt" style={footerLinkStyle}>Kontakt</Link>
+      </nav>
+    </footer>
   );
 }
 
@@ -259,4 +278,41 @@ const textStyle: React.CSSProperties = {
   color: "#b7c6be",
   lineHeight: 1.7,
   whiteSpace: "pre-line",
+};
+
+
+const footerStyle: React.CSSProperties = {
+  maxWidth: "980px",
+  margin: "24px auto 0 auto",
+  padding: "18px",
+  borderRadius: "20px",
+  background: "#111714",
+  border: "1px solid #27312d",
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+  gap: "14px",
+  flexWrap: "wrap",
+};
+
+const footerBrandStyle: React.CSSProperties = {
+  display: "grid",
+  gap: "4px",
+  color: "#ffffff",
+};
+
+const footerLinksStyle: React.CSSProperties = {
+  display: "flex",
+  gap: "10px",
+  flexWrap: "wrap",
+};
+
+const footerLinkStyle: React.CSSProperties = {
+  color: "#86efac",
+  textDecoration: "none",
+  fontWeight: 800,
+  padding: "8px 10px",
+  borderRadius: "999px",
+  background: "rgba(34,197,94,0.08)",
+  border: "1px solid rgba(134,239,172,0.18)",
 };

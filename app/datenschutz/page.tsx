@@ -565,7 +565,8 @@ export default function PrivacyPage() {
           </p>
         </Section>
       </div>
-    </main>
+          <PageFooter />
+</main>
   );
 }
 
@@ -581,6 +582,24 @@ function Section({
       <h2 style={sectionTitleStyle}>{title}</h2>
       <div style={sectionContentStyle}>{children}</div>
     </section>
+  );
+}
+
+
+function PageFooter() {
+  return (
+    <footer style={footerStyle}>
+      <div style={footerBrandStyle}>
+        <strong>Cardletics</strong>
+        <span>Track • Collect • Battle • Trade</span>
+      </div>
+      <nav style={footerLinksStyle}>
+        <Link href="/impressum" style={footerLinkStyle}>Impressum</Link>
+        <Link href="/datenschutz" style={footerLinkStyle}>Datenschutz</Link>
+        <Link href="/agb" style={footerLinkStyle}>AGB</Link>
+        <Link href="/kontakt" style={footerLinkStyle}>Kontakt</Link>
+      </nav>
+    </footer>
   );
 }
 
@@ -691,4 +710,41 @@ const addressStyle: CSSProperties = {
   border: "1px solid #27312d",
   borderRadius: "14px",
   padding: "14px",
+};
+
+
+const footerStyle: CSSProperties = {
+  maxWidth: "980px",
+  margin: "24px auto 0 auto",
+  padding: "18px",
+  borderRadius: "20px",
+  background: "#111714",
+  border: "1px solid #27312d",
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+  gap: "14px",
+  flexWrap: "wrap",
+};
+
+const footerBrandStyle: CSSProperties = {
+  display: "grid",
+  gap: "4px",
+  color: "#ffffff",
+};
+
+const footerLinksStyle: CSSProperties = {
+  display: "flex",
+  gap: "10px",
+  flexWrap: "wrap",
+};
+
+const footerLinkStyle: CSSProperties = {
+  color: "#86efac",
+  textDecoration: "none",
+  fontWeight: 800,
+  padding: "8px 10px",
+  borderRadius: "999px",
+  background: "rgba(34,197,94,0.08)",
+  border: "1px solid rgba(134,239,172,0.18)",
 };

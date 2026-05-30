@@ -642,34 +642,68 @@ const translations: Record<LanguageKey, Translation> = {
   },
 };
 
-const languageOptions: { key: LanguageKey; label: string; flag: string; short: string }[] = [
-  { key: "de", label: "Deutsch", flag: "🇩🇪", short: "DE" },
-  { key: "en", label: "English", flag: "🇬🇧", short: "EN" },
-  { key: "es", label: "Español", flag: "🇪🇸", short: "ES" },
-  { key: "fr", label: "Français", flag: "🇫🇷", short: "FR" },
-  { key: "pt", label: "Português", flag: "🇵🇹", short: "PT" },
-  { key: "zh", label: "中文", flag: "🇨🇳", short: "ZH" },
-  { key: "hi", label: "हिन्दी", flag: "🇮🇳", short: "HI" },
-  { key: "ar", label: "العربية", flag: "🇸🇦", short: "AR" },
-  { key: "bn", label: "বাংলা", flag: "🇧🇩", short: "BN" },
-  { key: "ru", label: "Русский", flag: "🇷🇺", short: "RU" },
-  { key: "ja", label: "日本語", flag: "🇯🇵", short: "JA" },
-  { key: "tr", label: "Türkçe", flag: "🇹🇷", short: "TR" },
-  { key: "vi", label: "Tiếng Việt", flag: "🇻🇳", short: "VI" },
-  { key: "id", label: "Bahasa Indonesia", flag: "🇮🇩", short: "ID" },
-  { key: "ur", label: "اردو", flag: "🇵🇰", short: "UR" },
+const languageOptions: { key: LanguageKey; label: string; countryCode: string }[] = [
+  { key: "de", label: "Deutsch", countryCode: "de" },
+  { key: "en", label: "English", countryCode: "gb" },
+  { key: "es", label: "Español", countryCode: "es" },
+  { key: "fr", label: "Français", countryCode: "fr" },
+  { key: "pt", label: "Português", countryCode: "pt" },
+  { key: "zh", label: "中文", countryCode: "cn" },
+  { key: "hi", label: "हिन्दी", countryCode: "in" },
+  { key: "ar", label: "العربية", countryCode: "sa" },
+  { key: "bn", label: "বাংলা", countryCode: "bd" },
+  { key: "ru", label: "Русский", countryCode: "ru" },
+  { key: "ja", label: "日本語", countryCode: "jp" },
+  { key: "tr", label: "Türkçe", countryCode: "tr" },
+  { key: "vi", label: "Tiếng Việt", countryCode: "vn" },
+  { key: "id", label: "Bahasa Indonesia", countryCode: "id" },
+  { key: "ur", label: "اردو", countryCode: "pk" },
 ];
+
+const footerTranslations: Record<LanguageKey, { tagline: string; impressum: string; privacy: string; terms: string; contact: string }> = {
+  de: { tagline: "Tracken • Sammeln • Kämpfen • Handeln", impressum: "Impressum", privacy: "Datenschutz", terms: "AGB", contact: "Kontakt" },
+  en: { tagline: "Track • Collect • Battle • Trade", impressum: "Legal notice", privacy: "Privacy", terms: "Terms", contact: "Contact" },
+  es: { tagline: "Registrar • Coleccionar • Combatir • Comerciar", impressum: "Aviso legal", privacy: "Privacidad", terms: "Condiciones", contact: "Contacto" },
+  fr: { tagline: "Suivre • Collectionner • Combattre • Échanger", impressum: "Mentions légales", privacy: "Confidentialité", terms: "CGU", contact: "Contact" },
+  pt: { tagline: "Acompanhar • Colecionar • Batalhar • Trocar", impressum: "Aviso legal", privacy: "Privacidade", terms: "Termos", contact: "Contato" },
+  zh: { tagline: "记录 • 收集 • 对战 • 交易", impressum: "法律声明", privacy: "隐私", terms: "条款", contact: "联系" },
+  hi: { tagline: "ट्रैक • संग्रह • मुकाबला • व्यापार", impressum: "कानूनी सूचना", privacy: "गोपनीयता", terms: "शर्तें", contact: "संपर्क" },
+  ar: { tagline: "تتبع • اجمع • قاتل • تداول", impressum: "إشعار قانوني", privacy: "الخصوصية", terms: "الشروط", contact: "اتصال" },
+  bn: { tagline: "ট্র্যাক • সংগ্রহ • লড়াই • ট্রেড", impressum: "আইনি তথ্য", privacy: "গোপনীয়তা", terms: "শর্তাবলি", contact: "যোগাযোগ" },
+  ru: { tagline: "Отслеживай • Собирай • Сражайся • Торгуй", impressum: "Правовая информация", privacy: "Конфиденциальность", terms: "Условия", contact: "Контакты" },
+  ja: { tagline: "記録 • 収集 • バトル • 取引", impressum: "法的表示", privacy: "プライバシー", terms: "利用規約", contact: "お問い合わせ" },
+  tr: { tagline: "Takip et • Topla • Savaş • Takas et", impressum: "Yasal bilgiler", privacy: "Gizlilik", terms: "Şartlar", contact: "İletişim" },
+  vi: { tagline: "Theo dõi • Sưu tầm • Đấu • Giao dịch", impressum: "Thông tin pháp lý", privacy: "Quyền riêng tư", terms: "Điều khoản", contact: "Liên hệ" },
+  id: { tagline: "Lacak • Koleksi • Bertarung • Berdagang", impressum: "Informasi hukum", privacy: "Privasi", terms: "Syarat", contact: "Kontak" },
+  ur: { tagline: "ٹریک • جمع • مقابلہ • تجارت", impressum: "قانونی نوٹس", privacy: "رازداری", terms: "شرائط", contact: "رابطہ" },
+};
+
+function FlagIcon({ countryCode, alt }: { countryCode: string; alt: string }) {
+  return (
+    <img
+      src={`https://flagcdn.com/w40/${countryCode}.png`}
+      alt={alt}
+      width={18}
+      height={13}
+      style={flagImageStyle}
+      loading="lazy"
+    />
+  );
+}
 
 export default function HomePage() {
   const [helpOpen, setHelpOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [selectedShotIndex, setSelectedShotIndex] = useState<number | null>(null);
   const [language, setLanguage] = useState<LanguageKey>("de");
+  const [languageMenuOpen, setLanguageMenuOpen] = useState(false);
 
   const t = translations[language];
   const screenshots = useMemo<ScreenshotItem[]>(() => t.screenshots, [t]);
   const selectedShot = selectedShotIndex !== null ? screenshots[selectedShotIndex] : null;
   const dir = language === "ar" || language === "ur" ? "rtl" : "ltr";
+  const selectedLanguage = languageOptions.find((option) => option.key === language) ?? languageOptions[0];
+  const footer = footerTranslations[language];
 
   useEffect(() => {
     function handleResize() {
@@ -724,29 +758,42 @@ export default function HomePage() {
         <div style={heroGlowOneStyle} />
         <div style={heroGlowTwoStyle} />
 
-        <div style={languageBarStyle}>
-          <span style={languageFlagStyle} aria-hidden="true">
-            {languageOptions.find((option) => option.key === language)?.flag ?? "🌐"}
-          </span>
-          <label style={languageLabelStyle} htmlFor="language-select">
-            {t.languageLabel}
-          </label>
-          <select
-            id="language-select"
-            value={language}
-            onChange={(e) => setLanguage(e.target.value as LanguageKey)}
-            style={languageSelectStyle}
+        <div style={{ ...languageBarStyle, top: isMobile ? "12px" : "14px", right: isMobile ? "12px" : "14px" }}>
+          <button
+            type="button"
+            style={languageButtonStyle}
+            onClick={() => setLanguageMenuOpen((open) => !open)}
             aria-label={t.languageLabel}
           >
-            {languageOptions.map((option) => (
-              <option key={option.key} value={option.key}>
-                {`${option.flag} ${option.label}`}
-              </option>
-            ))}
-          </select>
+            <FlagIcon countryCode={selectedLanguage.countryCode} alt={selectedLanguage.label} />
+            <span>{selectedLanguage.label}</span>
+            <span aria-hidden="true" style={languageChevronStyle}>▾</span>
+          </button>
+
+          {languageMenuOpen && (
+            <div style={languageMenuStyle}>
+              {languageOptions.map((option) => (
+                <button
+                  key={option.key}
+                  type="button"
+                  style={{
+                    ...languageOptionStyle,
+                    ...(option.key === language ? languageOptionActiveStyle : null),
+                  }}
+                  onClick={() => {
+                    setLanguage(option.key);
+                    setLanguageMenuOpen(false);
+                  }}
+                >
+                  <FlagIcon countryCode={option.countryCode} alt={option.label} />
+                  <span>{option.label}</span>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
-        <div style={{ ...heroInnerStyle, padding: isMobile ? "40px 18px 30px 18px" : "58px 24px" }}>
+        <div style={{ ...heroInnerStyle, padding: isMobile ? "76px 18px 30px 18px" : "58px 24px" }}>
           <div style={{ ...logoWrapperStyle, marginBottom: isMobile ? "18px" : "22px" }}>
             <div style={{ ...logoOuterStyle, width: isMobile ? "138px" : "180px", height: isMobile ? "138px" : "180px", borderRadius: isMobile ? "32px" : "40px" }}>
               <div style={{ ...logoInnerStyle, borderRadius: isMobile ? "24px" : "32px" }}>
@@ -843,6 +890,20 @@ export default function HomePage() {
         </div>
       </section>
 
+
+      <footer style={footerStyle}>
+        <div style={footerBrandStyle}>
+          <strong>Cardletics</strong>
+          <span>{footer.tagline}</span>
+        </div>
+        <nav style={footerLinksStyle}>
+          <a href="/impressum" style={footerLinkStyle}>{footer.impressum}</a>
+          <a href="/datenschutz" style={footerLinkStyle}>{footer.privacy}</a>
+          <a href="/agb" style={footerLinkStyle}>{footer.terms}</a>
+          <a href="/kontakt" style={footerLinkStyle}>{footer.contact}</a>
+        </nav>
+      </footer>
+
       <div style={{ ...helpWidgetWrapStyle, right: isMobile ? "14px" : "18px", bottom: isMobile ? "14px" : "18px" }}>
         {helpOpen && (
           <div style={{ ...helpPanelStyle, width: isMobile ? "calc(100vw - 28px)" : "min(360px, calc(100vw - 36px))" }}>
@@ -886,44 +947,75 @@ export default function HomePage() {
 
 const languageBarStyle: React.CSSProperties = {
   position: "absolute",
-  top: "14px",
-  right: "14px",
-  zIndex: 5,
-  display: "flex",
+  zIndex: 8,
+};
+
+const languageButtonStyle: React.CSSProperties = {
+  minHeight: "34px",
+  display: "inline-flex",
   alignItems: "center",
-  gap: "6px",
-  padding: "5px 7px",
+  gap: "8px",
+  padding: "6px 10px",
   borderRadius: "999px",
-  background: "rgba(8, 19, 12, 0.72)",
-  border: "1px solid rgba(134,239,172,0.20)",
+  background: "rgba(8, 19, 12, 0.78)",
+  border: "1px solid rgba(134,239,172,0.22)",
+  color: "#ffffff",
+  fontSize: "12px",
+  fontWeight: 900,
+  cursor: "pointer",
   backdropFilter: "blur(10px)",
   boxShadow: "0 10px 24px rgba(0,0,0,0.22)",
 };
 
-const languageFlagStyle: React.CSSProperties = {
-  fontSize: "15px",
+const languageChevronStyle: React.CSSProperties = {
+  color: "rgba(255,255,255,0.58)",
+  fontSize: "11px",
   lineHeight: 1,
 };
 
-const languageLabelStyle: React.CSSProperties = {
-  color: "#86efac",
-  fontSize: "10px",
-  fontWeight: 900,
-  letterSpacing: "0.03em",
+const languageMenuStyle: React.CSSProperties = {
+  position: "absolute",
+  top: "40px",
+  right: 0,
+  width: "190px",
+  maxHeight: "280px",
+  overflowY: "auto",
+  padding: "6px",
+  borderRadius: "16px",
+  background: "rgba(12, 23, 18, 0.98)",
+  border: "1px solid rgba(134,239,172,0.18)",
+  boxShadow: "0 18px 40px rgba(0,0,0,0.38)",
 };
 
-const languageSelectStyle: React.CSSProperties = {
-  minHeight: "26px",
-  maxWidth: "126px",
-  borderRadius: "999px",
-  border: "1px solid rgba(255,255,255,0.10)",
-  background: "#111714",
-  color: "#ffffff",
-  padding: "3px 8px",
-  fontSize: "11px",
-  fontWeight: 900,
-  outline: "none",
+const languageOptionStyle: React.CSSProperties = {
+  width: "100%",
+  minHeight: "34px",
+  display: "flex",
+  alignItems: "center",
+  gap: "8px",
+  padding: "7px 9px",
+  border: "none",
+  borderRadius: "12px",
+  background: "transparent",
+  color: "#e7f1eb",
+  fontSize: "12px",
+  fontWeight: 800,
+  textAlign: "left",
   cursor: "pointer",
+};
+
+const languageOptionActiveStyle: React.CSSProperties = {
+  background: "rgba(34,197,94,0.16)",
+  color: "#bbf7d0",
+};
+
+const flagImageStyle: React.CSSProperties = {
+  width: "18px",
+  height: "13px",
+  objectFit: "cover",
+  borderRadius: "3px",
+  boxShadow: "0 0 0 1px rgba(255,255,255,0.16)",
+  flex: "0 0 auto",
 };
 
 function FeatureCard({ title, text }: { title: string; text: string }) {
@@ -1752,4 +1844,40 @@ const lightboxMiniButtonStyle: React.CSSProperties = {
   color: "#e7f1eb",
   fontWeight: 700,
   cursor: "pointer",
+};
+
+const footerStyle: React.CSSProperties = {
+  maxWidth: "1200px",
+  margin: "28px auto 0 auto",
+  padding: "18px",
+  borderRadius: "20px",
+  background: "#111714",
+  border: "1px solid #27312d",
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+  gap: "14px",
+  flexWrap: "wrap",
+};
+
+const footerBrandStyle: React.CSSProperties = {
+  display: "grid",
+  gap: "4px",
+  color: "#ffffff",
+};
+
+const footerLinksStyle: React.CSSProperties = {
+  display: "flex",
+  gap: "10px",
+  flexWrap: "wrap",
+};
+
+const footerLinkStyle: React.CSSProperties = {
+  color: "#86efac",
+  textDecoration: "none",
+  fontWeight: 800,
+  padding: "8px 10px",
+  borderRadius: "999px",
+  background: "rgba(34,197,94,0.08)",
+  border: "1px solid rgba(134,239,172,0.18)",
 };
