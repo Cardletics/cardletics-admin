@@ -2,12 +2,9 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import type { CSSProperties } from "react";
-import { useRouter } from "next/navigation";
 import { supabase } from "../../../lib/supabase";
 
 export default function AdminLoginPage() {
-  const router = useRouter();
-
   const [loginIdentifier, setLoginIdentifier] = useState("");
   const [password, setPassword] = useState("");
 
@@ -50,7 +47,7 @@ export default function AdminLoginPage() {
       if (cancelled) return;
 
       if (isAdmin === true) {
-        router.replace(safeRedirect);
+        window.location.assign(safeRedirect);
         return;
       }
 
@@ -67,7 +64,7 @@ export default function AdminLoginPage() {
     return () => {
       cancelled = true;
     };
-  }, [router]);
+  }, []);
 
   async function resolveLoginEmail(identifier: string) {
     const cleanIdentifier = identifier.trim().toLowerCase();
@@ -106,6 +103,7 @@ export default function AdminLoginPage() {
     }
 
     setLoading(true);
+    setInfoMessage("Login wird geprüft...");
 
     let loginEmail: string | null = null;
 
@@ -113,6 +111,7 @@ export default function AdminLoginPage() {
       loginEmail = await resolveLoginEmail(cleanIdentifier);
     } catch (error) {
       setLoading(false);
+      setInfoMessage(null);
       setErrorMessage(
         error instanceof Error
           ? error.message
@@ -123,21 +122,42 @@ export default function AdminLoginPage() {
 
     if (!loginEmail) {
       setLoading(false);
+      setInfoMessage(null);
       setErrorMessage(
         "Kein Adminaccount mit diesem Username oder dieser E-Mail gefunden."
       );
       return;
     }
 
-    const { error: loginError } = await supabase.auth.signInWithPassword({
-      email: loginEmail,
-      password,
-    });
+    setInfoMessage("Adminaccount gefunden. Anmeldung läuft...");
 
-    if (loginError) {
+    const { data: loginData, error: loginError } =
+      await supabase.auth.signInWithPassword({
+        email: loginEmail,
+        password,
+      });
+
+    if (loginError || !loginData.session) {
       setLoading(false);
+      setInfoMessage(null);
       setErrorMessage(
         "Login fehlgeschlagen. Bitte prüfe Username/E-Mail und Passwort."
+      );
+      return;
+    }
+
+    setInfoMessage("Session erstellt. Adminrechte werden geprüft...");
+
+    // Wichtig für mobile Browser: kurzer Puffer, damit Supabase die Session sicher speichern kann.
+    await new Promise((resolve) => setTimeout(resolve, 400));
+
+    const { data: sessionCheck } = await supabase.auth.getSession();
+
+    if (!sessionCheck.session) {
+      setLoading(false);
+      setInfoMessage(null);
+      setErrorMessage(
+        "Login wurde erstellt, aber die Session konnte im Browser nicht gespeichert werden. Bitte Website-Daten/Cookies für cardletics.com erlauben."
       );
       return;
     }
@@ -149,6 +169,7 @@ export default function AdminLoginPage() {
     if (adminError) {
       await supabase.auth.signOut();
       setLoading(false);
+      setInfoMessage(null);
       setErrorMessage(adminError.message || "Admin-Prüfung fehlgeschlagen.");
       return;
     }
@@ -156,12 +177,15 @@ export default function AdminLoginPage() {
     if (isAdmin !== true) {
       await supabase.auth.signOut();
       setLoading(false);
+      setInfoMessage(null);
       setErrorMessage("Login erfolgreich, aber dieser Account ist kein Admin.");
       return;
     }
 
     setInfoMessage("Login erfolgreich. Weiterleitung...");
-    router.replace(redirectTo);
+
+    // Auf mobilen Browsern stabiler als router.replace().
+    window.location.assign(redirectTo);
   }
 
   if (checkingSession) {
@@ -195,11 +219,14 @@ export default function AdminLoginPage() {
             <label style={labelStyle}>Username oder E-Mail</label>
             <input
               type="text"
-              placeholder="crank oder info@cardletics.com"
+              placeholder="Username oder E-Mail"
               value={loginIdentifier}
               onChange={(event) => setLoginIdentifier(event.target.value)}
               style={inputStyle}
               autoComplete="username"
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
             />
           </div>
 
@@ -221,8 +248,7 @@ export default function AdminLoginPage() {
         </form>
 
         <p style={hintStyle}>
-          Du kannst jetzt wie in der App entweder den Username oder die E-Mail
-          eingeben. Das Passwort bleibt das Supabase/Auth-Passwort dieses Accounts.
+          Nur freigeschaltete Adminaccounts können sich hier anmelden.
         </p>
       </div>
     </div>
