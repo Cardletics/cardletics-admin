@@ -1,17 +1,9 @@
-import Sidebar from "../../components/Sidebar";
+import AdminAuthShell from "../../components/AdminAuthShell";
 
 export default function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  return (
-    <div className="admin-shell">
-      <Sidebar />
-
-      <main className="admin-main">
-        <div className="admin-content">{children}</div>
-      </main>
-    </div>
-  );
+  return <AdminAuthShell>{children}</AdminAuthShell>;
 }
