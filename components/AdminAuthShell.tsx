@@ -22,6 +22,24 @@ export default function AdminAuthShell({ children }: { children: ReactNode }) {
   useEffect(() => {
     let cancelled = false;
 
+    async function waitForSession() {
+      for (let attempt = 0; attempt < 8; attempt += 1) {
+        const { data, error } = await supabase.auth.getSession();
+
+        if (error) {
+          return { session: null, error };
+        }
+
+        if (data.session) {
+          return { session: data.session, error: null };
+        }
+
+        await new Promise((resolve) => setTimeout(resolve, 250));
+      }
+
+      return { session: null, error: null };
+    }
+
     async function checkAdminSession() {
       if (isLoginPage) {
         setAuthState("allowed");
@@ -31,8 +49,7 @@ export default function AdminAuthShell({ children }: { children: ReactNode }) {
       setAuthState("checking");
       setMessage("Admin-Session wird geprüft...");
 
-      const { data: sessionData, error: sessionError } =
-        await supabase.auth.getSession();
+      const { session, error: sessionError } = await waitForSession();
 
       if (cancelled) return;
 
@@ -40,22 +57,21 @@ export default function AdminAuthShell({ children }: { children: ReactNode }) {
         console.error("Supabase Session Fehler:", sessionError);
         setAuthState("blocked");
         setMessage("Session konnte nicht geprüft werden.");
-        router.replace("/admin/login");
+        window.location.replace("/admin/login");
         return;
       }
-
-      const session = sessionData.session;
 
       if (!session) {
         setSessionEmail(null);
         setAuthState("blocked");
         setMessage("Nicht eingeloggt. Weiterleitung zum Admin-Login...");
         const redirect = encodeURIComponent(pathname || "/admin/users");
-        router.replace(`/admin/login?redirect=${redirect}`);
+        window.location.replace(`/admin/login?redirect=${redirect}`);
         return;
       }
 
       setSessionEmail(session.user.email ?? null);
+      setMessage("Adminrechte werden geprüft...");
 
       const { data: isAdmin, error: adminError } = await supabase.rpc(
         "is_admin_user"
@@ -78,7 +94,7 @@ export default function AdminAuthShell({ children }: { children: ReactNode }) {
         setSessionEmail(null);
         setAuthState("blocked");
         setMessage("Dieser Account hat keine Adminrechte.");
-        router.replace("/admin/login?error=not_admin");
+        window.location.replace("/admin/login?error=not_admin");
         return;
       }
 
@@ -99,7 +115,7 @@ export default function AdminAuthShell({ children }: { children: ReactNode }) {
       if (event === "SIGNED_OUT") {
         setSessionEmail(null);
         const redirect = encodeURIComponent(pathname || "/admin/users");
-        router.replace(`/admin/login?redirect=${redirect}`);
+        window.location.replace(`/admin/login?redirect=${redirect}`);
       }
     });
 
@@ -122,7 +138,7 @@ export default function AdminAuthShell({ children }: { children: ReactNode }) {
     }
 
     setSessionEmail(null);
-    router.replace("/admin/login");
+    window.location.replace("/admin/login");
   }
 
   if (isLoginPage) {
@@ -148,7 +164,7 @@ export default function AdminAuthShell({ children }: { children: ReactNode }) {
           <p style={statusTextStyle}>{message}</p>
           <button
             type="button"
-            onClick={() => router.replace("/admin/login")}
+            onClick={() => window.location.replace("/admin/login")}
             style={buttonStyle}
           >
             Zum Login
