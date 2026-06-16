@@ -8,7 +8,7 @@ import { supabase } from "../../../lib/supabase";
 export default function AdminLoginPage() {
   const router = useRouter();
 
-  const [email, setEmail] = useState("");
+  const [loginIdentifier, setLoginIdentifier] = useState("");
   const [password, setPassword] = useState("");
 
   const [redirectTo, setRedirectTo] = useState("/admin/users");
@@ -69,29 +69,76 @@ export default function AdminLoginPage() {
     };
   }, [router]);
 
+  async function resolveLoginEmail(identifier: string) {
+    const cleanIdentifier = identifier.trim().toLowerCase();
+
+    if (!cleanIdentifier) {
+      return null;
+    }
+
+    const { data, error } = await supabase.rpc("admin_resolve_login_identifier", {
+      p_identifier: cleanIdentifier,
+    });
+
+    if (error) {
+      console.error("Username/E-Mail-Auflösung fehlgeschlagen:", error);
+      throw new Error(error.message || "Username/E-Mail konnte nicht geprüft werden.");
+    }
+
+    if (!data || typeof data !== "string") {
+      return null;
+    }
+
+    return data.trim().toLowerCase();
+  }
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     setErrorMessage(null);
     setInfoMessage(null);
 
-    const cleanEmail = email.trim().toLowerCase();
+    const cleanIdentifier = loginIdentifier.trim();
 
-    if (!cleanEmail || !password) {
-      setErrorMessage("Bitte E-Mail und Passwort eingeben.");
+    if (!cleanIdentifier || !password) {
+      setErrorMessage("Bitte Username/E-Mail und Passwort eingeben.");
       return;
     }
 
     setLoading(true);
 
+    let loginEmail: string | null = null;
+
+    try {
+      loginEmail = await resolveLoginEmail(cleanIdentifier);
+    } catch (error) {
+      setLoading(false);
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : "Username/E-Mail konnte nicht geprüft werden."
+      );
+      return;
+    }
+
+    if (!loginEmail) {
+      setLoading(false);
+      setErrorMessage(
+        "Kein Adminaccount mit diesem Username oder dieser E-Mail gefunden."
+      );
+      return;
+    }
+
     const { error: loginError } = await supabase.auth.signInWithPassword({
-      email: cleanEmail,
+      email: loginEmail,
       password,
     });
 
     if (loginError) {
       setLoading(false);
-      setErrorMessage(loginError.message || "Login fehlgeschlagen.");
+      setErrorMessage(
+        "Login fehlgeschlagen. Bitte prüfe Username/E-Mail und Passwort."
+      );
       return;
     }
 
@@ -135,8 +182,8 @@ export default function AdminLoginPage() {
           <p style={eyebrowStyle}>Cardletics</p>
           <h1 style={titleStyle}>Admin Login</h1>
           <p style={subtitleStyle}>
-            Melde dich mit einem echten Supabase-Adminaccount per E-Mail und
-            Passwort an.
+            Melde dich mit deinem Admin-Username oder deiner Admin-E-Mail und
+            deinem Passwort an.
           </p>
         </div>
 
@@ -145,14 +192,14 @@ export default function AdminLoginPage() {
 
         <form onSubmit={handleSubmit} style={formStyle}>
           <div>
-            <label style={labelStyle}>E-Mail</label>
+            <label style={labelStyle}>Username oder E-Mail</label>
             <input
-              type="email"
-              placeholder="info@cardletics.com"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
+              type="text"
+              placeholder="crank oder info@cardletics.com"
+              value={loginIdentifier}
+              onChange={(event) => setLoginIdentifier(event.target.value)}
               style={inputStyle}
-              autoComplete="email"
+              autoComplete="username"
             />
           </div>
 
@@ -174,8 +221,8 @@ export default function AdminLoginPage() {
         </form>
 
         <p style={hintStyle}>
-          Wichtig: Username allein reicht nicht. Supabase muss eine echte Auth-Session
-          erstellen, damit <strong>auth.uid()</strong> funktioniert.
+          Du kannst jetzt wie in der App entweder den Username oder die E-Mail
+          eingeben. Das Passwort bleibt das Supabase/Auth-Passwort dieses Accounts.
         </p>
       </div>
     </div>
