@@ -10,60 +10,24 @@ export default function AdminLoginPage() {
 
   const [redirectTo, setRedirectTo] = useState("/admin/users");
   const [loading, setLoading] = useState(false);
-  const [checkingSession, setCheckingSession] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [infoMessage, setInfoMessage] = useState<string | null>(null);
 
   useEffect(() => {
-    let cancelled = false;
+    const params = new URLSearchParams(window.location.search);
+    const redirectParam = params.get("redirect");
+    const errorParam = params.get("error");
 
-    async function prepareLogin() {
-      const params = new URLSearchParams(window.location.search);
-      const redirectParam = params.get("redirect");
-      const errorParam = params.get("error");
+    const safeRedirect =
+      redirectParam && redirectParam.startsWith("/admin")
+        ? redirectParam
+        : "/admin/users";
 
-      const safeRedirect =
-        redirectParam && redirectParam.startsWith("/admin")
-          ? redirectParam
-          : "/admin/users";
+    setRedirectTo(safeRedirect);
 
-      setRedirectTo(safeRedirect);
-
-      if (errorParam === "not_admin") {
-        setErrorMessage("Dieser Account hat keine Adminrechte.");
-      }
-
-      const { data } = await supabase.auth.getSession();
-
-      if (cancelled) return;
-
-      if (!data.session) {
-        setCheckingSession(false);
-        return;
-      }
-
-      const { data: isAdmin } = await supabase.rpc("is_admin_user");
-
-      if (cancelled) return;
-
-      if (isAdmin === true) {
-        window.location.assign(safeRedirect);
-        return;
-      }
-
-      await supabase.auth.signOut();
-
-      if (cancelled) return;
-
-      setCheckingSession(false);
-      setErrorMessage("Die vorhandene Session hat keine Adminrechte.");
+    if (errorParam === "not_admin") {
+      setErrorMessage("Dieser Account hat keine Adminrechte.");
     }
-
-    prepareLogin();
-
-    return () => {
-      cancelled = true;
-    };
   }, []);
 
   async function resolveLoginEmail(identifier: string) {
@@ -148,8 +112,7 @@ export default function AdminLoginPage() {
 
     setInfoMessage("Session erstellt. Adminrechte werden geprüft...");
 
-    // Wichtig für mobile Browser: kurzer Puffer, damit Supabase die Session sicher speichern kann.
-    await new Promise((resolve) => setTimeout(resolve, 400));
+    await new Promise((resolve) => setTimeout(resolve, 800));
 
     const { data: sessionCheck } = await supabase.auth.getSession();
 
@@ -157,7 +120,7 @@ export default function AdminLoginPage() {
       setLoading(false);
       setInfoMessage(null);
       setErrorMessage(
-        "Login wurde erstellt, aber die Session konnte im Browser nicht gespeichert werden. Bitte Website-Daten/Cookies für cardletics.com erlauben."
+        "Login wurde erstellt, aber die Session konnte im Browser nicht gespeichert werden. Bitte Cookies/Website-Daten für cardletics.com erlauben."
       );
       return;
     }
@@ -184,19 +147,8 @@ export default function AdminLoginPage() {
 
     setInfoMessage("Login erfolgreich. Weiterleitung...");
 
-    // Auf mobilen Browsern stabiler als router.replace().
-    window.location.assign(redirectTo);
-  }
-
-  if (checkingSession) {
-    return (
-      <div style={pageStyle}>
-        <div style={cardStyle}>
-          <h1 style={titleStyle}>Cardletics Admin</h1>
-          <p style={subtitleStyle}>Session wird geprüft...</p>
-        </div>
-      </div>
-    );
+    // Vollständiger Seitenwechsel ist auf mobilen Browsern stabiler als router.replace().
+    window.location.href = redirectTo;
   }
 
   return (
