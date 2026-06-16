@@ -561,7 +561,7 @@ function MiniStat({ title, value }: { title: string; value: string }) {
   );
 }
 
-function InfoItem({ label, value }: { label: string }) {
+function InfoItem({ label, value }: { label: string; value: string }) {
   return (
     <div style={infoItemStyle}>
       <div style={infoLabelStyle}>{label}</div>
