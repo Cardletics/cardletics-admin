@@ -2,9 +2,12 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import type { CSSProperties } from "react";
+import { useRouter } from "next/navigation";
 import { supabase } from "../../../lib/supabase";
 
 export default function AdminLoginPage() {
+  const router = useRouter();
+
   const [loginIdentifier, setLoginIdentifier] = useState("");
   const [password, setPassword] = useState("");
 
@@ -93,34 +96,16 @@ export default function AdminLoginPage() {
       return;
     }
 
-    setInfoMessage("Adminaccount gefunden. Anmeldung läuft...");
+    const { error: loginError } = await supabase.auth.signInWithPassword({
+      email: loginEmail,
+      password,
+    });
 
-    const { data: loginData, error: loginError } =
-      await supabase.auth.signInWithPassword({
-        email: loginEmail,
-        password,
-      });
-
-    if (loginError || !loginData.session) {
+    if (loginError) {
       setLoading(false);
       setInfoMessage(null);
       setErrorMessage(
         "Login fehlgeschlagen. Bitte prüfe Username/E-Mail und Passwort."
-      );
-      return;
-    }
-
-    setInfoMessage("Session erstellt. Adminrechte werden geprüft...");
-
-    await new Promise((resolve) => setTimeout(resolve, 800));
-
-    const { data: sessionCheck } = await supabase.auth.getSession();
-
-    if (!sessionCheck.session) {
-      setLoading(false);
-      setInfoMessage(null);
-      setErrorMessage(
-        "Login wurde erstellt, aber die Session konnte im Browser nicht gespeichert werden. Bitte Cookies/Website-Daten für cardletics.com erlauben."
       );
       return;
     }
@@ -146,9 +131,7 @@ export default function AdminLoginPage() {
     }
 
     setInfoMessage("Login erfolgreich. Weiterleitung...");
-
-    // Vollständiger Seitenwechsel ist auf mobilen Browsern stabiler als router.replace().
-    window.location.href = redirectTo;
+    router.replace(redirectTo);
   }
 
   return (
