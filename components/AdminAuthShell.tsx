@@ -1,134 +1,181 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import type { CSSProperties, ReactNode } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { FormEvent, ReactNode, useEffect, useState } from "react";
+import type { CSSProperties } from "react";
 import Sidebar from "./Sidebar";
 import { supabase } from "../lib/supabase";
 
-type AuthState = "checking" | "allowed" | "blocked";
+type AuthState = "checking" | "login" | "allowed";
 
 export default function AdminAuthShell({ children }: { children: ReactNode }) {
-  const router = useRouter();
-  const pathname = usePathname();
-
   const [authState, setAuthState] = useState<AuthState>("checking");
-  const [message, setMessage] = useState("Admin-Session wird geprüft...");
-  const [sessionEmail, setSessionEmail] = useState<string | null>(null);
+  const [email, setEmail] = useState<string | null>(null);
+  const [loginIdentifier, setLoginIdentifier] = useState("");
+  const [password, setPassword] = useState("");
+  const [message, setMessage] = useState("Session wird geprüft...");
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
 
-  const isLoginPage = pathname === "/admin/login";
+  async function checkSession() {
+    setAuthState("checking");
+    setMessage("Session wird geprüft...");
+    setErrorMessage(null);
+
+    const { data: sessionData, error: sessionError } =
+      await supabase.auth.getSession();
+
+    if (sessionError) {
+      setEmail(null);
+      setAuthState("login");
+      setErrorMessage(sessionError.message);
+      return;
+    }
+
+    if (!sessionData.session) {
+      setEmail(null);
+      setAuthState("login");
+      setMessage("Bitte als Admin einloggen.");
+      return;
+    }
+
+    setEmail(sessionData.session.user.email ?? null);
+    setMessage("Adminrechte werden geprüft...");
+
+    const { data: isAdmin, error: adminError } = await supabase.rpc(
+      "is_admin_user"
+    );
+
+    if (adminError) {
+      setAuthState("login");
+      setErrorMessage(adminError.message);
+      return;
+    }
+
+    if (isAdmin !== true) {
+      await supabase.auth.signOut();
+      setEmail(null);
+      setAuthState("login");
+      setErrorMessage("Dieser Account ist kein Admin.");
+      return;
+    }
+
+    setAuthState("allowed");
+  }
 
   useEffect(() => {
-    let cancelled = false;
+    checkSession();
 
-    async function checkAdminSession() {
-      if (isLoginPage) {
-        setAuthState("allowed");
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(() => {
+      // Kein automatisches Redirect mehr. Nur Session neu prüfen.
+      checkSession();
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  async function resolveLoginEmail(identifier: string) {
+    const cleanIdentifier = identifier.trim().toLowerCase();
+
+    if (!cleanIdentifier) return null;
+
+    const { data, error } = await supabase.rpc("admin_resolve_login_identifier", {
+      p_identifier: cleanIdentifier,
+    });
+
+    if (error) {
+      throw new Error(error.message || "Username/E-Mail konnte nicht geprüft werden.");
+    }
+
+    if (!data || typeof data !== "string") return null;
+
+    return data.trim().toLowerCase();
+  }
+
+  async function handleLogin(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    setErrorMessage(null);
+
+    if (!loginIdentifier.trim() || !password) {
+      setErrorMessage("Bitte Username/E-Mail und Passwort eingeben.");
+      return;
+    }
+
+    setLoading(true);
+    setMessage("Login wird geprüft...");
+
+    try {
+      const loginEmail = await resolveLoginEmail(loginIdentifier);
+
+      if (!loginEmail) {
+        setErrorMessage("Kein Adminaccount mit diesem Username oder dieser E-Mail gefunden.");
+        setLoading(false);
         return;
       }
 
-      setAuthState("checking");
-      setMessage("Admin-Session wird geprüft...");
+      const { error: loginError } = await supabase.auth.signInWithPassword({
+        email: loginEmail,
+        password,
+      });
 
-      const { data: sessionData, error: sessionError } =
-        await supabase.auth.getSession();
-
-      if (cancelled) return;
-
-      if (sessionError) {
-        console.error("Supabase Session Fehler:", sessionError);
-        setSessionEmail(null);
-        setAuthState("blocked");
-        setMessage("Session konnte nicht geprüft werden.");
-        router.replace("/admin/login");
+      if (loginError) {
+        setErrorMessage("Login fehlgeschlagen. Bitte prüfe Username/E-Mail und Passwort.");
+        setLoading(false);
         return;
       }
 
-      const session = sessionData.session;
+      setMessage("Login erfolgreich. Adminrechte werden geprüft...");
 
-      if (!session) {
-        setSessionEmail(null);
-        setAuthState("blocked");
-        setMessage("Nicht eingeloggt. Weiterleitung zum Admin-Login...");
-        const redirect = encodeURIComponent(pathname || "/admin/users");
-        router.replace(`/admin/login?redirect=${redirect}`);
+      const { data: sessionData } = await supabase.auth.getSession();
+
+      if (!sessionData.session) {
+        setErrorMessage("Login erfolgreich, aber die Session wurde nicht gespeichert.");
+        setLoading(false);
         return;
       }
 
-      setSessionEmail(session.user.email ?? null);
-      setMessage("Adminrechte werden geprüft...");
+      setEmail(sessionData.session.user.email ?? null);
 
       const { data: isAdmin, error: adminError } = await supabase.rpc(
         "is_admin_user"
       );
 
-      if (cancelled) return;
-
       if (adminError) {
-        console.error("Admin-Prüfung fehlgeschlagen:", adminError);
-        setAuthState("blocked");
-        setMessage(adminError.message || "Admin-Prüfung fehlgeschlagen.");
+        setErrorMessage(adminError.message || "Admin-Prüfung fehlgeschlagen.");
+        setLoading(false);
         return;
       }
 
       if (isAdmin !== true) {
         await supabase.auth.signOut();
-
-        if (cancelled) return;
-
-        setSessionEmail(null);
-        setAuthState("blocked");
-        setMessage("Dieser Account hat keine Adminrechte.");
-        router.replace("/admin/login?error=not_admin");
+        setErrorMessage("Login erfolgreich, aber dieser Account ist kein Admin.");
+        setLoading(false);
         return;
       }
 
       setAuthState("allowed");
+      setPassword("");
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error ? error.message : "Login konnte nicht geprüft werden."
+      );
     }
 
-    checkAdminSession();
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
-      if (isLoginPage) return;
-
-      if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
-        setSessionEmail(session?.user.email ?? null);
-      }
-
-      if (event === "SIGNED_OUT") {
-        setSessionEmail(null);
-        const redirect = encodeURIComponent(pathname || "/admin/users");
-        router.replace(`/admin/login?redirect=${redirect}`);
-      }
-    });
-
-    return () => {
-      cancelled = true;
-      subscription.unsubscribe();
-    };
-  }, [isLoginPage, pathname, router]);
+    setLoading(false);
+  }
 
   async function handleLogout() {
     setLoggingOut(true);
-
-    const { error } = await supabase.auth.signOut();
-
-    if (error) {
-      console.error("Logout fehlgeschlagen:", error);
-      setLoggingOut(false);
-      setMessage(error.message || "Logout fehlgeschlagen.");
-      return;
-    }
-
-    setSessionEmail(null);
-    router.replace("/admin/login");
-  }
-
-  if (isLoginPage) {
-    return <>{children}</>;
+    await supabase.auth.signOut();
+    setEmail(null);
+    setAuthState("login");
+    setPassword("");
+    setLoggingOut(false);
   }
 
   if (authState === "checking") {
@@ -142,18 +189,54 @@ export default function AdminAuthShell({ children }: { children: ReactNode }) {
     );
   }
 
-  if (authState === "blocked") {
+  if (authState === "login") {
     return (
-      <div style={centerPageStyle}>
-        <div style={errorCardStyle}>
-          <h1 style={statusTitleStyle}>Admin-Zugriff blockiert</h1>
-          <p style={statusTextStyle}>{message}</p>
-          <button
-            type="button"
-            onClick={() => router.replace("/admin/login")}
-            style={buttonStyle}
-          >
-            Zum Login
+      <div style={loginPageStyle}>
+        <div style={loginCardStyle}>
+          <p style={eyebrowStyle}>Cardletics</p>
+          <h1 style={statusTitleStyle}>Admin Login</h1>
+          <p style={statusTextStyle}>
+            Melde dich mit deinem Admin-Username oder deiner Admin-E-Mail an.
+          </p>
+
+          {errorMessage && <div style={errorBoxStyle}>{errorMessage}</div>}
+          {!errorMessage && message && <div style={infoBoxStyle}>{message}</div>}
+
+          <form onSubmit={handleLogin} style={formStyle}>
+            <div>
+              <label style={labelStyle}>Username oder E-Mail</label>
+              <input
+                type="text"
+                placeholder="Username oder E-Mail"
+                value={loginIdentifier}
+                onChange={(event) => setLoginIdentifier(event.target.value)}
+                style={inputStyle}
+                autoComplete="username"
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
+              />
+            </div>
+
+            <div>
+              <label style={labelStyle}>Passwort</label>
+              <input
+                type="password"
+                placeholder="Passwort"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                style={inputStyle}
+                autoComplete="current-password"
+              />
+            </div>
+
+            <button type="submit" disabled={loading} style={buttonStyle}>
+              {loading ? "Login läuft..." : "Einloggen"}
+            </button>
+          </form>
+
+          <button type="button" onClick={checkSession} style={secondaryButtonStyle}>
+            Session neu prüfen
           </button>
         </div>
       </div>
@@ -168,7 +251,7 @@ export default function AdminAuthShell({ children }: { children: ReactNode }) {
         <div style={topbarStyle}>
           <div>
             <div style={topbarLabelStyle}>Eingeloggt als Admin</div>
-            <div style={topbarEmailStyle}>{sessionEmail || "Unbekannte Session"}</div>
+            <div style={topbarEmailStyle}>{email || "Unbekannte Session"}</div>
           </div>
 
           <button
@@ -200,6 +283,12 @@ const centerPageStyle: CSSProperties = {
   padding: "24px",
 };
 
+const loginPageStyle: CSSProperties = {
+  ...centerPageStyle,
+  background:
+    "radial-gradient(circle at top, rgba(34,197,94,0.18), transparent 34%), #07100c",
+};
+
 const statusCardStyle: CSSProperties = {
   width: "100%",
   maxWidth: "440px",
@@ -210,16 +299,26 @@ const statusCardStyle: CSSProperties = {
   boxShadow: "0 18px 60px rgba(0,0,0,0.35)",
 };
 
-const errorCardStyle: CSSProperties = {
+const loginCardStyle: CSSProperties = {
   ...statusCardStyle,
-  border: "1px solid #7f1d1d",
-  background: "#331717",
+  maxWidth: "460px",
+  borderRadius: "22px",
+  padding: "26px",
+};
+
+const eyebrowStyle: CSSProperties = {
+  margin: "0 0 8px 0",
+  color: "#86efac",
+  fontWeight: 800,
+  letterSpacing: "0.08em",
+  textTransform: "uppercase",
+  fontSize: "12px",
 };
 
 const statusTitleStyle: CSSProperties = {
   margin: "0 0 10px 0",
   color: "#e7f1eb",
-  fontSize: "26px",
+  fontSize: "30px",
 };
 
 const statusTextStyle: CSSProperties = {
@@ -228,13 +327,69 @@ const statusTextStyle: CSSProperties = {
   lineHeight: 1.5,
 };
 
+const errorBoxStyle: CSSProperties = {
+  background: "#331717",
+  border: "1px solid #7f1d1d",
+  color: "#fecaca",
+  borderRadius: "14px",
+  padding: "12px 14px",
+  marginBottom: "16px",
+  lineHeight: 1.5,
+};
+
+const infoBoxStyle: CSSProperties = {
+  background: "#163322",
+  border: "1px solid #166534",
+  color: "#bbf7d0",
+  borderRadius: "14px",
+  padding: "12px 14px",
+  marginBottom: "16px",
+  lineHeight: 1.5,
+};
+
+const formStyle: CSSProperties = {
+  display: "grid",
+  gap: "16px",
+};
+
+const labelStyle: CSSProperties = {
+  display: "block",
+  marginBottom: "8px",
+  color: "#cfe0d6",
+  fontWeight: 800,
+};
+
+const inputStyle: CSSProperties = {
+  width: "100%",
+  minHeight: "48px",
+  borderRadius: "14px",
+  border: "1px solid #27312d",
+  background: "#0f1512",
+  color: "#e7f1eb",
+  padding: "12px 14px",
+  boxSizing: "border-box",
+  outline: "none",
+};
+
 const buttonStyle: CSSProperties = {
-  minHeight: "44px",
-  padding: "10px 16px",
-  borderRadius: "12px",
+  minHeight: "50px",
   border: "0",
+  borderRadius: "14px",
   background: "#22c55e",
   color: "#08130c",
+  fontWeight: 900,
+  fontSize: "15px",
+  cursor: "pointer",
+};
+
+const secondaryButtonStyle: CSSProperties = {
+  marginTop: "12px",
+  minHeight: "42px",
+  padding: "9px 14px",
+  borderRadius: "12px",
+  border: "1px solid #27312d",
+  background: "#101714",
+  color: "#e7f1eb",
   fontWeight: 800,
   cursor: "pointer",
 };
