@@ -1,683 +1,487 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import type { CSSProperties } from "react";
 import { supabase } from "../../lib/supabase";
 
-type Profile = {
+type JsonValue = string | number | boolean | null | JsonObject | JsonArray;
+type JsonObject = { [key: string]: JsonValue };
+type JsonArray = JsonValue[];
+
+type DashboardRow = {
+  total_users: number | string | null;
+  active_15m: number | string | null;
+  active_24h: number | string | null;
+  active_7d: number | string | null;
+  new_24h: number | string | null;
+  new_7d: number | string | null;
+  new_30d: number | string | null;
+
+  total_coins: number | string | null;
+  avg_coins: number | string | null;
+  total_card_points: number | string | null;
+
+  total_subscriptions: number | string | null;
+  active_subscriptions: number | string | null;
+  paid_active_subscriptions: number | string | null;
+  variant_free: number | string | null;
+  variant_basic: number | string | null;
+  variant_pro: number | string | null;
+  variant_elite: number | string | null;
+  variant_master: number | string | null;
+
+  subscription_revenue_total: number | string | null;
+  subscription_revenue_active: number | string | null;
+  coin_revenue_total: number | string | null;
+  real_money_total: number | string | null;
+  real_money_today: number | string | null;
+  real_money_7d: number | string | null;
+  real_money_30d: number | string | null;
+
+  coin_purchase_count: number | string | null;
+  coin_purchase_count_30d: number | string | null;
+  boost_purchase_count: number | string | null;
+  boost_purchase_count_30d: number | string | null;
+  boost_coins_spent_total: number | string | null;
+  pending_pack_rewards: number | string | null;
+
+  latest_users: JsonArray | null;
+  latest_revenue_events: JsonArray | null;
+  daily_revenue_chart: JsonArray | null;
+};
+
+type LatestUser = {
   id: string;
+  email: string | null;
   username: string | null;
-  card_points: number | null;
-  created_at: string;
+  coins: number | string | null;
+  card_points: number | string | null;
+  created_at: string | null;
+  last_seen_at: string | null;
 };
 
-type Subscription = {
+type RevenueEvent = {
   id: string;
+  kind: string;
+  label: string | null;
+  amount_eur: number | string | null;
   user_id: string;
-  variant: "Free" | "Basic" | "Pro" | "Elite" | "Master";
-  status: "active" | "expired" | "cancelled" | "trialing";
-  started_at: string;
-  expires_at: string | null;
-  provider: string | null;
-  is_affiliate: boolean;
-  price_eur: number | null;
-  created_at: string;
+  email: string | null;
+  username: string | null;
+  created_at: string | null;
 };
 
-type CoinPurchase = {
-  id: string;
-  user_id: string;
-  coins_amount: number;
-  price_eur: number;
-  provider: string | null;
-  created_at: string;
-};
-
-type BoostPackPurchase = {
-  id: string;
-  user_id: string;
-  pack_name: string;
-  quantity: number;
-  coin_cost: number;
-  total_coin_cost: number;
-  created_at: string;
-};
-
-type ChartRange = "day" | "week" | "month";
-
-type RevenueBucket = {
+type ChartItem = {
+  date: string;
   label: string;
-  subscriptionRevenue: number;
-  coinRevenue: number;
-  realMoneyRevenue: number;
-  newSubscriptions: number;
-  coinPurchases: number;
-  boostPurchases: number;
-  boostCoinsSpent: number;
+  subscription_revenue: number | string | null;
+  coin_revenue: number | string | null;
+  real_money: number | string | null;
+  subscription_count: number | string | null;
+  coin_purchase_count: number | string | null;
 };
 
-const SUBSCRIPTION_VARIANTS = ["Free", "Basic", "Pro", "Elite", "Master"];
-const ACTIVE_STATUSES = ["active", "trialing"];
+const emptyDashboard: DashboardRow = {
+  total_users: 0,
+  active_15m: 0,
+  active_24h: 0,
+  active_7d: 0,
+  new_24h: 0,
+  new_7d: 0,
+  new_30d: 0,
+
+  total_coins: 0,
+  avg_coins: 0,
+  total_card_points: 0,
+
+  total_subscriptions: 0,
+  active_subscriptions: 0,
+  paid_active_subscriptions: 0,
+  variant_free: 0,
+  variant_basic: 0,
+  variant_pro: 0,
+  variant_elite: 0,
+  variant_master: 0,
+
+  subscription_revenue_total: 0,
+  subscription_revenue_active: 0,
+  coin_revenue_total: 0,
+  real_money_total: 0,
+  real_money_today: 0,
+  real_money_7d: 0,
+  real_money_30d: 0,
+
+  coin_purchase_count: 0,
+  coin_purchase_count_30d: 0,
+  boost_purchase_count: 0,
+  boost_purchase_count_30d: 0,
+  boost_coins_spent_total: 0,
+  pending_pack_rewards: 0,
+
+  latest_users: [],
+  latest_revenue_events: [],
+  daily_revenue_chart: [],
+};
 
 export default function DashboardPage() {
+  const [dashboard, setDashboard] = useState<DashboardRow>(emptyDashboard);
   const [loading, setLoading] = useState(true);
-
-  const [profiles, setProfiles] = useState<Profile[]>([]);
-  const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
-  const [coinPurchases, setCoinPurchases] = useState<CoinPurchase[]>([]);
-  const [boostPackPurchases, setBoostPackPurchases] = useState<BoostPackPurchase[]>([]);
-
-  const [variantFilter, setVariantFilter] = useState("all");
-  const [affiliateFilter, setAffiliateFilter] = useState("all");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [chartRange, setChartRange] = useState<ChartRange>("day");
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
+    let cancelled = false;
+
     async function loadDashboard() {
       setLoading(true);
+      setLoadError(null);
 
-      const profilesResponse = await supabase
-        .from("profiles")
-        .select("id, username, card_points, created_at")
-        .limit(1000);
+      const { data, error } = await supabase.rpc("admin_dashboard_overview");
 
-      if (profilesResponse.error) {
-        console.error("Fehler beim Laden von profiles:", profilesResponse.error);
+      if (cancelled) return;
+
+      if (error) {
+        console.error("Fehler beim Laden des Dashboards:", error);
+        setDashboard(emptyDashboard);
+        setLoadError(error.message || "Dashboard konnte nicht geladen werden.");
       } else {
-        setProfiles((profilesResponse.data as Profile[]) || []);
-      }
-
-      const subscriptionsResponse = await supabase
-        .from("subscriptions")
-        .select("*")
-        .limit(1000);
-
-      if (subscriptionsResponse.error) {
-        console.error("Fehler beim Laden von subscriptions:", subscriptionsResponse.error);
-      } else {
-        setSubscriptions((subscriptionsResponse.data as Subscription[]) || []);
-      }
-
-      const coinPurchasesResponse = await supabase
-        .from("coin_purchases")
-        .select("*")
-        .limit(1000);
-
-      if (coinPurchasesResponse.error) {
-        console.error("Fehler beim Laden von coin_purchases:", coinPurchasesResponse.error);
-      } else {
-        setCoinPurchases((coinPurchasesResponse.data as CoinPurchase[]) || []);
-      }
-
-      const boostPackPurchasesResponse = await supabase
-        .from("boost_pack_purchases")
-        .select("*")
-        .limit(1000);
-
-      if (boostPackPurchasesResponse.error) {
-        console.error(
-          "Fehler beim Laden von boost_pack_purchases:",
-          boostPackPurchasesResponse.error
-        );
-      } else {
-        setBoostPackPurchases(
-          (boostPackPurchasesResponse.data as BoostPackPurchase[]) || []
-        );
+        const rows = (data as DashboardRow[] | null) || [];
+        setDashboard(rows[0] || emptyDashboard);
       }
 
       setLoading(false);
     }
 
     loadDashboard();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  const totalUsers = profiles.length;
+  const latestUsers = useMemo(() => {
+    return toObjectArray(dashboard.latest_users) as LatestUser[];
+  }, [dashboard.latest_users]);
 
-  const totalCardPoints = profiles.reduce((sum, user) => {
-    return sum + (user.card_points || 0);
-  }, 0);
-
-  const latestSignup = useMemo(() => {
-    if (profiles.length === 0) return null;
-
-    const sorted = [...profiles].sort((a, b) => {
-      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-    });
-
-    return sorted[0]?.created_at || null;
-  }, [profiles]);
-
-  const activeSubscriptionsCount = subscriptions.filter((sub) =>
-    ACTIVE_STATUSES.includes(sub.status)
-  ).length;
-
-  const affiliateSubscriptionsCount = subscriptions.filter((sub) => sub.is_affiliate).length;
-
-  const nonAffiliateSubscriptionsCount = subscriptions.filter((sub) => !sub.is_affiliate).length;
-
-  const totalSubscriptionRevenue = subscriptions.reduce((sum, sub) => {
-    return sum + (sub.price_eur || 0);
-  }, 0);
-
-  const totalCoinRevenue = coinPurchases.reduce((sum, item) => {
-    return sum + (item.price_eur || 0);
-  }, 0);
-
-  const totalRealMoneyRevenue = totalSubscriptionRevenue + totalCoinRevenue;
-
-  const totalBoostCoinsSpent = boostPackPurchases.reduce((sum, item) => {
-    return sum + (item.total_coin_cost || 0);
-  }, 0);
-
-  const todayRevenue = useMemo(() => {
-    const today = new Date();
-    const todayKey = today.toLocaleDateString("sv-SE");
-
-    const subscriptionToday = subscriptions.reduce((sum, sub) => {
-      const key = new Date(sub.created_at).toLocaleDateString("sv-SE");
-      return key === todayKey ? sum + (sub.price_eur || 0) : sum;
-    }, 0);
-
-    const coinToday = coinPurchases.reduce((sum, purchase) => {
-      const key = new Date(purchase.created_at).toLocaleDateString("sv-SE");
-      return key === todayKey ? sum + (purchase.price_eur || 0) : sum;
-    }, 0);
-
-    return subscriptionToday + coinToday;
-  }, [subscriptions, coinPurchases]);
-
-  const yesterdayRevenue = useMemo(() => {
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    const yesterdayKey = yesterday.toLocaleDateString("sv-SE");
-
-    const subscriptionYesterday = subscriptions.reduce((sum, sub) => {
-      const key = new Date(sub.created_at).toLocaleDateString("sv-SE");
-      return key === yesterdayKey ? sum + (sub.price_eur || 0) : sum;
-    }, 0);
-
-    const coinYesterday = coinPurchases.reduce((sum, purchase) => {
-      const key = new Date(purchase.created_at).toLocaleDateString("sv-SE");
-      return key === yesterdayKey ? sum + (purchase.price_eur || 0) : sum;
-    }, 0);
-
-    return subscriptionYesterday + coinYesterday;
-  }, [subscriptions, coinPurchases]);
-
-  const todayPurchasesCount = useMemo(() => {
-    const today = new Date().toLocaleDateString("sv-SE");
-
-    const subCount = subscriptions.filter(
-      (sub) => new Date(sub.created_at).toLocaleDateString("sv-SE") === today
-    ).length;
-
-    const coinCount = coinPurchases.filter(
-      (purchase) => new Date(purchase.created_at).toLocaleDateString("sv-SE") === today
-    ).length;
-
-    return subCount + coinCount;
-  }, [subscriptions, coinPurchases]);
-
-  const revenueChangePercent = useMemo(() => {
-    if (yesterdayRevenue === 0) {
-      if (todayRevenue === 0) return 0;
-      return 100;
-    }
-
-    return ((todayRevenue - yesterdayRevenue) / yesterdayRevenue) * 100;
-  }, [todayRevenue, yesterdayRevenue]);
-
-  const filteredSubscriptions = useMemo(() => {
-    let result = [...subscriptions];
-
-    if (variantFilter !== "all") {
-      result = result.filter((sub) => sub.variant === variantFilter);
-    }
-
-    if (affiliateFilter === "affiliate") {
-      result = result.filter((sub) => sub.is_affiliate);
-    }
-
-    if (affiliateFilter === "nonAffiliate") {
-      result = result.filter((sub) => !sub.is_affiliate);
-    }
-
-    if (statusFilter === "active") {
-      result = result.filter((sub) => ACTIVE_STATUSES.includes(sub.status));
-    }
-
-    if (statusFilter === "inactive") {
-      result = result.filter((sub) => !ACTIVE_STATUSES.includes(sub.status));
-    }
-
-    result.sort((a, b) => {
-      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-    });
-
-    return result;
-  }, [subscriptions, variantFilter, affiliateFilter, statusFilter]);
+  const latestRevenueEvents = useMemo(() => {
+    return toObjectArray(dashboard.latest_revenue_events) as RevenueEvent[];
+  }, [dashboard.latest_revenue_events]);
 
   const chartData = useMemo(() => {
-    const bucketMap = new Map<string, RevenueBucket>();
+    return toObjectArray(dashboard.daily_revenue_chart) as ChartItem[];
+  }, [dashboard.daily_revenue_chart]);
 
-    function getBucketLabel(dateString: string, range: ChartRange) {
-      const date = new Date(dateString);
+  const maxRevenue = Math.max(
+    1,
+    ...chartData.map((item) => toNumber(item.real_money))
+  );
 
-      if (range === "day") {
-        return date.toLocaleDateString("de-DE");
-      }
+  const variantData = [
+    { label: "Free", value: toNumber(dashboard.variant_free) },
+    { label: "Basic", value: toNumber(dashboard.variant_basic) },
+    { label: "Pro", value: toNumber(dashboard.variant_pro) },
+    { label: "Elite", value: toNumber(dashboard.variant_elite) },
+    { label: "Master", value: toNumber(dashboard.variant_master) },
+  ];
 
-      if (range === "week") {
-        const start = new Date(date);
-        const day = start.getDay();
-        const diff = day === 0 ? -6 : 1 - day;
-        start.setDate(start.getDate() + diff);
-
-        return `KW ${getWeekNumber(date)} (${start.toLocaleDateString("de-DE")})`;
-      }
-
-      return date.toLocaleDateString("de-DE", {
-        month: "short",
-        year: "numeric",
-      });
-    }
-
-    function ensureBucket(label: string) {
-      if (!bucketMap.has(label)) {
-        bucketMap.set(label, {
-          label,
-          subscriptionRevenue: 0,
-          coinRevenue: 0,
-          realMoneyRevenue: 0,
-          newSubscriptions: 0,
-          coinPurchases: 0,
-          boostPurchases: 0,
-          boostCoinsSpent: 0,
-        });
-      }
-
-      return bucketMap.get(label)!;
-    }
-
-    subscriptions.forEach((sub) => {
-      const label = getBucketLabel(sub.created_at, chartRange);
-      const bucket = ensureBucket(label);
-
-      bucket.subscriptionRevenue += sub.price_eur || 0;
-      bucket.newSubscriptions += 1;
-      bucket.realMoneyRevenue = bucket.subscriptionRevenue + bucket.coinRevenue;
-    });
-
-    coinPurchases.forEach((purchase) => {
-      const label = getBucketLabel(purchase.created_at, chartRange);
-      const bucket = ensureBucket(label);
-
-      bucket.coinRevenue += purchase.price_eur || 0;
-      bucket.coinPurchases += 1;
-      bucket.realMoneyRevenue = bucket.subscriptionRevenue + bucket.coinRevenue;
-    });
-
-    boostPackPurchases.forEach((purchase) => {
-      const label = getBucketLabel(purchase.created_at, chartRange);
-      const bucket = ensureBucket(label);
-
-      bucket.boostPurchases += purchase.quantity || 0;
-      bucket.boostCoinsSpent += purchase.total_coin_cost || 0;
-    });
-
-    return Array.from(bucketMap.values()).sort((a, b) =>
-      a.label.localeCompare(b.label, "de")
-    );
-  }, [subscriptions, coinPurchases, boostPackPurchases, chartRange]);
-
-  const maxRevenue = Math.max(...chartData.map((item) => item.realMoneyRevenue), 1);
-
-  function formatDate(dateString: string | null) {
-    if (!dateString) return "—";
-    return new Date(dateString).toLocaleString("de-DE");
-  }
-
-  function formatMoney(value: number) {
-    return value.toLocaleString("de-DE", {
-      style: "currency",
-      currency: "EUR",
-    });
-  }
-
-  function formatCoins(value: number) {
-    return value.toLocaleString("de-DE");
-  }
-
-  function getVariantCount(variant: string) {
-    return subscriptions.filter((sub) => sub.variant === variant).length;
-  }
+  const maxVariant = Math.max(1, ...variantData.map((item) => item.value));
 
   return (
     <div style={pageStyle}>
       <div style={pageHeaderStyle}>
         <h1 style={pageTitleStyle}>Dashboard</h1>
         <p style={pageSubtitleStyle}>
-          Übersicht über Nutzer, Abos, Coin-Käufe, Boost-Packs und Umsatz.
+          Zentrale Admin-Übersicht für Nutzer, Economy, Abos, Revenue und letzte Aktivitäten.
         </p>
       </div>
 
+      {loadError && (
+        <div style={errorCardStyle}>
+          <strong>Fehler beim Laden des Dashboards</strong>
+          <p style={errorTextStyle}>{loadError}</p>
+          <p style={errorHintStyle}>
+            Prüfe, ob die RPC <strong>admin_dashboard_overview</strong> existiert und du als Admin eingeloggt bist.
+          </p>
+        </div>
+      )}
+
       <section style={heroRevenueCardStyle}>
         <div>
-          <div style={heroLabelStyle}>Tageseinnahmen heute</div>
-          <div style={heroValueStyle}>
-            {loading ? "..." : formatMoney(todayRevenue)}
-          </div>
+          <div style={heroLabelStyle}>Echtgeld heute</div>
+          <div style={heroValueStyle}>{loading ? "..." : formatMoney(dashboard.real_money_today)}</div>
           <div style={heroSublineStyle}>
-            {loading
-              ? "Lade Vergleich..."
-              : `${revenueChangePercent >= 0 ? "+" : ""}${revenueChangePercent.toFixed(
-                  1
-                )}% vs. gestern`}
+            {loading ? "Lade Vergleich..." : `${formatMoney(dashboard.real_money_7d)} in den letzten 7 Tagen`}
           </div>
         </div>
 
         <div style={heroMetaGridStyle}>
-          <div style={heroMetaCardStyle}>
-            <span style={heroMetaLabelStyle}>Gestern</span>
-            <strong style={heroMetaValueStyle}>
-              {loading ? "..." : formatMoney(yesterdayRevenue)}
-            </strong>
-          </div>
-
-          <div style={heroMetaCardStyle}>
-            <span style={heroMetaLabelStyle}>Käufe heute</span>
-            <strong style={heroMetaValueStyle}>
-              {loading ? "..." : String(todayPurchasesCount)}
-            </strong>
-          </div>
+          <HeroMini title="30 Tage" value={loading ? "..." : formatMoney(dashboard.real_money_30d)} />
+          <HeroMini title="Gesamt" value={loading ? "..." : formatMoney(dashboard.real_money_total)} />
         </div>
       </section>
 
+      <SectionTitle title="Schnellzugriff" subtitle="Direkt zu den wichtigsten Adminbereichen." />
+      <div style={quickGridStyle}>
+        <QuickLink href="/admin/users" title="Users" text="Nutzer suchen und Details öffnen" />
+        <QuickLink href="/admin/subscriptions" title="Subscriptions" text="Abos, Status und Affiliate prüfen" />
+        <QuickLink href="/admin/revenue" title="Revenue" text="Umsatz-Events und Zahlungen prüfen" />
+        <QuickLink href="/admin/analytics" title="Analytics" text="Aktivität und Kennzahlen ansehen" />
+      </div>
+
+      <SectionTitle title="Nutzer" subtitle="Registrierungen und Aktivität aus profiles." />
       <div style={kpiGridStyle}>
-        <KpiCard title="Total Users" value={loading ? "..." : String(totalUsers)} />
-        <KpiCard
-          title="Gesamte Card Points"
-          value={loading ? "..." : formatCoins(totalCardPoints)}
-        />
-        <KpiCard
-          title="Neueste Registrierung"
-          value={loading ? "..." : formatDate(latestSignup)}
-        />
-        <KpiCard
-          title="Echtgeld-Umsatz gesamt"
-          value={loading ? "..." : formatMoney(totalRealMoneyRevenue)}
-        />
-        <KpiCard
-          title="Alle Abos"
-          value={loading ? "..." : String(subscriptions.length)}
-        />
-        <KpiCard
-          title="Aktive Abos"
-          value={loading ? "..." : String(activeSubscriptionsCount)}
-        />
-        <KpiCard
-          title="Affiliate Abos"
-          value={loading ? "..." : String(affiliateSubscriptionsCount)}
-        />
-        <KpiCard
-          title="Ohne Affiliate"
-          value={loading ? "..." : String(nonAffiliateSubscriptionsCount)}
-        />
-        <KpiCard title="Free" value={loading ? "..." : String(getVariantCount("Free"))} />
-        <KpiCard title="Basic" value={loading ? "..." : String(getVariantCount("Basic"))} />
-        <KpiCard title="Pro" value={loading ? "..." : String(getVariantCount("Pro"))} />
-        <KpiCard title="Elite" value={loading ? "..." : String(getVariantCount("Elite"))} />
-        <KpiCard title="Master" value={loading ? "..." : String(getVariantCount("Master"))} />
-        <KpiCard
-          title="Coin-Käufe"
-          value={loading ? "..." : String(coinPurchases.length)}
-        />
-        <KpiCard
-          title="Boost-Pack-Käufe"
-          value={loading ? "..." : String(boostPackPurchases.length)}
-        />
-        <KpiCard
-          title="Abo-Umsatz"
-          value={loading ? "..." : formatMoney(totalSubscriptionRevenue)}
-        />
-        <KpiCard
-          title="Coin-Umsatz"
-          value={loading ? "..." : formatMoney(totalCoinRevenue)}
-        />
-        <KpiCard
-          title="Für Boost-Packs ausgegebene Coins"
-          value={loading ? "..." : formatCoins(totalBoostCoinsSpent)}
-        />
+        <KpiCard title="User gesamt" value={loading ? "..." : formatNumber(dashboard.total_users)} />
+        <KpiCard title="Aktiv 15 Min." value={loading ? "..." : formatNumber(dashboard.active_15m)} accent="green" />
+        <KpiCard title="Aktiv 24 Std." value={loading ? "..." : formatNumber(dashboard.active_24h)} />
+        <KpiCard title="Aktiv 7 Tage" value={loading ? "..." : formatNumber(dashboard.active_7d)} />
+        <KpiCard title="Neue 24 Std." value={loading ? "..." : formatNumber(dashboard.new_24h)} />
+        <KpiCard title="Neue 7 Tage" value={loading ? "..." : formatNumber(dashboard.new_7d)} />
+        <KpiCard title="Neue 30 Tage" value={loading ? "..." : formatNumber(dashboard.new_30d)} />
+      </div>
+
+      <SectionTitle title="Economy" subtitle="Coins, Card Points, interne Ausgaben und Rewards." />
+      <div style={kpiGridStyle}>
+        <KpiCard title="Coins gesamt" value={loading ? "..." : formatNumber(dashboard.total_coins)} accent="orange" />
+        <KpiCard title="Ø Coins/User" value={loading ? "..." : formatNumber(dashboard.avg_coins)} />
+        <KpiCard title="Card Points gesamt" value={loading ? "..." : formatNumber(dashboard.total_card_points)} />
+        <KpiCard title="Boost-Coins ausgegeben" value={loading ? "..." : formatNumber(dashboard.boost_coins_spent_total)} />
+        <KpiCard title="Pending Pack Rewards" value={loading ? "..." : formatNumber(dashboard.pending_pack_rewards)} accent="orange" />
+      </div>
+
+      <SectionTitle title="Subscriptions" subtitle="Abo-Verteilung und aktiver Monatswert." />
+      <div style={kpiGridStyle}>
+        <KpiCard title="Abos gesamt" value={loading ? "..." : formatNumber(dashboard.total_subscriptions)} />
+        <KpiCard title="Aktive Abos" value={loading ? "..." : formatNumber(dashboard.active_subscriptions)} accent="green" />
+        <KpiCard title="Aktive bezahlt" value={loading ? "..." : formatNumber(dashboard.paid_active_subscriptions)} />
+        <KpiCard title="Aktiver Abo-Monatswert" value={loading ? "..." : formatMoney(dashboard.subscription_revenue_active)} />
+        <KpiCard title="Abo-Umsatz gesamt" value={loading ? "..." : formatMoney(dashboard.subscription_revenue_total)} />
       </div>
 
       <div style={cardStyle}>
         <div style={sectionHeaderStyle}>
           <div>
-            <h3 style={sectionTitleStyle}>Echtgeld-Diagramm</h3>
-            <p style={sectionTextStyle}>
-              Nur Abos und Coin-Käufe zählen als Umsatz. Boost-Packs zählen als Coin-Ausgabe.
-            </p>
-          </div>
-
-          <div style={buttonGroupStyle}>
-            <button
-              onClick={() => setChartRange("day")}
-              style={chartRange === "day" ? activeButtonStyle : buttonStyle}
-            >
-              Tag
-            </button>
-            <button
-              onClick={() => setChartRange("week")}
-              style={chartRange === "week" ? activeButtonStyle : buttonStyle}
-            >
-              Woche
-            </button>
-            <button
-              onClick={() => setChartRange("month")}
-              style={chartRange === "month" ? activeButtonStyle : buttonStyle}
-            >
-              Monat
-            </button>
+            <h3 style={sectionTitleStyle}>Abo-Verteilung</h3>
+            <p style={sectionTextStyle}>Free, Basic, Pro, Elite und Master.</p>
           </div>
         </div>
 
-        <div style={chartGridStyle}>
-          {chartData.map((item) => (
-            <div key={item.label} style={chartCardStyle}>
-              <div style={chartBarWrapperStyle}>
+        <div style={barListStyle}>
+          {variantData.map((item) => (
+            <div key={item.label} style={barRowStyle}>
+              <div style={barLabelStyle}>{item.label}</div>
+              <div style={barTrackStyle}>
                 <div
                   style={{
-                    width: "100%",
-                    height: `${(item.realMoneyRevenue / maxRevenue) * 100}%`,
-                    minHeight: item.realMoneyRevenue > 0 ? "8px" : "0px",
-                    background: "linear-gradient(180deg, #22c55e 0%, #16a34a 100%)",
-                    borderRadius: "10px 10px 0 0",
+                    height: "100%",
+                    width: `${Math.max(4, (item.value / maxVariant) * 100)}%`,
+                    background: "linear-gradient(90deg, #22c55e, #86efac)",
+                    borderRadius: "999px",
                   }}
                 />
               </div>
-
-              <strong style={chartLabelStyle}>{item.label}</strong>
-
-              <div style={chartInfoStyle}>
-                <div>Echtgeld gesamt: {formatMoney(item.realMoneyRevenue)}</div>
-                <div>Abos: {formatMoney(item.subscriptionRevenue)}</div>
-                <div>Coins: {formatMoney(item.coinRevenue)}</div>
-                <div>Neue Abos: {item.newSubscriptions}</div>
-                <div>Coin-Käufe: {item.coinPurchases}</div>
-                <div>Boost-Pack-Käufe: {item.boostPurchases}</div>
-                <div>Boost-Coins: {formatCoins(item.boostCoinsSpent)}</div>
-              </div>
+              <div style={barValueStyle}>{formatNumber(item.value)}</div>
             </div>
           ))}
         </div>
       </div>
 
-      <div style={cardStyle}>
-        <h3 style={sectionTitleStyle}>Abo-Filter</h3>
-
-        <div style={filterGridStyle}>
-          <div>
-            <label style={labelStyle}>Variante</label>
-            <select
-              value={variantFilter}
-              onChange={(e) => setVariantFilter(e.target.value)}
-              style={inputStyle}
-            >
-              <option value="all">Alle Varianten</option>
-              {SUBSCRIPTION_VARIANTS.map((variant) => (
-                <option key={variant} value={variant}>
-                  {variant}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label style={labelStyle}>Affiliate</label>
-            <select
-              value={affiliateFilter}
-              onChange={(e) => setAffiliateFilter(e.target.value)}
-              style={inputStyle}
-            >
-              <option value="all">Alle</option>
-              <option value="affiliate">Nur Affiliate</option>
-              <option value="nonAffiliate">Nur ohne Affiliate</option>
-            </select>
-          </div>
-
-          <div>
-            <label style={labelStyle}>Status</label>
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              style={inputStyle}
-            >
-              <option value="all">Alle</option>
-              <option value="active">Nur aktiv</option>
-              <option value="inactive">Nur inaktiv</option>
-            </select>
-          </div>
-        </div>
+      <SectionTitle title="Revenue" subtitle="Echtgeld zählt nur aus Abos und Coin-Käufen. Boosts sind interne Coin-Ausgaben." />
+      <div style={kpiGridStyle}>
+        <KpiCard title="Echtgeld gesamt" value={loading ? "..." : formatMoney(dashboard.real_money_total)} accent="green" />
+        <KpiCard title="Echtgeld 30 Tage" value={loading ? "..." : formatMoney(dashboard.real_money_30d)} />
+        <KpiCard title="Coin-Umsatz gesamt" value={loading ? "..." : formatMoney(dashboard.coin_revenue_total)} />
+        <KpiCard title="Coin-Käufe gesamt" value={loading ? "..." : formatNumber(dashboard.coin_purchase_count)} />
+        <KpiCard title="Coin-Käufe 30 Tage" value={loading ? "..." : formatNumber(dashboard.coin_purchase_count_30d)} />
+        <KpiCard title="Boost-Käufe 30 Tage" value={loading ? "..." : formatNumber(dashboard.boost_purchase_count_30d)} />
       </div>
 
       <div style={cardStyle}>
         <div style={sectionHeaderStyle}>
-          <h3 style={sectionTitleStyle}>Subscriptions</h3>
-          <span style={sectionCountStyle}>
-            {loading ? "Lade..." : `${filteredSubscriptions.length} Einträge`}
-          </span>
+          <div>
+            <h3 style={sectionTitleStyle}>Revenue-Verlauf 14 Tage</h3>
+            <p style={sectionTextStyle}>Abos + Coin-Käufe nach Tag.</p>
+          </div>
         </div>
 
-        {loading ? (
-          <p style={sectionTextStyle}>Lade Daten...</p>
-        ) : filteredSubscriptions.length === 0 ? (
-          <p style={sectionTextStyle}>Keine Abos gefunden.</p>
+        {chartData.length === 0 ? (
+          <p style={sectionTextStyle}>Noch keine Chartdaten vorhanden.</p>
         ) : (
-          <>
-            <div style={mobileSubscriptionListStyle}>
-              {filteredSubscriptions.map((sub) => (
-                <div key={sub.id} style={mobileSubscriptionCardStyle}>
-                  <div style={mobileSubscriptionTopStyle}>
-                    <div>
-                      <div style={mobileLabelStyle}>User ID</div>
-                      <div style={mobileValueStyle}>{sub.user_id}</div>
-                    </div>
-                    <div style={statusBadgeStyle}>
-                      {sub.status}
-                    </div>
+          <div style={chartGridStyle}>
+            {chartData.map((item) => {
+              const realMoney = toNumber(item.real_money);
+              return (
+                <div key={item.date} style={chartItemStyle}>
+                  <div style={chartBarWrapperStyle}>
+                    <div
+                      style={{
+                        width: "100%",
+                        height: `${Math.max(4, (realMoney / maxRevenue) * 100)}%`,
+                        background: "linear-gradient(180deg, #22c55e 0%, #16a34a 100%)",
+                        borderRadius: "10px 10px 0 0",
+                      }}
+                    />
                   </div>
-
-                  <div style={mobileInfoGridStyle}>
-                    <InfoItem label="Variante" value={sub.variant} />
-                    <InfoItem label="Affiliate" value={sub.is_affiliate ? "Ja" : "Nein"} />
-                    <InfoItem label="Provider" value={sub.provider || "—"} />
-                    <InfoItem label="Preis" value={formatMoney(sub.price_eur || 0)} />
-                    <InfoItem label="Started At" value={formatDate(sub.started_at)} />
-                    <InfoItem label="Expires At" value={formatDate(sub.expires_at)} />
-                    <InfoItem label="Created At" value={formatDate(sub.created_at)} />
-                  </div>
+                  <strong style={chartLabelStyle}>{item.label}</strong>
+                  <span style={chartValueStyle}>{formatMoney(realMoney)}</span>
                 </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      <div style={twoColumnGridStyle}>
+        <div style={cardStyle}>
+          <div style={sectionHeaderStyle}>
+            <div>
+              <h3 style={sectionTitleStyle}>Letzte Registrierungen</h3>
+              <p style={sectionTextStyle}>Die neuesten Profile.</p>
+            </div>
+            <Link href="/admin/users" style={smallLinkStyle}>Alle User</Link>
+          </div>
+
+          {latestUsers.length === 0 ? (
+            <p style={sectionTextStyle}>Noch keine User vorhanden.</p>
+          ) : (
+            <div style={listStyle}>
+              {latestUsers.map((user) => (
+                <Link key={user.id} href={`/admin/users/${user.id}`} style={listItemLinkStyle}>
+                  <div>
+                    <strong style={listTitleStyle}>{user.username || user.email || "Kein Username"}</strong>
+                    <div style={listSubStyle}>{user.email || user.id}</div>
+                    <div style={listSubStyle}>Registriert: {formatDate(user.created_at)}</div>
+                  </div>
+                  <div style={listRightStyle}>
+                    <div>{formatNumber(user.coins)} Coins</div>
+                    <div>{formatNumber(user.card_points)} CP</div>
+                  </div>
+                </Link>
               ))}
             </div>
+          )}
+        </div>
 
-            <div style={desktopTableWrapperStyle}>
-              <table
-                style={{
-                  width: "100%",
-                  borderCollapse: "collapse",
-                  minWidth: "1200px",
-                }}
-              >
-                <thead>
-                  <tr style={{ background: "#111814", textAlign: "left" }}>
-                    <th style={tableHeaderStyle}>User ID</th>
-                    <th style={tableHeaderStyle}>Variante</th>
-                    <th style={tableHeaderStyle}>Status</th>
-                    <th style={tableHeaderStyle}>Affiliate</th>
-                    <th style={tableHeaderStyle}>Provider</th>
-                    <th style={tableHeaderStyle}>Preis</th>
-                    <th style={tableHeaderStyle}>Started At</th>
-                    <th style={tableHeaderStyle}>Expires At</th>
-                    <th style={tableHeaderStyle}>Created At</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredSubscriptions.map((sub) => (
-                    <tr key={sub.id} style={{ borderTop: "1px solid #27312d" }}>
-                      <td style={tableCellStyle}>{sub.user_id}</td>
-                      <td style={tableCellStyle}>{sub.variant}</td>
-                      <td style={tableCellStyle}>{sub.status}</td>
-                      <td style={tableCellStyle}>{sub.is_affiliate ? "Ja" : "Nein"}</td>
-                      <td style={tableCellStyle}>{sub.provider || "—"}</td>
-                      <td style={tableCellStyle}>{formatMoney(sub.price_eur || 0)}</td>
-                      <td style={tableCellStyle}>{formatDate(sub.started_at)}</td>
-                      <td style={tableCellStyle}>{formatDate(sub.expires_at)}</td>
-                      <td style={tableCellStyle}>{formatDate(sub.created_at)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+        <div style={cardStyle}>
+          <div style={sectionHeaderStyle}>
+            <div>
+              <h3 style={sectionTitleStyle}>Letzte Echtgeld-Events</h3>
+              <p style={sectionTextStyle}>Abos und Coin-Käufe.</p>
             </div>
-          </>
-        )}
+            <Link href="/admin/revenue" style={smallLinkStyle}>Revenue</Link>
+          </div>
+
+          {latestRevenueEvents.length === 0 ? (
+            <p style={sectionTextStyle}>Noch keine Revenue Events vorhanden.</p>
+          ) : (
+            <div style={listStyle}>
+              {latestRevenueEvents.map((event) => (
+                <Link key={`${event.kind}-${event.id}`} href={`/admin/users/${event.user_id}`} style={listItemLinkStyle}>
+                  <div>
+                    <strong style={listTitleStyle}>{kindLabel(event.kind)} · {event.label || "—"}</strong>
+                    <div style={listSubStyle}>{event.username || event.email || event.user_id}</div>
+                    <div style={listSubStyle}>{formatDate(event.created_at)}</div>
+                  </div>
+                  <div style={listRightStyle}>{formatMoney(event.amount_eur)}</div>
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
 }
 
-function KpiCard({ title, value }: { title: string; value: string }) {
+function SectionTitle({ title, subtitle }: { title: string; subtitle: string }) {
+  return (
+    <div style={sectionTitleBlockStyle}>
+      <h2 style={sectionMainTitleStyle}>{title}</h2>
+      <p style={sectionMainSubtitleStyle}>{subtitle}</p>
+    </div>
+  );
+}
+
+function KpiCard({
+  title,
+  value,
+  accent = "default",
+}: {
+  title: string;
+  value: string;
+  accent?: "default" | "green" | "orange";
+}) {
+  const valueStyle =
+    accent === "green"
+      ? connectedValueStyle
+      : accent === "orange"
+      ? orangeValueStyle
+      : kpiValueStyle;
+
   return (
     <div style={kpiCardStyle}>
       <p style={kpiTitleStyle}>{title}</p>
-      <h3 style={kpiValueStyle}>{value}</h3>
+      <h3 style={valueStyle}>{value}</h3>
     </div>
   );
 }
 
-function InfoItem({ label, value }: { label: string; value: string }) {
+function HeroMini({ title, value }: { title: string; value: string }) {
   return (
-    <div style={infoItemStyle}>
-      <div style={infoLabelStyle}>{label}</div>
-      <div style={infoValueStyle}>{value}</div>
+    <div style={heroMetaCardStyle}>
+      <span style={heroMetaLabelStyle}>{title}</span>
+      <strong style={heroMetaValueStyle}>{value}</strong>
     </div>
   );
 }
 
-function getWeekNumber(date: Date) {
-  const tempDate = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
-  const dayNum = tempDate.getUTCDay() || 7;
-  tempDate.setUTCDate(tempDate.getUTCDate() + 4 - dayNum);
-  const yearStart = new Date(Date.UTC(tempDate.getUTCFullYear(), 0, 1));
-  return Math.ceil((((tempDate.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
+function QuickLink({ href, title, text }: { href: string; title: string; text: string }) {
+  return (
+    <Link href={href} style={quickLinkStyle}>
+      <strong style={quickTitleStyle}>{title}</strong>
+      <span style={quickTextStyle}>{text}</span>
+    </Link>
+  );
 }
 
-const pageStyle: CSSProperties = {
-  width: "100%",
-};
+function toNumber(value: number | string | null | undefined) {
+  if (typeof value === "number") return Number.isNaN(value) ? 0 : value;
+  if (typeof value === "string") {
+    const parsed = Number(value);
+    return Number.isNaN(parsed) ? 0 : parsed;
+  }
+  return 0;
+}
 
-const pageHeaderStyle: CSSProperties = {
-  marginBottom: "20px",
-};
+function toObjectArray(value: JsonArray | null | undefined) {
+  if (!Array.isArray(value)) return [];
+  return value.filter((item) => typeof item === "object" && item !== null) as JsonObject[];
+}
+
+function formatNumber(value: number | string | null | undefined) {
+  return Math.round(toNumber(value)).toLocaleString("de-DE");
+}
+
+function formatMoney(value: number | string | null | undefined) {
+  return toNumber(value).toLocaleString("de-DE", {
+    style: "currency",
+    currency: "EUR",
+  });
+}
+
+function formatDate(value: string | null | undefined) {
+  if (!value) return "—";
+  return new Date(value).toLocaleString("de-DE");
+}
+
+function kindLabel(kind: string) {
+  if (kind === "subscription") return "Abo";
+  if (kind === "coin_purchase") return "Coin-Kauf";
+  return kind;
+}
+
+const pageStyle: CSSProperties = { width: "100%" };
+
+const pageHeaderStyle: CSSProperties = { marginBottom: "20px" };
 
 const pageTitleStyle: CSSProperties = {
   marginTop: 0,
@@ -691,6 +495,18 @@ const pageSubtitleStyle: CSSProperties = {
   color: "#94a39b",
   lineHeight: 1.5,
 };
+
+const errorCardStyle: CSSProperties = {
+  background: "#331717",
+  border: "1px solid #7f1d1d",
+  borderRadius: "16px",
+  padding: "16px",
+  marginBottom: "20px",
+  color: "#fecaca",
+};
+
+const errorTextStyle: CSSProperties = { margin: "8px 0 0 0", color: "#fecaca" };
+const errorHintStyle: CSSProperties = { margin: "8px 0 0 0", color: "#fca5a5", lineHeight: 1.5 };
 
 const heroRevenueCardStyle: CSSProperties = {
   background: "linear-gradient(135deg, #14532d 0%, #0f172a 100%)",
@@ -711,7 +527,7 @@ const heroLabelStyle: CSSProperties = {
 
 const heroValueStyle: CSSProperties = {
   fontSize: "34px",
-  fontWeight: 800,
+  fontWeight: 900,
   color: "white",
   lineHeight: 1.1,
   wordBreak: "break-word",
@@ -721,12 +537,12 @@ const heroSublineStyle: CSSProperties = {
   marginTop: "10px",
   color: "#bbf7d0",
   fontSize: "15px",
-  fontWeight: 600,
+  fontWeight: 700,
 };
 
 const heroMetaGridStyle: CSSProperties = {
   display: "grid",
-  gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+  gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
   gap: "12px",
 };
 
@@ -744,14 +560,36 @@ const heroMetaLabelStyle: CSSProperties = {
   marginBottom: "6px",
 };
 
-const heroMetaValueStyle: CSSProperties = {
-  color: "white",
-  fontSize: "18px",
+const heroMetaValueStyle: CSSProperties = { color: "white", fontSize: "18px" };
+
+const sectionTitleBlockStyle: CSSProperties = { margin: "26px 0 12px 0" };
+const sectionMainTitleStyle: CSSProperties = { margin: 0, color: "#e7f1eb", fontSize: "22px" };
+const sectionMainSubtitleStyle: CSSProperties = { margin: "6px 0 0 0", color: "#94a39b", lineHeight: 1.5 };
+
+const quickGridStyle: CSSProperties = {
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))",
+  gap: "14px",
+  marginBottom: "20px",
 };
+
+const quickLinkStyle: CSSProperties = {
+  display: "grid",
+  gap: "8px",
+  background: "#171f1c",
+  border: "1px solid #27312d",
+  borderRadius: "16px",
+  padding: "16px",
+  textDecoration: "none",
+  boxShadow: "0 8px 30px rgba(0,0,0,0.16)",
+};
+
+const quickTitleStyle: CSSProperties = { color: "#e7f1eb", fontSize: "17px" };
+const quickTextStyle: CSSProperties = { color: "#94a39b", lineHeight: 1.45 };
 
 const kpiGridStyle: CSSProperties = {
   display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+  gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))",
   gap: "14px",
   marginBottom: "20px",
 };
@@ -764,18 +602,10 @@ const kpiCardStyle: CSSProperties = {
   boxShadow: "0 8px 30px rgba(0,0,0,0.16)",
 };
 
-const kpiTitleStyle: CSSProperties = {
-  margin: 0,
-  fontSize: "14px",
-  color: "#94a39b",
-};
-
-const kpiValueStyle: CSSProperties = {
-  margin: "10px 0 0 0",
-  fontSize: "24px",
-  color: "#e7f1eb",
-  wordBreak: "break-word",
-};
+const kpiTitleStyle: CSSProperties = { margin: 0, fontSize: "14px", color: "#94a39b" };
+const kpiValueStyle: CSSProperties = { margin: "10px 0 0 0", fontSize: "24px", color: "#e7f1eb", wordBreak: "break-word" };
+const connectedValueStyle: CSSProperties = { ...kpiValueStyle, color: "#86efac" };
+const orangeValueStyle: CSSProperties = { ...kpiValueStyle, color: "#fdba74" };
 
 const cardStyle: CSSProperties = {
   background: "#171f1c",
@@ -795,205 +625,32 @@ const sectionHeaderStyle: CSSProperties = {
   marginBottom: "16px",
 };
 
-const sectionTitleStyle: CSSProperties = {
-  margin: 0,
-  color: "#e7f1eb",
-};
+const sectionTitleStyle: CSSProperties = { margin: 0, color: "#e7f1eb" };
+const sectionTextStyle: CSSProperties = { margin: "6px 0 0 0", color: "#94a39b", lineHeight: 1.5 };
 
-const sectionTextStyle: CSSProperties = {
-  margin: "8px 0 0 0",
-  color: "#94a39b",
-  lineHeight: 1.5,
-};
-
-const sectionCountStyle: CSSProperties = {
-  color: "#94a39b",
-  fontSize: "14px",
-};
-
-const buttonGroupStyle: CSSProperties = {
-  display: "flex",
-  gap: "8px",
-  flexWrap: "wrap",
-};
-
-const buttonStyle: CSSProperties = {
-  padding: "12px 14px",
-  borderRadius: "12px",
-  border: "1px solid #27312d",
-  background: "#0f1512",
-  color: "#e7f1eb",
-  cursor: "pointer",
-  minHeight: "44px",
-};
-
-const activeButtonStyle: CSSProperties = {
-  ...buttonStyle,
-  background: "#22c55e",
-  color: "#08130c",
-  border: "1px solid #22c55e",
-  fontWeight: 700,
-};
+const barListStyle: CSSProperties = { display: "grid", gap: "14px" };
+const barRowStyle: CSSProperties = { display: "grid", gridTemplateColumns: "80px 1fr 70px", alignItems: "center", gap: "12px" };
+const barLabelStyle: CSSProperties = { color: "#cfe0d6", fontWeight: 800 };
+const barTrackStyle: CSSProperties = { height: "14px", background: "#0f1512", border: "1px solid #27312d", borderRadius: "999px", overflow: "hidden" };
+const barValueStyle: CSSProperties = { color: "#e7f1eb", fontWeight: 800, textAlign: "right" };
 
 const chartGridStyle: CSSProperties = {
   display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-  gap: "14px",
-  marginTop: "20px",
-};
-
-const chartCardStyle: CSSProperties = {
-  background: "#101714",
-  border: "1px solid #27312d",
-  borderRadius: "14px",
-  padding: "14px",
-};
-
-const chartBarWrapperStyle: CSSProperties = {
-  height: "160px",
-  display: "flex",
-  alignItems: "flex-end",
-  marginBottom: "12px",
-};
-
-const chartLabelStyle: CSSProperties = {
-  display: "block",
-  marginBottom: "8px",
-  color: "#e7f1eb",
-};
-
-const chartInfoStyle: CSSProperties = {
-  fontSize: "14px",
-  color: "#b7c6be",
-  lineHeight: 1.7,
-};
-
-const filterGridStyle: CSSProperties = {
-  display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-  gap: "14px",
-  marginTop: "16px",
-};
-
-const inputStyle: CSSProperties = {
-  width: "100%",
-  padding: "12px 14px",
-  borderRadius: "12px",
-  border: "1px solid #27312d",
-  background: "#0f1512",
-  color: "#e7f1eb",
-  boxSizing: "border-box",
-  minHeight: "46px",
-};
-
-const labelStyle: CSSProperties = {
-  display: "block",
-  marginBottom: "8px",
-  fontWeight: 700,
-  color: "#cfe0d6",
-};
-
-const mobileSubscriptionListStyle: CSSProperties = {
-  display: "grid",
-  gap: "14px",
-};
-
-const mobileSubscriptionCardStyle: CSSProperties = {
-  background: "#101714",
-  border: "1px solid #27312d",
-  borderRadius: "16px",
-  padding: "16px",
-};
-
-const mobileSubscriptionTopStyle: CSSProperties = {
-  display: "flex",
-  justifyContent: "space-between",
+  gridTemplateColumns: "repeat(auto-fit, minmax(70px, 1fr))",
+  alignItems: "end",
   gap: "12px",
-  alignItems: "flex-start",
-  marginBottom: "14px",
+  minHeight: "220px",
 };
 
-const mobileLabelStyle: CSSProperties = {
-  fontSize: "12px",
-  color: "#94a39b",
-  marginBottom: "4px",
-};
+const chartItemStyle: CSSProperties = { display: "flex", flexDirection: "column", alignItems: "center", gap: "8px", minWidth: 0 };
+const chartBarWrapperStyle: CSSProperties = { height: "145px", width: "100%", maxWidth: "44px", display: "flex", alignItems: "flex-end", justifyContent: "center", background: "#0f1512", borderRadius: "12px", overflow: "hidden", border: "1px solid #27312d" };
+const chartLabelStyle: CSSProperties = { color: "#cfe0d6", fontSize: "11px", textAlign: "center" };
+const chartValueStyle: CSSProperties = { color: "#94a39b", fontSize: "11px", textAlign: "center" };
 
-const mobileValueStyle: CSSProperties = {
-  fontSize: "14px",
-  color: "#e7f1eb",
-  wordBreak: "break-word",
-};
-
-const statusBadgeStyle: CSSProperties = {
-  padding: "8px 10px",
-  borderRadius: "999px",
-  background: "#163322",
-  color: "#86efac",
-  fontSize: "12px",
-  fontWeight: 700,
-  whiteSpace: "nowrap",
-};
-
-const mobileInfoGridStyle: CSSProperties = {
-  display: "grid",
-  gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-  gap: "12px",
-};
-
-const infoItemStyle: CSSProperties = {
-  background: "#171f1c",
-  border: "1px solid #27312d",
-  borderRadius: "12px",
-  padding: "12px",
-};
-
-const infoLabelStyle: CSSProperties = {
-  fontSize: "12px",
-  color: "#94a39b",
-  marginBottom: "6px",
-};
-
-const infoValueStyle: CSSProperties = {
-  fontSize: "14px",
-  color: "#e7f1eb",
-  wordBreak: "break-word",
-};
-
-const desktopTableWrapperStyle: CSSProperties = {
-  overflowX: "auto",
-  marginTop: "18px",
-  display: "none",
-};
-
-const tableHeaderStyle: CSSProperties = {
-  padding: "12px",
-  fontSize: "14px",
-  fontWeight: 700,
-  color: "#cfe0d6",
-  borderBottom: "1px solid #27312d",
-};
-
-const tableCellStyle: CSSProperties = {
-  padding: "12px",
-  fontSize: "14px",
-  color: "#e7f1eb",
-  verticalAlign: "top",
-};
-
-if (typeof window !== "undefined") {
-  const styleId = "dashboard-responsive-styles";
-
-  if (!document.getElementById(styleId)) {
-    const style = document.createElement("style");
-    style.id = styleId;
-    style.innerHTML = `
-      @media (min-width: 900px) {
-        .dashboard-desktop-table {
-          display: block;
-        }
-      }
-    `;
-    document.head.appendChild(style);
-  }
-}
+const twoColumnGridStyle: CSSProperties = { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "20px" };
+const smallLinkStyle: CSSProperties = { color: "#86efac", textDecoration: "none", fontWeight: 800 };
+const listStyle: CSSProperties = { display: "grid", gap: "12px" };
+const listItemLinkStyle: CSSProperties = { display: "flex", justifyContent: "space-between", gap: "12px", background: "#101714", border: "1px solid #27312d", borderRadius: "14px", padding: "14px", textDecoration: "none" };
+const listTitleStyle: CSSProperties = { display: "block", color: "#e7f1eb", marginBottom: "6px" };
+const listSubStyle: CSSProperties = { color: "#94a39b", fontSize: "13px", lineHeight: 1.45, wordBreak: "break-word" };
+const listRightStyle: CSSProperties = { color: "#e7f1eb", fontWeight: 800, textAlign: "right", whiteSpace: "nowrap" };
