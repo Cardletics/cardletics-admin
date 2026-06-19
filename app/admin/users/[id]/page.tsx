@@ -1,767 +1,348 @@
+
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import type { CSSProperties } from "react";
 import Link from "next/link";
+import { FormEvent, useEffect, useMemo, useState } from "react";
+import type { CSSProperties } from "react";
 import { useParams } from "next/navigation";
 import { supabase } from "../../../../lib/supabase";
-import {
-  exportUserDetailsToExcel,
-  exportUserDetailsToPdf,
-} from "../../../../lib/exportHelpers";
 
-type Profile = {
-  id: string;
-  username: string | null;
-  created_at: string;
-  selected_background_id: string | null;
-  card_points: number | null;
+type JsonMap = Record<string, unknown>;
+type UserDetail = {
+  profile?: JsonMap | null;
+  subscription?: JsonMap | null;
+  inventory_count?: number | string | null;
+  coin_purchase_count?: number | string | null;
+  boost_purchase_count?: number | string | null;
+  pending_pack_rewards?: number | string | null;
 };
+type CoinMode = "set" | "add" | "subtract";
+type SubscriptionVariant = "free" | "basic" | "pro" | "elite" | "master";
+type SubscriptionStatus = "active" | "trialing" | "cancelled" | "expired";
 
-type Subscription = {
-  id: string;
-  user_id: string;
-  variant: string;
-  status: string;
-  started_at: string;
-  expires_at: string | null;
-  provider: string | null;
-  is_affiliate: boolean;
-  price_eur: number | null;
-  created_at: string;
-};
-
-type CoinPurchase = {
-  id: string;
-  user_id: string;
-  coins_amount: number;
-  price_eur: number;
-  provider: string | null;
-  created_at: string;
-};
-
-type BoostPackPurchase = {
-  id: string;
-  user_id: string;
-  pack_name: string;
-  quantity: number;
-  coin_cost: number;
-  total_coin_cost: number;
-  created_at: string;
-};
-
-type MarketplaceSale = {
-  id: string;
-  seller_user_id: string;
-  buyer_user_id: string | null;
-  sale_price_coins: number;
-  fee_coins: number;
-  created_at: string;
-};
-
-export default function UserDetailPage() {
+export default function AdminUserDetailPage() {
   const params = useParams();
-  const userId = String(params.id);
+  const userId = String(params?.id || "");
 
+  const [detail, setDetail] = useState<UserDetail | null>(null);
+  const [inventory, setInventory] = useState<JsonMap[]>([]);
   const [loading, setLoading] = useState(true);
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
-  const [coinPurchases, setCoinPurchases] = useState<CoinPurchase[]>([]);
-  const [boostPackPurchases, setBoostPackPurchases] = useState<BoostPackPurchase[]>([]);
-  const [marketplaceSales, setMarketplaceSales] = useState<MarketplaceSale[]>([]);
+  const [inventoryLoading, setInventoryLoading] = useState(true);
+  const [message, setMessage] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  useEffect(() => {
-    async function loadUserDetails() {
-      setLoading(true);
+  const [coinMode, setCoinMode] = useState<CoinMode>("add");
+  const [coinAmount, setCoinAmount] = useState("0");
+  const [savingCoins, setSavingCoins] = useState(false);
 
-      const profileResponse = await supabase
-        .from("profiles")
-        .select("id, username, created_at, selected_background_id, card_points")
-        .eq("id", userId)
-        .maybeSingle();
+  const [subscriptionVariant, setSubscriptionVariant] = useState<SubscriptionVariant>("free");
+  const [subscriptionStatus, setSubscriptionStatus] = useState<SubscriptionStatus>("active");
+  const [subscriptionMonths, setSubscriptionMonths] = useState("1");
+  const [subscriptionProvider, setSubscriptionProvider] = useState("admin");
+  const [savingSubscription, setSavingSubscription] = useState(false);
+  const [cardSearch, setCardSearch] = useState("");
 
-      if (profileResponse.error) {
-        console.error("Fehler beim Laden des Profils:", profileResponse.error);
-      } else {
-        setProfile((profileResponse.data as Profile | null) || null);
-      }
+  async function loadDetail() {
+    if (!userId) return;
+    setLoading(true);
+    setErrorMessage(null);
 
-      const subscriptionsResponse = await supabase
-        .from("subscriptions")
-        .select("*")
-        .eq("user_id", userId);
+    const { data, error } = await supabase.rpc("admin_get_user_detail", { p_user_id: userId });
 
-      if (subscriptionsResponse.error) {
-        console.error("Fehler beim Laden der Abos:", subscriptionsResponse.error);
-      } else {
-        setSubscriptions((subscriptionsResponse.data as Subscription[]) || []);
-      }
-
-      const coinPurchasesResponse = await supabase
-        .from("coin_purchases")
-        .select("*")
-        .eq("user_id", userId);
-
-      if (coinPurchasesResponse.error) {
-        console.error("Fehler beim Laden der Coin-Käufe:", coinPurchasesResponse.error);
-      } else {
-        setCoinPurchases((coinPurchasesResponse.data as CoinPurchase[]) || []);
-      }
-
-      const boostPackPurchasesResponse = await supabase
-        .from("boost_pack_purchases")
-        .select("*")
-        .eq("user_id", userId);
-
-      if (boostPackPurchasesResponse.error) {
-        console.error(
-          "Fehler beim Laden der Boost-Pack-Käufe:",
-          boostPackPurchasesResponse.error
-        );
-      } else {
-        setBoostPackPurchases(
-          (boostPackPurchasesResponse.data as BoostPackPurchase[]) || []
-        );
-      }
-
-      const marketplaceSalesResponse = await supabase
-        .from("marketplace_sales")
-        .select("*")
-        .eq("seller_user_id", userId);
-
-      if (marketplaceSalesResponse.error) {
-        console.error(
-          "Fehler beim Laden der Marketplace-Sales:",
-          marketplaceSalesResponse.error
-        );
-      } else {
-        setMarketplaceSales((marketplaceSalesResponse.data as MarketplaceSale[]) || []);
-      }
-
+    if (error) {
+      setDetail(null);
+      setErrorMessage(error.message || "User Details konnten nicht geladen werden.");
       setLoading(false);
+      return;
     }
 
-    loadUserDetails();
+    const loaded = (data || {}) as UserDetail;
+    setDetail(loaded);
+
+    const sub = loaded.subscription || null;
+    if (sub) {
+      setSubscriptionVariant(normalizeVariant(readString(sub, "variant")));
+      setSubscriptionStatus(normalizeStatus(readString(sub, "status")));
+      setSubscriptionProvider(readString(sub, "provider") || "admin");
+    }
+
+    setLoading(false);
+  }
+
+  async function loadInventory() {
+    if (!userId) return;
+    setInventoryLoading(true);
+
+    const { data, error } = await supabase.rpc("admin_get_user_inventory", { p_user_id: userId });
+
+    if (error) {
+      setInventory([]);
+      setErrorMessage(error.message || "Inventar konnte nicht geladen werden.");
+      setInventoryLoading(false);
+      return;
+    }
+
+    setInventory(Array.isArray(data) ? (data as JsonMap[]) : []);
+    setInventoryLoading(false);
+  }
+
+  useEffect(() => {
+    loadDetail();
+    loadInventory();
   }, [userId]);
 
-  const totalSubscriptionRevenue = subscriptions.reduce(
-    (sum, item) => sum + (item.price_eur || 0),
-    0
-  );
+  const profile = detail?.profile || {};
+  const subscription = detail?.subscription || null;
 
-  const totalCoinRevenue = coinPurchases.reduce(
-    (sum, item) => sum + (item.price_eur || 0),
-    0
-  );
+  const filteredInventory = useMemo(() => {
+    const search = cardSearch.trim().toLowerCase();
+    if (!search) return inventory;
+    return inventory.filter((item) => JSON.stringify(item).toLowerCase().includes(search));
+  }, [inventory, cardSearch]);
 
-  const totalBoostCoinsSpent = boostPackPurchases.reduce(
-    (sum, item) => sum + (item.total_coin_cost || 0),
-    0
-  );
+  async function handleCoinSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const amount = Number.parseInt(coinAmount, 10);
+    if (Number.isNaN(amount) || amount < 0) {
+      setErrorMessage("Bitte eine gültige Coin-Zahl eingeben.");
+      return;
+    }
 
-  const totalMarketplaceFeeCoins = marketplaceSales.reduce(
-    (sum, item) => sum + (item.fee_coins || 0),
-    0
-  );
+    setSavingCoins(true);
+    setMessage(null);
+    setErrorMessage(null);
 
-  const exportSections = useMemo(() => {
-    return [
-      {
-        title: "Profil",
-        rows: profile
-          ? [
-              {
-                id: profile.id,
-                username: profile.username || "",
-                created_at: profile.created_at,
-                selected_background_id: profile.selected_background_id || "",
-                card_points: profile.card_points || 0,
-              },
-            ]
-          : [],
-      },
-      {
-        title: "Subscriptions",
-        rows: subscriptions.map((item) => ({
-          id: item.id,
-          variant: item.variant,
-          status: item.status,
-          provider: item.provider || "",
-          is_affiliate: item.is_affiliate ? "Ja" : "Nein",
-          price_eur: item.price_eur || 0,
-          started_at: item.started_at,
-          expires_at: item.expires_at || "",
-          created_at: item.created_at,
-        })),
-      },
-      {
-        title: "Coin Purchases",
-        rows: coinPurchases.map((item) => ({
-          id: item.id,
-          coins_amount: item.coins_amount,
-          price_eur: item.price_eur,
-          provider: item.provider || "",
-          created_at: item.created_at,
-        })),
-      },
-      {
-        title: "Boost Pack Purchases",
-        rows: boostPackPurchases.map((item) => ({
-          id: item.id,
-          pack_name: item.pack_name,
-          quantity: item.quantity,
-          coin_cost: item.coin_cost,
-          total_coin_cost: item.total_coin_cost,
-          created_at: item.created_at,
-        })),
-      },
-      {
-        title: "Marketplace Sales",
-        rows: marketplaceSales.map((item) => ({
-          id: item.id,
-          sale_price_coins: item.sale_price_coins,
-          fee_coins: item.fee_coins,
-          buyer_user_id: item.buyer_user_id || "",
-          created_at: item.created_at,
-        })),
-      },
-    ];
-  }, [profile, subscriptions, coinPurchases, boostPackPurchases, marketplaceSales]);
-
-  function handleExcelExport() {
-    const baseName = `cardletics-user-${userId}`;
-    exportUserDetailsToExcel(baseName, exportSections);
-  }
-
-  function handlePdfExport() {
-    const baseName = `cardletics-user-${userId}`;
-    const title = `Cardletics User Report: ${profile?.username || userId}`;
-    exportUserDetailsToPdf(baseName, title, exportSections);
-  }
-
-  function formatDate(dateString: string | null) {
-    if (!dateString) return "—";
-    return new Date(dateString).toLocaleString("de-DE");
-  }
-
-  function formatMoney(value: number) {
-    return value.toLocaleString("de-DE", {
-      style: "currency",
-      currency: "EUR",
+    const { data, error } = await supabase.rpc("admin_adjust_user_coins", {
+      p_user_id: userId,
+      p_mode: coinMode,
+      p_amount: amount,
     });
+
+    if (error) {
+      setErrorMessage(error.message || "Coins konnten nicht geändert werden.");
+      setSavingCoins(false);
+      return;
+    }
+
+    setMessage(`Coins geändert: ${readNumber(data as JsonMap, "old_coins")} → ${readNumber(data as JsonMap, "new_coins")}`);
+    setSavingCoins(false);
+    await loadDetail();
   }
 
-  if (loading) {
-    return (
-      <div style={pageStyle}>
-        <h1 style={pageTitleStyle}>User Details</h1>
-        <p style={pageSubtitleStyle}>Lade Daten...</p>
-      </div>
-    );
-  }
+  async function handleSubscriptionSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const months = Number.parseInt(subscriptionMonths, 10);
+    if (Number.isNaN(months) || months < 0) {
+      setErrorMessage("Bitte eine gültige Monatszahl eingeben.");
+      return;
+    }
 
-  if (!profile) {
-    return (
-      <div style={pageStyle}>
-        <h1 style={pageTitleStyle}>User Details</h1>
-        <p style={pageSubtitleStyle}>Kein User gefunden.</p>
-        <Link href="/admin/users" style={backTextLinkStyle}>
-          Zurück zu Users
-        </Link>
-      </div>
-    );
+    setSavingSubscription(true);
+    setMessage(null);
+    setErrorMessage(null);
+
+    const { error } = await supabase.rpc("admin_update_user_subscription", {
+      p_user_id: userId,
+      p_variant: subscriptionVariant,
+      p_status: subscriptionStatus,
+      p_months: months,
+      p_provider: subscriptionProvider || "admin",
+    });
+
+    if (error) {
+      setErrorMessage(error.message || "Abo konnte nicht geändert werden.");
+      setSavingSubscription(false);
+      return;
+    }
+
+    setMessage("Abo wurde aktualisiert.");
+    setSavingSubscription(false);
+    await loadDetail();
   }
 
   return (
     <div style={pageStyle}>
-      <div style={heroCardStyle}>
-        <div style={heroTopStyle}>
-          <div>
-            <div style={heroLabelStyle}>User Detailansicht</div>
-            <h1 style={heroTitleStyle}>{profile.username || "Kein Username"}</h1>
-            <p style={heroSubtitleStyle}>
-              Alle wichtigen Profil-, Abo-, Kauf- und Marketplace-Daten für diesen
-              User.
-            </p>
-          </div>
-
-          <div style={heroButtonGridStyle}>
-            <button onClick={handleExcelExport} style={primaryButtonStyle}>
-              Export Excel
-            </button>
-            <button onClick={handlePdfExport} style={secondaryButtonStyle}>
-              Export PDF
-            </button>
-            <Link href="/admin/users" style={backButtonStyle}>
-              Zurück
-            </Link>
-          </div>
+      <div style={pageHeaderStyle}>
+        <div>
+          <Link href="/admin/users" style={backLinkStyle}>← Zurück zu Users</Link>
+          <h1 style={pageTitleStyle}>User Details</h1>
+          <p style={pageSubtitleStyle}>Coins, Abo und Karten des Users verwalten.</p>
         </div>
-
-        <div style={heroMetaGridStyle}>
-          <div style={heroMetaCardStyle}>
-            <span style={heroMetaLabelStyle}>User ID</span>
-            <strong style={heroMetaValueStyle}>{profile.id}</strong>
-          </div>
-
-          <div style={heroMetaCardStyle}>
-            <span style={heroMetaLabelStyle}>Registriert</span>
-            <strong style={heroMetaValueStyle}>
-              {formatDate(profile.created_at)}
-            </strong>
-          </div>
-        </div>
+        <button type="button" onClick={() => { loadDetail(); loadInventory(); }} style={secondaryButtonStyle}>Neu laden</button>
       </div>
+
+      {errorMessage && <div style={errorBoxStyle}>{errorMessage}</div>}
+      {message && <div style={successBoxStyle}>{message}</div>}
 
       <div style={kpiGridStyle}>
-        <KpiCard title="Card Points" value={String(profile.card_points || 0)} />
-        <KpiCard title="Abos" value={String(subscriptions.length)} />
-        <KpiCard title="Coin-Käufe" value={String(coinPurchases.length)} />
-        <KpiCard
-          title="Boost-Pack-Käufe"
-          value={String(boostPackPurchases.length)}
-        />
-        <KpiCard
-          title="Abo-Umsatz"
-          value={formatMoney(totalSubscriptionRevenue)}
-        />
-        <KpiCard title="Coin-Umsatz" value={formatMoney(totalCoinRevenue)} />
-        <KpiCard
-          title="Boost Coins ausgegeben"
-          value={String(totalBoostCoinsSpent)}
-        />
-        <KpiCard
-          title="Marketplace Fee Coins"
-          value={String(totalMarketplaceFeeCoins)}
-        />
+        <KpiCard title="Username" value={loading ? "..." : readString(profile, "username") || "—"} />
+        <KpiCard title="E-Mail" value={loading ? "..." : readString(profile, "email") || "—"} />
+        <KpiCard title="Coins" value={loading ? "..." : formatNumber(readNumber(profile, "coins"))} accent="green" />
+        <KpiCard title="Card Points" value={loading ? "..." : formatNumber(readNumber(profile, "card_points"))} />
+        <KpiCard title="Karten" value={loading ? "..." : formatNumber(detail?.inventory_count)} />
+        <KpiCard title="Pending Rewards" value={loading ? "..." : formatNumber(detail?.pending_pack_rewards)} accent="orange" />
       </div>
 
-      <div style={cardStyle}>
+      <div style={gridTwoStyle}>
+        <section style={cardStyle}>
+          <h2 style={sectionTitleStyle}>Profil</h2>
+          <InfoGrid items={[
+            ["User ID", userId],
+            ["Username", readString(profile, "username") || "—"],
+            ["E-Mail", readString(profile, "email") || "—"],
+            ["Coins", formatNumber(readNumber(profile, "coins"))],
+            ["Card Points", formatNumber(readNumber(profile, "card_points"))],
+            ["Admin", readBoolean(profile, "is_admin") ? "Ja" : "Nein"],
+            ["Erstellt", formatDate(readString(profile, "created_at"))],
+            ["Last Seen", formatDate(readString(profile, "last_seen_at"))],
+          ]} />
+        </section>
+
+        <section style={cardStyle}>
+          <h2 style={sectionTitleStyle}>Coins bearbeiten</h2>
+          <form onSubmit={handleCoinSubmit} style={formStyle}>
+            <label style={labelStyle}>Aktion</label>
+            <select value={coinMode} onChange={(e) => setCoinMode(e.target.value as CoinMode)} style={inputStyle}>
+              <option value="add">Coins hinzufügen</option>
+              <option value="subtract">Coins abziehen</option>
+              <option value="set">Coins exakt setzen</option>
+            </select>
+            <label style={labelStyle}>Betrag</label>
+            <input type="number" min="0" step="1" value={coinAmount} onChange={(e) => setCoinAmount(e.target.value)} style={inputStyle} />
+            <button type="submit" disabled={savingCoins} style={primaryButtonStyle}>{savingCoins ? "Speichere..." : "Coins speichern"}</button>
+          </form>
+          <p style={hintStyle}>Abziehen geht nie unter 0. Setzen ersetzt den aktuellen Coin-Wert.</p>
+        </section>
+      </div>
+
+      <div style={gridTwoStyle}>
+        <section style={cardStyle}>
+          <h2 style={sectionTitleStyle}>Aktuelles Abo</h2>
+          {subscription ? (
+            <InfoGrid items={[
+              ["Variante", labelVariant(readString(subscription, "variant"))],
+              ["Status", readString(subscription, "status") || "—"],
+              ["Preis", formatMoney(readNumber(subscription, "price_eur"))],
+              ["Provider", readString(subscription, "provider") || "—"],
+              ["Affiliate", readBoolean(subscription, "is_affiliate") ? "Ja" : "Nein"],
+              ["Started", formatDate(readString(subscription, "started_at"))],
+              ["Expires", formatDate(readString(subscription, "expires_at"))],
+            ]} />
+          ) : <p style={emptyTextStyle}>Noch kein Abo vorhanden.</p>}
+        </section>
+
+        <section style={cardStyle}>
+          <h2 style={sectionTitleStyle}>Abo hoch-/runtersetzen</h2>
+          <form onSubmit={handleSubscriptionSubmit} style={formStyle}>
+            <label style={labelStyle}>Variante</label>
+            <select value={subscriptionVariant} onChange={(e) => setSubscriptionVariant(e.target.value as SubscriptionVariant)} style={inputStyle}>
+              <option value="free">Free</option>
+              <option value="basic">Basic</option>
+              <option value="pro">Pro</option>
+              <option value="elite">Elite</option>
+              <option value="master">Master</option>
+            </select>
+            <label style={labelStyle}>Status</label>
+            <select value={subscriptionStatus} onChange={(e) => setSubscriptionStatus(e.target.value as SubscriptionStatus)} style={inputStyle}>
+              <option value="active">Active</option>
+              <option value="trialing">Trialing</option>
+              <option value="cancelled">Cancelled</option>
+              <option value="expired">Expired</option>
+            </select>
+            <label style={labelStyle}>Laufzeit in Monaten</label>
+            <input type="number" min="0" step="1" value={subscriptionMonths} onChange={(e) => setSubscriptionMonths(e.target.value)} style={inputStyle} />
+            <label style={labelStyle}>Provider</label>
+            <input type="text" value={subscriptionProvider} onChange={(e) => setSubscriptionProvider(e.target.value)} style={inputStyle} />
+            <button type="submit" disabled={savingSubscription} style={primaryButtonStyle}>{savingSubscription ? "Speichere..." : "Abo speichern"}</button>
+          </form>
+          <p style={hintStyle}>Free = 0 €. Basic 1,99 €, Pro 2,99 €, Elite 4,99 €, Master 7,99 €.</p>
+        </section>
+      </div>
+
+      <section style={cardStyle}>
         <div style={sectionHeaderStyle}>
-          <h3 style={sectionTitleStyle}>Profil</h3>
+          <div>
+            <h2 style={sectionTitleStyle}>Karten / Inventory</h2>
+            <p style={sectionTextStyle}>Aktuell Anzeige. Karte hinzufügen/entfernen bauen wir danach separat.</p>
+          </div>
+          <span style={sectionCountStyle}>{inventoryLoading ? "Lade..." : `${filteredInventory.length} Karten`}</span>
         </div>
-
-        <div style={profileGridStyle}>
-          <InfoItem label="User ID" value={profile.id} />
-          <InfoItem label="Username" value={profile.username || "—"} />
-          <InfoItem label="Registriert am" value={formatDate(profile.created_at)} />
-          <InfoItem
-            label="Background"
-            value={profile.selected_background_id || "—"}
-          />
-        </div>
-      </div>
-
-      <SectionTable
-        title="Subscriptions"
-        headers={[
-          "Variante",
-          "Status",
-          "Affiliate",
-          "Provider",
-          "Preis",
-          "Started At",
-          "Expires At",
-        ]}
-        rows={subscriptions.map((item) => [
-          item.variant,
-          item.status,
-          item.is_affiliate ? "Ja" : "Nein",
-          item.provider || "—",
-          formatMoney(item.price_eur || 0),
-          formatDate(item.started_at),
-          formatDate(item.expires_at),
-        ])}
-      />
-
-      <SectionTable
-        title="Coin Purchases"
-        headers={["Coins", "Preis", "Provider", "Created At"]}
-        rows={coinPurchases.map((item) => [
-          String(item.coins_amount),
-          formatMoney(item.price_eur),
-          item.provider || "—",
-          formatDate(item.created_at),
-        ])}
-      />
-
-      <SectionTable
-        title="Boost Pack Purchases"
-        headers={["Pack", "Menge", "Coin Cost", "Total Coin Cost", "Created At"]}
-        rows={boostPackPurchases.map((item) => [
-          item.pack_name,
-          String(item.quantity),
-          String(item.coin_cost),
-          String(item.total_coin_cost),
-          formatDate(item.created_at),
-        ])}
-      />
-
-      <SectionTable
-        title="Marketplace Sales"
-        headers={["Sale Price Coins", "Fee Coins", "Buyer User ID", "Created At"]}
-        rows={marketplaceSales.map((item) => [
-          String(item.sale_price_coins),
-          String(item.fee_coins),
-          item.buyer_user_id || "—",
-          formatDate(item.created_at),
-        ])}
-      />
-    </div>
-  );
-}
-
-function KpiCard({ title, value }: { title: string; value: string }) {
-  return (
-    <div style={kpiCardStyle}>
-      <p style={kpiTitleStyle}>{title}</p>
-      <h3 style={kpiValueStyle}>{value}</h3>
-    </div>
-  );
-}
-
-function InfoItem({ label, value }: { label: string; value: string }) {
-  return (
-    <div style={infoItemStyle}>
-      <p style={infoLabelStyle}>{label}</p>
-      <p style={infoValueStyle}>{value}</p>
-    </div>
-  );
-}
-
-function SectionTable({
-  title,
-  headers,
-  rows,
-}: {
-  title: string;
-  headers: string[];
-  rows: string[][];
-}) {
-  return (
-    <div style={cardStyle}>
-      <div style={sectionHeaderStyle}>
-        <h3 style={sectionTitleStyle}>{title}</h3>
-        <span style={sectionCountStyle}>{rows.length} Einträge</span>
-      </div>
-
-      {rows.length === 0 ? (
-        <p style={emptyTextStyle}>Keine Daten vorhanden.</p>
-      ) : (
-        <>
-          <div className="user-detail-mobile-list" style={mobileListStyle}>
-            {rows.map((row, rowIndex) => (
-              <div key={rowIndex} style={mobileCardStyle}>
-                <div style={mobileInfoGridStyle}>
-                  {headers.map((header, cellIndex) => (
-                    <InfoItem
-                      key={`${rowIndex}-${cellIndex}`}
-                      label={header}
-                      value={row[cellIndex] || "—"}
-                    />
-                  ))}
-                </div>
+        <input type="text" placeholder="Karte suchen..." value={cardSearch} onChange={(e) => setCardSearch(e.target.value)} style={{ ...inputStyle, marginBottom: 16 }} />
+        {inventoryLoading ? <p style={emptyTextStyle}>Inventar wird geladen...</p> : filteredInventory.length === 0 ? <p style={emptyTextStyle}>Keine Karten gefunden.</p> : (
+          <div style={cardGridStyle}>{filteredInventory.map((card, index) => (
+            <div key={readString(card, "id") || `${index}`} style={inventoryCardStyle}>
+              <div style={cardTopRowStyle}>
+                <strong style={cardNameStyle}>{cardTitle(card)}</strong>
+                <span style={rarityBadgeStyle}>{cardRarity(card)}</span>
               </div>
-            ))}
-          </div>
-
-          <div
-            className="user-detail-desktop-table"
-            style={desktopTableWrapperStyle}
-          >
-            <table
-              style={{
-                width: "100%",
-                borderCollapse: "collapse",
-                minWidth: "900px",
-              }}
-            >
-              <thead>
-                <tr style={{ background: "#111814", textAlign: "left" }}>
-                  {headers.map((header) => (
-                    <th key={header} style={tableHeaderStyle}>
-                      {header}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((row, rowIndex) => (
-                  <tr key={rowIndex} style={{ borderTop: "1px solid #27312d" }}>
-                    {row.map((cell, cellIndex) => (
-                      <td key={`${rowIndex}-${cellIndex}`} style={tableCellStyle}>
-                        {cell}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </>
-      )}
+              <InfoGrid compact items={[
+                ["ID", readString(card, "id") || "—"],
+                ["Card ID", readString(card, "card_id") || readString(card, "card_key") || "—"],
+                ["Status", readString(card, "status") || "—"],
+                ["Quantity", String(readNumber(card, "quantity") || readNumber(card, "count") || 1)],
+                ["Set", readString(card, "set_id") || readString(card, "set") || "—"],
+                ["Created", formatDate(readString(card, "created_at"))],
+              ]} />
+            </div>
+          ))}</div>
+        )}
+      </section>
     </div>
   );
 }
 
-const pageStyle: CSSProperties = {
-  width: "100%",
-};
+function KpiCard({ title, value, accent = "default" }: { title: string; value: string; accent?: "default" | "green" | "orange" }) {
+  return <div style={kpiCardStyle}><p style={kpiTitleStyle}>{title}</p><h3 style={accent === "green" ? greenValueStyle : accent === "orange" ? orangeValueStyle : kpiValueStyle}>{value}</h3></div>;
+}
 
-const pageTitleStyle: CSSProperties = {
-  marginTop: 0,
-  marginBottom: "8px",
-  fontSize: "30px",
-  color: "#e7f1eb",
-};
+function InfoGrid({ items, compact = false }: { items: [string, string][]; compact?: boolean }) {
+  return <div style={compact ? infoGridCompactStyle : infoGridStyle}>{items.map(([label, value]) => <div key={`${label}-${value}`} style={infoItemStyle}><div style={infoLabelStyle}>{label}</div><div style={infoValueStyle}>{value}</div></div>)}</div>;
+}
+function readString(source: JsonMap | null | undefined, key: string) { const v = source?.[key]; return v === null || v === undefined ? "" : String(v); }
+function readNumber(sourceOrValue: JsonMap | unknown, key?: string) { const v = key && sourceOrValue && typeof sourceOrValue === "object" ? (sourceOrValue as JsonMap)[key] : sourceOrValue; if (typeof v === "number") return Number.isNaN(v) ? 0 : v; if (typeof v === "string") { const n = Number(v); return Number.isNaN(n) ? 0 : n; } return 0; }
+function readBoolean(source: JsonMap | null | undefined, key: string) { return source?.[key] === true; }
+function formatNumber(value: unknown) { return Math.round(readNumber(value)).toLocaleString("de-DE"); }
+function formatMoney(value: unknown) { return readNumber(value).toLocaleString("de-DE", { style: "currency", currency: "EUR" }); }
+function formatDate(value?: string | null) { if (!value) return "—"; const d = new Date(value); return Number.isNaN(d.getTime()) ? "—" : d.toLocaleString("de-DE"); }
+function normalizeVariant(value: string): SubscriptionVariant { const v = value.toLowerCase().trim(); if (v === "basic" || v === "pro" || v === "elite" || v === "master") return v; return "free"; }
+function normalizeStatus(value: string): SubscriptionStatus { const v = value.toLowerCase().trim(); if (v === "trialing" || v === "cancelled" || v === "expired") return v; return "active"; }
+function labelVariant(value: string) { const v = normalizeVariant(value); return v.charAt(0).toUpperCase() + v.slice(1); }
+function cardTitle(card: JsonMap) { return readString(card, "card_name") || readString(card, "name") || readString(card, "title") || readString(card, "card_id") || "Unbekannte Karte"; }
+function cardRarity(card: JsonMap) { return readString(card, "rarity") || readString(card, "rarity_id") || readString(card, "tier") || "—"; }
 
-const pageSubtitleStyle: CSSProperties = {
-  marginTop: 0,
-  color: "#94a39b",
-  lineHeight: 1.5,
-};
-
-const heroCardStyle: CSSProperties = {
-  background: "linear-gradient(135deg, #14532d 0%, #0f172a 100%)",
-  border: "1px solid #2f5f45",
-  borderRadius: "20px",
-  padding: "20px",
-  boxShadow: "0 8px 30px rgba(0,0,0,0.22)",
-  marginBottom: "20px",
-};
-
-const heroTopStyle: CSSProperties = {
-  display: "flex",
-  justifyContent: "space-between",
-  alignItems: "flex-start",
-  gap: "16px",
-  flexWrap: "wrap",
-};
-
-const heroLabelStyle: CSSProperties = {
-  fontSize: "14px",
-  color: "rgba(255,255,255,0.75)",
-  marginBottom: "8px",
-};
-
-const heroTitleStyle: CSSProperties = {
-  margin: 0,
-  fontSize: "32px",
-  fontWeight: 800,
-  color: "white",
-  lineHeight: 1.1,
-  wordBreak: "break-word",
-};
-
-const heroSubtitleStyle: CSSProperties = {
-  marginTop: "10px",
-  marginBottom: 0,
-  color: "#bbf7d0",
-  fontSize: "15px",
-  fontWeight: 600,
-  lineHeight: 1.5,
-};
-
-const heroButtonGridStyle: CSSProperties = {
-  display: "grid",
-  gridTemplateColumns: "1fr",
-  gap: "10px",
-  width: "100%",
-  maxWidth: "220px",
-};
-
-const heroMetaGridStyle: CSSProperties = {
-  display: "grid",
-  gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-  gap: "12px",
-  marginTop: "16px",
-};
-
-const heroMetaCardStyle: CSSProperties = {
-  background: "rgba(255,255,255,0.08)",
-  border: "1px solid rgba(255,255,255,0.12)",
-  borderRadius: "14px",
-  padding: "14px",
-};
-
-const heroMetaLabelStyle: CSSProperties = {
-  display: "block",
-  fontSize: "13px",
-  color: "rgba(255,255,255,0.72)",
-  marginBottom: "6px",
-};
-
-const heroMetaValueStyle: CSSProperties = {
-  color: "white",
-  fontSize: "16px",
-  wordBreak: "break-word",
-};
-
-const kpiGridStyle: CSSProperties = {
-  display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-  gap: "14px",
-  marginBottom: "20px",
-};
-
-const kpiCardStyle: CSSProperties = {
-  background: "#171f1c",
-  padding: "18px",
-  borderRadius: "16px",
-  border: "1px solid #27312d",
-  boxShadow: "0 8px 30px rgba(0,0,0,0.16)",
-};
-
-const kpiTitleStyle: CSSProperties = {
-  margin: 0,
-  fontSize: "14px",
-  color: "#94a39b",
-};
-
-const kpiValueStyle: CSSProperties = {
-  margin: "10px 0 0 0",
-  fontSize: "24px",
-  color: "#e7f1eb",
-  wordBreak: "break-word",
-};
-
-const cardStyle: CSSProperties = {
-  background: "#171f1c",
-  borderRadius: "16px",
-  padding: "18px",
-  border: "1px solid #27312d",
-  boxShadow: "0 8px 30px rgba(0,0,0,0.16)",
-  marginTop: "20px",
-};
-
-const sectionHeaderStyle: CSSProperties = {
-  display: "flex",
-  justifyContent: "space-between",
-  alignItems: "center",
-  gap: "12px",
-  flexWrap: "wrap",
-  marginBottom: "16px",
-};
-
-const sectionTitleStyle: CSSProperties = {
-  margin: 0,
-  color: "#e7f1eb",
-};
-
-const sectionCountStyle: CSSProperties = {
-  color: "#94a39b",
-  fontSize: "14px",
-};
-
-const emptyTextStyle: CSSProperties = {
-  color: "#94a39b",
-  margin: 0,
-};
-
-const profileGridStyle: CSSProperties = {
-  display: "grid",
-  gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-  gap: "12px",
-};
-
-const infoItemStyle: CSSProperties = {
-  background: "#101714",
-  border: "1px solid #27312d",
-  borderRadius: "12px",
-  padding: "12px",
-};
-
-const infoLabelStyle: CSSProperties = {
-  margin: 0,
-  fontSize: "12px",
-  color: "#94a39b",
-  marginBottom: "6px",
-};
-
-const infoValueStyle: CSSProperties = {
-  margin: 0,
-  fontWeight: 700,
-  color: "#e7f1eb",
-  wordBreak: "break-word",
-  fontSize: "14px",
-};
-
-const mobileListStyle: CSSProperties = {
-  display: "grid",
-  gap: "14px",
-};
-
-const mobileCardStyle: CSSProperties = {
-  background: "#101714",
-  border: "1px solid #27312d",
-  borderRadius: "16px",
-  padding: "16px",
-};
-
-const mobileInfoGridStyle: CSSProperties = {
-  display: "grid",
-  gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-  gap: "12px",
-};
-
-const desktopTableWrapperStyle: CSSProperties = {
-  overflowX: "auto",
-  marginTop: "18px",
-  display: "none",
-};
-
-const tableHeaderStyle: CSSProperties = {
-  padding: "12px",
-  fontSize: "14px",
-  fontWeight: 700,
-  color: "#cfe0d6",
-  borderBottom: "1px solid #27312d",
-};
-
-const tableCellStyle: CSSProperties = {
-  padding: "12px",
-  fontSize: "14px",
-  color: "#e7f1eb",
-  verticalAlign: "top",
-};
-
-const primaryButtonStyle: CSSProperties = {
-  minHeight: "44px",
-  padding: "12px 14px",
-  borderRadius: "12px",
-  border: "1px solid #22c55e",
-  background: "#22c55e",
-  color: "#08130c",
-  cursor: "pointer",
-  fontWeight: 700,
-};
-
-const secondaryButtonStyle: CSSProperties = {
-  minHeight: "44px",
-  padding: "12px 14px",
-  borderRadius: "12px",
-  border: "1px solid #27312d",
-  background: "#0f1512",
-  color: "#e7f1eb",
-  cursor: "pointer",
-  fontWeight: 700,
-};
-
-const backButtonStyle: CSSProperties = {
-  minHeight: "44px",
-  padding: "12px 14px",
-  borderRadius: "12px",
-  border: "1px solid #27312d",
-  background: "#171f1c",
-  color: "#e7f1eb",
-  textDecoration: "none",
-  display: "inline-flex",
-  alignItems: "center",
-  justifyContent: "center",
-  fontWeight: 700,
-};
-
-const backTextLinkStyle: CSSProperties = {
-  color: "#86efac",
-  textDecoration: "underline",
-};
+const pageStyle: CSSProperties = { width: "100%" };
+const pageHeaderStyle: CSSProperties = { display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 14, flexWrap: "wrap", marginBottom: 20 };
+const backLinkStyle: CSSProperties = { display: "inline-flex", marginBottom: 10, color: "#86efac", textDecoration: "none", fontWeight: 800 };
+const pageTitleStyle: CSSProperties = { marginTop: 0, marginBottom: 8, fontSize: 30, color: "#e7f1eb" };
+const pageSubtitleStyle: CSSProperties = { marginTop: 0, color: "#94a39b", lineHeight: 1.5 };
+const secondaryButtonStyle: CSSProperties = { minHeight: 42, padding: "9px 14px", borderRadius: 12, border: "1px solid #27312d", background: "#101714", color: "#e7f1eb", fontWeight: 800, cursor: "pointer" };
+const errorBoxStyle: CSSProperties = { background: "#331717", border: "1px solid #7f1d1d", color: "#fecaca", borderRadius: 14, padding: "12px 14px", marginBottom: 16, lineHeight: 1.5 };
+const successBoxStyle: CSSProperties = { background: "#163322", border: "1px solid #166534", color: "#bbf7d0", borderRadius: 14, padding: "12px 14px", marginBottom: 16, lineHeight: 1.5 };
+const kpiGridStyle: CSSProperties = { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))", gap: 14, marginBottom: 20 };
+const kpiCardStyle: CSSProperties = { background: "#171f1c", padding: 16, borderRadius: 16, border: "1px solid #27312d", boxShadow: "0 8px 30px rgba(0,0,0,0.16)" };
+const kpiTitleStyle: CSSProperties = { margin: 0, fontSize: 13, color: "#94a39b" };
+const kpiValueStyle: CSSProperties = { margin: "10px 0 0 0", fontSize: 22, color: "#e7f1eb", wordBreak: "break-word" };
+const greenValueStyle: CSSProperties = { ...kpiValueStyle, color: "#86efac" };
+const orangeValueStyle: CSSProperties = { ...kpiValueStyle, color: "#fdba74" };
+const gridTwoStyle: CSSProperties = { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 18, marginBottom: 18 };
+const cardStyle: CSSProperties = { background: "#171f1c", borderRadius: 16, padding: 18, border: "1px solid #27312d", boxShadow: "0 8px 30px rgba(0,0,0,0.16)", marginBottom: 18 };
+const sectionHeaderStyle: CSSProperties = { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap", marginBottom: 16 };
+const sectionTitleStyle: CSSProperties = { margin: "0 0 16px 0", color: "#e7f1eb", fontSize: 20 };
+const sectionTextStyle: CSSProperties = { margin: "6px 0 0 0", color: "#94a39b", lineHeight: 1.5 };
+const sectionCountStyle: CSSProperties = { color: "#94a39b", fontSize: 14 };
+const formStyle: CSSProperties = { display: "grid", gap: 12 };
+const labelStyle: CSSProperties = { display: "block", color: "#cfe0d6", fontWeight: 800 };
+const inputStyle: CSSProperties = { width: "100%", minHeight: 46, borderRadius: 12, border: "1px solid #27312d", background: "#0f1512", color: "#e7f1eb", padding: "11px 13px", boxSizing: "border-box", outline: "none" };
+const primaryButtonStyle: CSSProperties = { minHeight: 46, border: 0, borderRadius: 12, background: "#22c55e", color: "#08130c", fontWeight: 900, cursor: "pointer" };
+const hintStyle: CSSProperties = { color: "#94a39b", lineHeight: 1.5, margin: "14px 0 0 0" };
+const emptyTextStyle: CSSProperties = { color: "#94a39b", lineHeight: 1.5 };
+const infoGridStyle: CSSProperties = { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 12 };
+const infoGridCompactStyle: CSSProperties = { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 10 };
+const infoItemStyle: CSSProperties = { background: "#101714", border: "1px solid #27312d", borderRadius: 12, padding: 12 };
+const infoLabelStyle: CSSProperties = { fontSize: 12, color: "#94a39b", marginBottom: 6 };
+const infoValueStyle: CSSProperties = { fontSize: 14, color: "#e7f1eb", wordBreak: "break-word" };
+const cardGridStyle: CSSProperties = { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 14 };
+const inventoryCardStyle: CSSProperties = { background: "#101714", border: "1px solid #27312d", borderRadius: 16, padding: 14 };
+const cardTopRowStyle: CSSProperties = { display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10, marginBottom: 12 };
+const cardNameStyle: CSSProperties = { color: "#e7f1eb", fontSize: 16, wordBreak: "break-word" };
+const rarityBadgeStyle: CSSProperties = { display: "inline-flex", padding: "6px 9px", borderRadius: 999, background: "#172554", color: "#93c5fd", fontSize: 12, fontWeight: 800, whiteSpace: "nowrap" };
