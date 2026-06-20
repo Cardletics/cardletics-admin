@@ -748,7 +748,7 @@ export default function AdminUserDetailPage() {
               <span style={sectionCountStyle}>{packLoading ? "Lade..." : `${filteredPackRewards.length} Tokens`}</span>
             </div>
             <input type="text" placeholder="Token suchen: pack, status, id..." value={packSearch} onChange={(event) => setPackSearch(event.target.value)} style={{ ...inputStyle, marginBottom: "16px" }} />
-            <JsonCardGrid items={filteredPackRewards} emptyText="Keine Pack Tokens gefunden." />
+            <PackRewardGrid items={filteredPackRewards} />
           </section>
 
           <section style={cardStyle}>
@@ -1442,6 +1442,63 @@ function summarizeRarities(cards: JsonMap[]) {
   return Array.from(counts.entries())
     .map(([rarity, count]) => `${count}× ${rarity.charAt(0).toUpperCase() + rarity.slice(1)}`)
     .join(", ");
+}
+
+function PackRewardGrid({ items }: { items: JsonMap[] }) {
+  if (items.length === 0) {
+    return <p style={emptyTextStyle}>Keine Pack Tokens gefunden.</p>;
+  }
+
+  return (
+    <div style={cardGridStyle}>
+      {items.map((token, index) => {
+        const status = readString(token, "status") || "pending";
+        const receivedAt = readString(token, "received_at") || readString(token, "created_at");
+        const openedAt = readString(token, "opened_at") || readString(token, "claimed_at");
+        const packTitle =
+          readString(token, "pack_name") ||
+          readString(token, "pack_key") ||
+          readString(token, "pack_tier") ||
+          readString(token, "reward_key") ||
+          "Pack Token";
+
+        return (
+          <div
+            key={readString(token, "id") || `${index}`}
+            style={{
+              ...inventoryCardStyle,
+              border: `1px solid ${status.toLowerCase() === "pending" ? "#4DA3FF" : "#27312d"}`,
+            }}
+          >
+            <div style={cardTopRowStyle}>
+              <strong style={cardNameStyle}>{packTitle}</strong>
+              <span
+                style={{
+                  ...rarityBadgeStyle,
+                  background: status.toLowerCase() === "pending" ? "#102b4c" : "#163322",
+                  color: status.toLowerCase() === "pending" ? "#b7d8ff" : "#bbf7d0",
+                  borderColor: status.toLowerCase() === "pending" ? "#4DA3FF" : "#22c55e",
+                }}
+              >
+                {status}
+              </span>
+            </div>
+
+            <InfoGrid
+              compact
+              items={[
+                ["Erhalten am", formatDate(receivedAt)],
+                ["Eingelöst am", openedAt ? formatDate(openedAt) : "Noch nicht eingelöst"],
+                ["Karten", String(readNumber(token, "cards_count") || readNumber(token, "card_count") || readNumber(token, "cards_per_open") || "—")],
+                ["Quelle", readString(token, "source") || readString(token, "provider") || "—"],
+                ["Notiz", readString(token, "note") || readString(token, "admin_note") || "—"],
+              ]}
+            />
+          </div>
+        );
+      })}
+    </div>
+  );
 }
 
 function JsonCardGrid({ items, emptyText, preferredTitleKeys = ["pack_key", "pack_name", "pack_tier", "reward_key", "status", "id"] }: { items: JsonMap[]; emptyText: string; preferredTitleKeys?: string[] }) {
