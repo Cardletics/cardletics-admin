@@ -20,7 +20,7 @@ type Profile = {
   subscription_raw_variant: string | null;
   subscription_status: string | null;
   subscription_expires_at: string | null;
-  subscription_price_eur: number | null;
+  subscription_price_eur: number | string | null;
 };
 
 type UsernameFilter = "all" | "withUsername" | "withoutUsername";
@@ -105,7 +105,8 @@ export default function UsersPage() {
 
     const totalCoins = users.reduce((sum, user) => sum + safeNumber(user.coins), 0);
     const totalCardPoints = users.reduce((sum, user) => sum + safeNumber(user.card_points), 0);
-    const paidPlans = users.filter((user) => getPlan(user) !== "free").length;
+    const paidPlans = users.filter((user) => isPaidSubscription(user)).length;
+    const giftedPlans = users.filter((user) => isGiftSubscription(user)).length;
     const masterPlans = users.filter((user) => getPlan(user) === "master").length;
 
     return {
@@ -116,6 +117,7 @@ export default function UsersPage() {
       totalCoins,
       totalCardPoints,
       paidPlans,
+      giftedPlans,
       masterPlans,
     };
   }, [users]);
@@ -274,8 +276,9 @@ export default function UsersPage() {
 
       <div style={kpiGridStyle}>
         <KpiCard title="Total Users" value={loading ? "..." : formatNumber(stats.totalUsers)} />
-        <KpiCard title="Paid Plans" value={loading ? "..." : formatNumber(stats.paidPlans)} />
-        <KpiCard title="Master" value={loading ? "..." : formatNumber(stats.masterPlans)} />
+        <KpiCard title="Bezahlte Abos" value={loading ? "..." : formatNumber(stats.paidPlans)} />
+        <KpiCard title="Geschenk-Abos" value={loading ? "..." : formatNumber(stats.giftedPlans)} />
+        <KpiCard title="Master gesamt" value={loading ? "..." : formatNumber(stats.masterPlans)} />
         <KpiCard title="Aktiv 15 Min." value={loading ? "..." : formatNumber(stats.active15)} />
         <KpiCard title="Heute online" value={loading ? "..." : formatNumber(stats.onlineToday)} />
         <KpiCard title="Neue 24 Std." value={loading ? "..." : formatNumber(stats.new24h)} />
@@ -466,6 +469,11 @@ export default function UsersPage() {
                           <span style={planBadgeStyle(getPlan(user))}>
                             {planLabel(getPlan(user), user)}
                           </span>
+                          {isGiftSubscription(user) && (
+                            <span style={giftPlanSublineStyle}>
+                              Geschenk · kein Umsatz
+                            </span>
+                          )}
                           {user.subscription_expires_at && (
                             <span style={planSublineStyle}>
                               bis {formatDate(user.subscription_expires_at)}
@@ -511,10 +519,17 @@ function InfoItem({ label, value }: { label: string; value: string }) {
   );
 }
 
-function safeNumber(value: number | null | undefined) {
-  if (typeof value !== "number") return 0;
-  if (Number.isNaN(value)) return 0;
-  return value;
+function safeNumber(value: unknown) {
+  if (typeof value === "number") {
+    return Number.isNaN(value) ? 0 : value;
+  }
+
+  if (typeof value === "string") {
+    const parsed = Number(value);
+    return Number.isNaN(parsed) ? 0 : parsed;
+  }
+
+  return 0;
 }
 
 function dateValue(value: string | null | undefined) {
@@ -554,6 +569,14 @@ function relativeTime(value: string) {
   return `vor ${days} Tagen`;
 }
 
+function isPaidSubscription(user: Profile) {
+  return getPlan(user) !== "free" && safeNumber(user.subscription_price_eur) > 0;
+}
+
+function isGiftSubscription(user: Profile) {
+  return getPlan(user) !== "free" && safeNumber(user.subscription_price_eur) <= 0;
+}
+
 function getPlan(user: Profile): PlanFilter {
   const plan = (user.subscription_variant || "free").toLowerCase().trim();
 
@@ -583,6 +606,10 @@ function planLabel(plan: PlanFilter, user?: Profile) {
 
   if (plan === "free" && raw !== "free" && raw !== "" && raw !== "none") {
     return `Free (${raw}/${status})`;
+  }
+
+  if (isGiftSubscription(user)) {
+    return `${label} · Geschenk`;
   }
 
   return label;
@@ -879,6 +906,12 @@ const planCellStyle: CSSProperties = {
 const planSublineStyle: CSSProperties = {
   color: "#94a39b",
   fontSize: "11px",
+};
+
+const giftPlanSublineStyle: CSSProperties = {
+  color: "#fdba74",
+  fontSize: "11px",
+  fontWeight: 800,
 };
 
 const freePlanBadgeStyle: CSSProperties = {
