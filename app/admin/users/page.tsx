@@ -24,7 +24,7 @@ type Profile = {
 };
 
 type UsernameFilter = "all" | "withUsername" | "withoutUsername";
-type ActivityFilter = "all" | "online15" | "active24h" | "inactive24h";
+type ActivityFilter = "all" | "online15" | "onlineToday" | "inactiveToday";
 type PlanFilter = "all" | "free" | "basic" | "pro" | "elite" | "master";
 type SortOrder =
   | "newest"
@@ -93,10 +93,9 @@ export default function UsersPage() {
       return diffMs <= 15 * 60 * 1000;
     }).length;
 
-    const active24h = users.filter((user) => {
+    const onlineToday = users.filter((user) => {
       if (!user.last_seen_at) return false;
-      const diffMs = now - new Date(user.last_seen_at).getTime();
-      return diffMs <= 24 * 60 * 60 * 1000;
+      return isSameLocalDay(user.last_seen_at);
     }).length;
 
     const new24h = users.filter((user) => {
@@ -112,7 +111,7 @@ export default function UsersPage() {
     return {
       totalUsers: users.length,
       active15,
-      active24h,
+      onlineToday,
       new24h,
       totalCoins,
       totalCardPoints,
@@ -163,16 +162,16 @@ export default function UsersPage() {
 
       result = result.filter((user) => {
         if (!user.last_seen_at) {
-          return activityFilter === "inactive24h";
+          return activityFilter === "inactiveToday";
         }
 
         const diffMs = now - new Date(user.last_seen_at).getTime();
-        const active15 = diffMs <= 15 * 60 * 1000;
-        const active24h = diffMs <= 24 * 60 * 60 * 1000;
+        const active15 = diffMs <= 15 * 60 * 1000 && isSameLocalDay(user.last_seen_at);
+        const onlineToday = isSameLocalDay(user.last_seen_at);
 
         if (activityFilter === "online15") return active15;
-        if (activityFilter === "active24h") return active24h;
-        if (activityFilter === "inactive24h") return !active24h;
+        if (activityFilter === "onlineToday") return onlineToday;
+        if (activityFilter === "inactiveToday") return !onlineToday;
 
         return true;
       });
@@ -230,9 +229,12 @@ export default function UsersPage() {
     if (!user.last_seen_at) return "Nie aktiv";
 
     const diffMs = Date.now() - new Date(user.last_seen_at).getTime();
+    const onlineToday = isSameLocalDay(user.last_seen_at);
 
-    if (diffMs <= 15 * 60 * 1000) return "Aktiv";
-    if (diffMs <= 24 * 60 * 60 * 1000) return "Heute online";
+    // "Heute online" basiert bewusst auf dem Kalenderdatum im Browser.
+    // Dadurch wird die Kennzeichnung um 00:00 Uhr automatisch zurückgesetzt.
+    if (onlineToday && diffMs <= 15 * 60 * 1000) return "Aktiv";
+    if (onlineToday) return "Heute online";
     return "Inaktiv";
   }
 
@@ -275,7 +277,7 @@ export default function UsersPage() {
         <KpiCard title="Paid Plans" value={loading ? "..." : formatNumber(stats.paidPlans)} />
         <KpiCard title="Master" value={loading ? "..." : formatNumber(stats.masterPlans)} />
         <KpiCard title="Aktiv 15 Min." value={loading ? "..." : formatNumber(stats.active15)} />
-        <KpiCard title="Heute online" value={loading ? "..." : formatNumber(stats.active24h)} />
+        <KpiCard title="Heute online" value={loading ? "..." : formatNumber(stats.onlineToday)} />
         <KpiCard title="Neue 24 Std." value={loading ? "..." : formatNumber(stats.new24h)} />
         <KpiCard title="Coins gesamt" value={loading ? "..." : formatNumber(stats.totalCoins)} />
         <KpiCard title="Card Points gesamt" value={loading ? "..." : formatNumber(stats.totalCardPoints)} />
@@ -349,8 +351,8 @@ export default function UsersPage() {
             >
               <option value="all">Alle</option>
               <option value="online15">Aktiv letzte 15 Min.</option>
-              <option value="active24h">Heute online</option>
-              <option value="inactive24h">Nicht aktiv 24 Std.</option>
+              <option value="onlineToday">Heute online</option>
+              <option value="inactiveToday">Nicht heute online</option>
             </select>
           </div>
 
@@ -410,10 +412,10 @@ export default function UsersPage() {
                   </div>
 
                   <div style={mobileInfoGridStyle}>
+                    <InfoItem label="Last Seen" value={formatDate(user.last_seen_at)} />
                     <InfoItem label="Abo" value={planLabel(getPlan(user), user)} />
                     <InfoItem label="Coins" value={formatNumber(user.coins)} />
                     <InfoItem label="Card Points" value={formatNumber(user.card_points)} />
-                    <InfoItem label="Last Seen" value={formatDate(user.last_seen_at)} />
                     <InfoItem label="Registriert" value={formatDate(user.created_at)} />
                     <InfoItem label="Background" value={user.selected_background_id || "—"} />
                   </div>
@@ -433,10 +435,10 @@ export default function UsersPage() {
                   <tr style={{ background: "#111814", textAlign: "left" }}>
                     <th style={tableHeaderStyle}>Username</th>
                     <th style={tableHeaderStyle}>E-Mail</th>
+                    <th style={tableHeaderStyle}>Last Seen</th>
                     <th style={tableHeaderStyle}>Abo Plan</th>
                     <th style={tableHeaderStyle}>Coins</th>
                     <th style={tableHeaderStyle}>Card Points</th>
-                    <th style={tableHeaderStyle}>Last Seen</th>
                     <th style={tableHeaderStyle}>Registriert am</th>
                     <th style={tableHeaderStyle}>Aktion</th>
                   </tr>
@@ -448,6 +450,17 @@ export default function UsersPage() {
                         {user.username && user.username.trim() !== "" ? user.username : "—"}
                       </td>
                       <td style={tableCellStyle}>{user.email || "—"}</td>
+                      <td style={tableCellStyle}>
+                        <div style={lastSeenCellStyle}>
+                          <span style={activityStyle(user)}>{activityLabel(user)}</span>
+                          <span style={lastSeenSublineStyle}>
+                            {activitySubline(user)}
+                          </span>
+                          <span style={lastSeenDateStyle}>
+                            {formatDate(user.last_seen_at)}
+                          </span>
+                        </div>
+                      </td>
                       <td style={tableCellStyle}>
                         <div style={planCellStyle}>
                           <span style={planBadgeStyle(getPlan(user))}>
@@ -462,17 +475,6 @@ export default function UsersPage() {
                       </td>
                       <td style={tableCellStyle}>{formatNumber(user.coins)}</td>
                       <td style={tableCellStyle}>{formatNumber(user.card_points)}</td>
-                      <td style={tableCellStyle}>
-                        <div style={lastSeenCellStyle}>
-                          <span style={activityStyle(user)}>{activityLabel(user)}</span>
-                          <span style={lastSeenSublineStyle}>
-                            {activitySubline(user)}
-                          </span>
-                          <span style={lastSeenDateStyle}>
-                            {formatDate(user.last_seen_at)}
-                          </span>
-                        </div>
-                      </td>
                       <td style={tableCellStyle}>{formatDate(user.created_at)}</td>
                       <td style={tableCellStyle}>
                         <Link href={`/admin/users/${user.id}`} style={tableButtonStyle}>
@@ -519,6 +521,20 @@ function dateValue(value: string | null | undefined) {
   if (!value) return 0;
   const timestamp = new Date(value).getTime();
   return Number.isNaN(timestamp) ? 0 : timestamp;
+}
+
+function isSameLocalDay(value: string) {
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) return false;
+
+  const now = new Date();
+
+  return (
+    date.getFullYear() === now.getFullYear() &&
+    date.getMonth() === now.getMonth() &&
+    date.getDate() === now.getDate()
+  );
 }
 
 function relativeTime(value: string) {
