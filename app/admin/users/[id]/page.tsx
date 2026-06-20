@@ -114,6 +114,9 @@ export default function AdminUserDetailPage() {
   const [randomBoosted, setRandomBoosted] = useState(false);
   const [grantingRandomCards, setGrantingRandomCards] = useState(false);
 
+  const [deletingCardId, setDeletingCardId] = useState<string | null>(null);
+  const [repairingMarketCardId, setRepairingMarketCardId] = useState<string | null>(null);
+
   async function loadDetail() {
     if (!userId) return;
 
@@ -330,6 +333,87 @@ export default function AdminUserDetailPage() {
     await Promise.all([loadInventory(), loadDetail()]);
   }
 
+  async function handleRepairMarketCard(card: JsonMap) {
+    const inventoryId = readString(card, "id");
+    if (!inventoryId) return;
+
+    const state = getMarketState(card);
+    const label = cardDisplayName(card);
+    const actionText = state === "active"
+      ? "Das aktive Börsenangebot wird abgebrochen und die Karte kehrt ins Inventar zurück."
+      : "Der Börsenstatus wird repariert und die Karte wird wieder sichtbar gemacht.";
+
+    if (!window.confirm(`${label}\n\n${actionText}`)) return;
+
+    setRepairingMarketCardId(inventoryId);
+    setMessage(null);
+    setErrorMessage(null);
+
+    const { data, error } = await supabase.rpc("admin_repair_market_card", {
+      p_inventory_id: inventoryId,
+    });
+
+    if (error) {
+      setErrorMessage(error.message || "Börsenstatus konnte nicht repariert werden.");
+      setRepairingMarketCardId(null);
+      return;
+    }
+
+    const action = readString(data as JsonMap, "action");
+    setMessage(
+      action === "active_listing_canceled"
+        ? `${label}: Börsenangebot abgebrochen, Karte ist wieder im Inventar.`
+        : `${label}: Börsenstatus repariert, Karte ist wieder sichtbar.`
+    );
+    setRepairingMarketCardId(null);
+    await Promise.all([loadInventory(), loadDetail()]);
+  }
+
+  async function handleDeleteInventoryCard(card: JsonMap) {
+    const inventoryId = readString(card, "id");
+    if (!inventoryId) return;
+
+    const state = getMarketState(card);
+    const label = cardDisplayName(card);
+
+    if (state === "active" || isMarketProblem(card)) {
+      setErrorMessage("Diese Karte ist mit der Börse verknüpft. Bitte zuerst den Börsenstatus reparieren bzw. das Angebot abbrechen.");
+      return;
+    }
+
+    const accepted = window.confirm(
+      `${label}\n\nKarte dauerhaft löschen?\n\nNicht verkaufte alte Listings und Gebote dieser Karte werden ebenfalls entfernt. Bereits verkaufte Karten können bewusst nicht gelöscht werden, damit die Verkaufs-Historie erhalten bleibt.`
+    );
+
+    if (!accepted) return;
+
+    setDeletingCardId(inventoryId);
+    setMessage(null);
+    setErrorMessage(null);
+
+    const { data, error } = await supabase.rpc("admin_delete_inventory_card", {
+      p_inventory_id: inventoryId,
+    });
+
+    if (error) {
+      const raw = error.message || "Karte konnte nicht gelöscht werden.";
+      const friendly = raw.includes("card_has_marketplace_sale_history")
+        ? "Diese Karte wurde bereits über die Börse verkauft. Sie bleibt als Transaktions-Historie erhalten und kann nicht gelöscht werden."
+        : raw.includes("card_is_in_exhibition")
+        ? "Die Karte ist aktuell in der Ausstellung. Entferne sie dort zuerst, dann kannst du sie löschen."
+        : raw.includes("card_is_on_market")
+        ? "Die Karte ist noch auf der Börse. Bitte zuerst den Börsenstatus reparieren bzw. das Angebot abbrechen."
+        : raw;
+      setErrorMessage(friendly);
+      setDeletingCardId(null);
+      return;
+    }
+
+    setMessage(`${readString(data as JsonMap, "deleted_name") || label} wurde dauerhaft gelöscht.`);
+    setDeletingCardId(null);
+    await Promise.all([loadInventory(), loadDetail()]);
+  }
+
   async function reloadAll() {
     await Promise.all([loadDetail(), loadInventory(), loadPacks()]);
     if (activeTab === "cards") {
@@ -357,6 +441,9 @@ export default function AdminUserDetailPage() {
 
     return inventory.filter((item) => JSON.stringify(item).toLowerCase().includes(search));
   }, [inventory, cardSearch]);
+
+  const marketActiveCards = inventory.filter((card) => getMarketState(card) === "active").length;
+  const marketProblemCards = inventory.filter((card) => isMarketProblem(card)).length;
 
   const filteredPackRewards = useMemo(() => {
     const search = packSearch.trim().toLowerCase();
@@ -935,7 +1022,9 @@ export default function AdminUserDetailPage() {
                 </p>
               </div>
               <span style={sectionCountStyle}>
-                {inventoryLoading ? "Lade..." : `${filteredInventory.length} Karten`}
+                {inventoryLoading
+                  ? "Lade..."
+                  : `${filteredInventory.length} Karten · ${marketActiveCards} auf Börse${marketProblemCards > 0 ? ` · ${marketProblemCards} Börsenfehler` : ""}`}
               </span>
             </div>
 
@@ -950,7 +1039,13 @@ export default function AdminUserDetailPage() {
             {inventoryLoading ? (
               <p style={emptyTextStyle}>Inventar wird geladen...</p>
             ) : (
-              <InventoryVisualGrid items={filteredInventory} />
+              <InventoryVisualGrid
+                items={filteredInventory}
+                deletingCardId={deletingCardId}
+                repairingMarketCardId={repairingMarketCardId}
+                onDelete={handleDeleteInventoryCard}
+                onRepairMarket={handleRepairMarketCard}
+              />
             )}
           </section>
         </>
@@ -1021,26 +1116,137 @@ function CatalogCardGrid({
   );
 }
 
-function InventoryVisualGrid({ items }: { items: JsonMap[] }) {
+function InventoryVisualGrid({
+  items,
+  deletingCardId,
+  repairingMarketCardId,
+  onDelete,
+  onRepairMarket,
+}: {
+  items: JsonMap[];
+  deletingCardId: string | null;
+  repairingMarketCardId: string | null;
+  onDelete: (card: JsonMap) => void;
+  onRepairMarket: (card: JsonMap) => void;
+}) {
   if (items.length === 0) {
     return <p style={emptyTextStyle}>Keine Karten gefunden.</p>;
   }
 
   return (
     <div style={visualCardGridStyle}>
-      {items.map((card, index) => (
-        <div
-          key={readString(card, "id") || `${index}`}
-          style={{
-            ...visualCardStyle,
-            ...rarityCardStyle(getCardRarity(card)),
-          }}
-        >
-          <CardVisual card={card} />
-        </div>
-      ))}
+      {items.map((card, index) => {
+        const inventoryId = readString(card, "id");
+        const marketState = getMarketState(card);
+        const blockedByMarket = marketState === "active" || isMarketProblem(card);
+        const isDeleting = deletingCardId === inventoryId;
+        const isRepairing = repairingMarketCardId === inventoryId;
+
+        return (
+          <div
+            key={inventoryId || `${index}`}
+            style={{
+              ...visualCardStyle,
+              ...rarityCardStyle(getCardRarity(card)),
+            }}
+          >
+            <CardVisual card={card} />
+            <MarketStatusPanel card={card} />
+
+            <div style={inventoryActionRowStyle}>
+              {blockedByMarket ? (
+                <button
+                  type="button"
+                  onClick={() => onRepairMarket(card)}
+                  disabled={isRepairing}
+                  style={marketRepairButtonStyle}
+                >
+                  {isRepairing
+                    ? "Börse wird repariert..."
+                    : marketState === "active"
+                    ? "Angebot abbrechen"
+                    : "Börsenstatus reparieren"}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => onDelete(card)}
+                  disabled={isDeleting}
+                  style={deleteCardButtonStyle}
+                >
+                  {isDeleting ? "Lösche..." : "Karte löschen"}
+                </button>
+              )}
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
+}
+
+function MarketStatusPanel({ card }: { card: JsonMap }) {
+  const state = getMarketState(card);
+
+  if (state === "not_listed") {
+    return <div style={marketNeutralBoxStyle}>Nicht auf der Börse</div>;
+  }
+
+  if (state === "active") {
+    const price = readNumber(card, "market_price");
+    const buyNow = readNumber(card, "market_buy_now_price");
+    const bids = readNumber(card, "market_bid_count");
+    const highestBid = readNumber(card, "market_highest_bid");
+
+    return (
+      <div style={marketActiveBoxStyle}>
+        <strong style={marketTitleStyle}>Auf der Börse</strong>
+        <span style={marketTextStyle}>Aktueller Preis: {formatNumber(price)} Coins</span>
+        {buyNow > 0 && <span style={marketTextStyle}>Sofortkauf: {formatNumber(buyNow)} Coins</span>}
+        <span style={marketTextStyle}>
+          Gebote: {formatNumber(bids)}{highestBid > 0 ? ` · Höchstes: ${formatNumber(highestBid)}` : ""}
+        </span>
+        <span style={marketTextStyle}>Endet: {formatDate(readString(card, "market_expires_at"))}</span>
+      </div>
+    );
+  }
+
+  return (
+    <div style={marketErrorBoxStyle}>
+      <strong style={marketTitleStyle}>Börsenfehler erkannt</strong>
+      <span style={marketTextStyle}>{marketProblemText(state)}</span>
+      <span style={marketTextStyle}>Die Karte kann in der App verschwinden, solange dieser Status besteht.</span>
+    </div>
+  );
+}
+
+function getMarketState(card: JsonMap) {
+  const fromServer = readString(card, "market_state").toLowerCase();
+
+  if (fromServer) return fromServer;
+
+  return readBoolean(card, "on_market") ? "stuck_missing_listing" : "not_listed";
+}
+
+function isMarketProblem(card: JsonMap) {
+  const state = getMarketState(card);
+  return state !== "not_listed" && state !== "active";
+}
+
+function marketProblemText(state: string) {
+  if (state === "stuck_missing_listing") {
+    return "on_market ist aktiv, aber es wurde kein passendes Listing gefunden.";
+  }
+  if (state === "stuck_expired_listing") {
+    return "Das Listing ist abgelaufen, aber die Karte ist weiterhin für die Börse blockiert.";
+  }
+  if (state === "stuck_active_listing") {
+    return "Ein aktives Listing existiert, aber die Karte ist im Inventar nicht als Börsenkarte markiert.";
+  }
+  if (state === "stuck_inactive_listing") {
+    return "Die Karte ist für die Börse blockiert, obwohl das Listing nicht mehr aktiv ist.";
+  }
+  return "Börsenstatus ist inkonsistent.";
 }
 
 function CardVisual({ card, compact = false }: { card: JsonMap; compact?: boolean }) {
@@ -1363,4 +1569,12 @@ const conditionTrackStyle: CSSProperties = { width: "100%", height: "7px", borde
 const conditionFillStyle: CSSProperties = { height: "100%", borderRadius: "99px" };
 const cardDateStyle: CSSProperties = { color: "#708078", fontSize: "10px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" };
 const specialBadgeStyle: CSSProperties = { position: "absolute", top: "10px", left: "10px", padding: "6px 8px", borderRadius: "999px", background: "#402015", border: "1px solid #fb923c", color: "#fed7aa", fontSize: "10px", fontWeight: 900, zIndex: 2 };
+const inventoryActionRowStyle: CSSProperties = { display: "grid", padding: "0 12px 12px" };
+const deleteCardButtonStyle: CSSProperties = { minHeight: "42px", borderRadius: "11px", border: "1px solid #991b1b", background: "#3a1515", color: "#fecaca", fontWeight: 900, cursor: "pointer" };
+const marketRepairButtonStyle: CSSProperties = { minHeight: "42px", borderRadius: "11px", border: "1px solid #a16207", background: "#3d2b0d", color: "#fde68a", fontWeight: 900, cursor: "pointer" };
+const marketNeutralBoxStyle: CSSProperties = { margin: "0 12px 12px", padding: "9px 10px", borderRadius: "10px", background: "#101714", color: "#94a39b", fontSize: "12px", fontWeight: 700 };
+const marketActiveBoxStyle: CSSProperties = { display: "grid", gap: "4px", margin: "0 12px 12px", padding: "10px", borderRadius: "10px", border: "1px solid #a16207", background: "#33230b", color: "#fde68a" };
+const marketErrorBoxStyle: CSSProperties = { display: "grid", gap: "4px", margin: "0 12px 12px", padding: "10px", borderRadius: "10px", border: "1px solid #991b1b", background: "#381515", color: "#fecaca" };
+const marketTitleStyle: CSSProperties = { fontSize: "12px", fontWeight: 900 };
+const marketTextStyle: CSSProperties = { fontSize: "11px", lineHeight: 1.35 };
 const rawBoxStyle: CSSProperties = { background: "#0b0f0d", border: "1px solid #27312d", borderRadius: "14px", padding: "14px", color: "#cfe0d6", whiteSpace: "pre-wrap", overflowX: "auto" };
