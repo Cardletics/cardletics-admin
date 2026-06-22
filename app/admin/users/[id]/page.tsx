@@ -43,17 +43,6 @@ const statusOptions: { value: SubscriptionStatus; label: string }[] = [
   { value: "expired", label: "Expired" },
 ];
 
-const packOptions = [
-  { value: "free", label: "Free Pack" },
-  { value: "basic", label: "Basic Pack" },
-  { value: "pro", label: "Pro Pack" },
-  { value: "elite", label: "Elite Pack" },
-  { value: "master", label: "Master Pack" },
-  { value: "boost", label: "Boost Pack" },
-  { value: "rare", label: "Rare Pack" },
-  { value: "epic", label: "Epic Pack" },
-  { value: "legendary", label: "Legendary Pack" },
-];
 
 export default function AdminUserDetailPage() {
   const params = useParams();
@@ -84,11 +73,12 @@ export default function AdminUserDetailPage() {
   const [subscriptionProvider, setSubscriptionProvider] = useState("admin");
   const [savingSubscription, setSavingSubscription] = useState(false);
 
-  const [grantPackKey, setGrantPackKey] = useState("master");
-  const [grantCardsCount, setGrantCardsCount] = useState("5");
   const [grantQuantity, setGrantQuantity] = useState("1");
   const [grantNote, setGrantNote] = useState("Admin Grant");
   const [grantingPack, setGrantingPack] = useState(false);
+  const [boostQuantity, setBoostQuantity] = useState("1");
+  const [boostNote, setBoostNote] = useState("Admin Boost");
+  const [grantingBoost, setGrantingBoost] = useState(false);
 
   const [cardSearch, setCardSearch] = useState("");
   const [packSearch, setPackSearch] = useState("");
@@ -99,6 +89,7 @@ export default function AdminUserDetailPage() {
   const [catalogRarity, setCatalogRarity] = useState<CatalogRarity>("all");
   const [includeSetCompletion, setIncludeSetCompletion] = useState(true);
   const [selectedCatalogCard, setSelectedCatalogCard] = useState<CatalogCard | null>(null);
+  const [catalogCollapsed, setCatalogCollapsed] = useState(false);
 
   const [conditionMode, setConditionMode] = useState<ConditionMode>("random");
   const [customCondition, setCustomCondition] = useState("100");
@@ -457,9 +448,30 @@ export default function AdminUserDetailPage() {
     return sum + readNumber(item, "total_coin_cost");
   }, 0);
 
-  const pendingTokens = packRewards.filter((item) => {
-    return readString(item, "status").toLowerCase() === "pending";
-  }).length;
+  // Die Übersicht zählt echte Inventar-Token aus event_pack_rewards.
+  // Dadurch werden normale Shop-/Historien-Einträge nicht mit den Tokens verwechselt.
+  const pendingPackTokenQuantity = packRewards
+    .filter((item) =>
+      readString(item, "status").toLowerCase() === "pending" &&
+      normalizeInventoryTokenKey(readString(item, "pack_key")) === "extra_pack"
+    )
+    .reduce((sum, item) => sum + Math.max(0, readNumber(item, "quantity")), 0);
+
+  const pendingBoostTokenQuantity = packRewards
+    .filter((item) =>
+      readString(item, "status").toLowerCase() === "pending" &&
+      normalizeInventoryTokenKey(readString(item, "pack_key")) === "boost_pack"
+    )
+    .reduce((sum, item) => sum + Math.max(0, readNumber(item, "quantity")), 0);
+
+  const activeBoostTokenQuantity = packRewards
+    .filter((item) =>
+      readString(item, "status").toLowerCase() === "active" &&
+      normalizeInventoryTokenKey(readString(item, "pack_key")) === "boost_pack"
+    )
+    .reduce((sum, item) => sum + Math.max(0, readNumber(item, "quantity") || 1), 0);
+
+  const totalPendingTokenQuantity = pendingPackTokenQuantity + pendingBoostTokenQuantity;
 
   async function handleCoinSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -531,16 +543,9 @@ export default function AdminUserDetailPage() {
   async function handleGrantPackSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    const cardsCount = Number.parseInt(grantCardsCount, 10);
     const quantity = Number.parseInt(grantQuantity, 10);
-
-    if (Number.isNaN(cardsCount) || cardsCount < 1) {
-      setErrorMessage("Bitte eine gültige Kartenanzahl eingeben.");
-      return;
-    }
-
-    if (Number.isNaN(quantity) || quantity < 1) {
-      setErrorMessage("Bitte eine gültige Token-Anzahl eingeben.");
+    if (Number.isNaN(quantity) || quantity < 1 || quantity > 100) {
+      setErrorMessage("Bitte 1 bis 100 Pack Tokens auswählen.");
       return;
     }
 
@@ -548,10 +553,8 @@ export default function AdminUserDetailPage() {
     setMessage(null);
     setErrorMessage(null);
 
-    const { data, error } = await supabase.rpc("admin_grant_pack_token", {
+    const { data, error } = await supabase.rpc("admin_grant_inventory_pack_token", {
       p_user_id: userId,
-      p_pack_key: grantPackKey,
-      p_cards_count: cardsCount,
       p_quantity: quantity,
       p_note: grantNote || "Admin Grant",
     });
@@ -563,8 +566,39 @@ export default function AdminUserDetailPage() {
     }
 
     const inserted = readNumber(data as JsonMap, "inserted") || quantity;
-    setMessage(`${inserted} Pack Token verteilt.`);
+    setMessage(`${inserted} Pack Token(s) mit je 5 Karten verteilt.`);
     setGrantingPack(false);
+    await Promise.all([loadDetail(), loadPacks()]);
+  }
+
+  async function handleGrantBoostSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    const quantity = Number.parseInt(boostQuantity, 10);
+    if (Number.isNaN(quantity) || quantity < 1 || quantity > 100) {
+      setErrorMessage("Bitte 1 bis 100 Boost Tokens auswählen.");
+      return;
+    }
+
+    setGrantingBoost(true);
+    setMessage(null);
+    setErrorMessage(null);
+
+    const { data, error } = await supabase.rpc("admin_grant_inventory_boost_token", {
+      p_user_id: userId,
+      p_quantity: quantity,
+      p_note: boostNote || "Admin Boost",
+    });
+
+    if (error) {
+      setErrorMessage(error.message || "Boost Token konnte nicht verteilt werden.");
+      setGrantingBoost(false);
+      return;
+    }
+
+    const inserted = readNumber(data as JsonMap, "inserted") || quantity;
+    setMessage(`${inserted} Boost Token(s) verteilt · +10 % für 7 Tage ab Aktivierung.`);
+    setGrantingBoost(false);
     await Promise.all([loadDetail(), loadPacks()]);
   }
 
@@ -574,7 +608,7 @@ export default function AdminUserDetailPage() {
         <div>
           <Link href="/admin/users" style={backLinkStyle}>← Zurück zu Users</Link>
           <h1 style={pageTitleStyle}>User Details</h1>
-          <p style={pageSubtitleStyle}>Coins, Abo, Boost-Packs, Pack Tokens und Karten verwalten.</p>
+          <p style={pageSubtitleStyle}>Coins, Abo, getrennte Inventar-Tokens und Karten verwalten.</p>
         </div>
 
         <button type="button" onClick={reloadAll} style={refreshButtonStyle}>Neu laden</button>
@@ -589,9 +623,9 @@ export default function AdminUserDetailPage() {
         <KpiCard title="Coins" value={loading ? "..." : formatNumber(readNumber(profile, "coins"))} accent="green" />
         <KpiCard title="Card Points" value={loading ? "..." : formatNumber(readNumber(profile, "card_points"))} />
         <KpiCard title="Karten" value={loading ? "..." : formatNumber(detail?.inventory_count)} />
-        <KpiCard title="Boost-Käufe" value={loading ? "..." : formatNumber(detail?.boost_purchase_count)} />
-        <KpiCard title="Pack Tokens" value={loading ? "..." : formatNumber(detail?.pack_rewards_count)} accent="blue" />
-        <KpiCard title="Pending Tokens" value={loading ? "..." : formatNumber(detail?.pending_pack_rewards)} accent="orange" />
+        <KpiCard title="Pack Tokens" value={packLoading ? "..." : String(pendingPackTokenQuantity)} accent="blue" />
+        <KpiCard title="Boost Tokens" value={packLoading ? "..." : String(pendingBoostTokenQuantity)} accent="orange" />
+        <KpiCard title="Aktiver Boost" value={packLoading ? "..." : activeBoostTokenQuantity > 0 ? "Ja" : "Nein"} accent={activeBoostTokenQuantity > 0 ? "green" : "default"} />
       </div>
 
       <div style={tabsStyle}>
@@ -698,65 +732,80 @@ export default function AdminUserDetailPage() {
             <section style={cardStyle}>
               <div style={sectionHeaderStyle}>
                 <div>
-                  <h2 style={sectionTitleStyle}>Pack Token verteilen</h2>
-                  <p style={sectionTextStyle}>Erzeugt Pending-Tokens in event_pack_rewards, sofern deine App diese Tabelle für Shop-/Event-Packs nutzt.</p>
+                  <h2 style={sectionTitleStyle}>Inventar-Tokens vergeben</h2>
+                  <p style={sectionTextStyle}>Die Tokens erscheinen im Inventar des Users. Ein Pack Token öffnet immer genau 5 Karten. Ein Boost Token wird vom User selbst aktiviert und gilt dann 7 Tage.</p>
                 </div>
               </div>
-              <form onSubmit={handleGrantPackSubmit} style={formStyle}>
-                <div>
-                  <label style={labelStyle}>Pack</label>
-                  <select value={grantPackKey} onChange={(event) => setGrantPackKey(event.target.value)} style={inputStyle}>
-                    {packOptions.map((pack) => <option key={pack.value} value={pack.value}>{pack.label}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label style={labelStyle}>Karten pro Token</label>
-                  <input type="number" min="1" step="1" value={grantCardsCount} onChange={(event) => setGrantCardsCount(event.target.value)} style={inputStyle} />
-                </div>
-                <div>
-                  <label style={labelStyle}>Anzahl Tokens</label>
-                  <input type="number" min="1" max="100" step="1" value={grantQuantity} onChange={(event) => setGrantQuantity(event.target.value)} style={inputStyle} />
-                </div>
-                <div>
-                  <label style={labelStyle}>Notiz</label>
-                  <input type="text" value={grantNote} onChange={(event) => setGrantNote(event.target.value)} style={inputStyle} />
-                </div>
-                <button type="submit" disabled={grantingPack} style={primaryButtonStyle}>{grantingPack ? "Verteile..." : "Pack Token verteilen"}</button>
-              </form>
+
+              <div style={gridTwoStyle}>
+                <form onSubmit={handleGrantPackSubmit} style={formStyle}>
+                  <div>
+                    <label style={labelStyle}>Pack Token</label>
+                    <div style={selectedCardBoxStyle}><strong>5 Karten pro Token</strong><span style={sectionTextStyle}>Der User öffnet den Token selbst im Inventar.</span></div>
+                  </div>
+                  <div>
+                    <label style={labelStyle}>Anzahl Tokens</label>
+                    <input type="number" min="1" max="100" step="1" value={grantQuantity} onChange={(event) => setGrantQuantity(event.target.value)} style={inputStyle} />
+                  </div>
+                  <div>
+                    <label style={labelStyle}>Notiz</label>
+                    <input type="text" value={grantNote} onChange={(event) => setGrantNote(event.target.value)} style={inputStyle} />
+                  </div>
+                  <button type="submit" disabled={grantingPack} style={primaryButtonStyle}>{grantingPack ? "Verteile..." : "5-Karten-Packtoken vergeben"}</button>
+                </form>
+
+                <form onSubmit={handleGrantBoostSubmit} style={formStyle}>
+                  <div>
+                    <label style={labelStyle}>Boost Token</label>
+                    <div style={selectedCardBoxStyle}><strong>+10 % bessere Drop-Chancen</strong><span style={sectionTextStyle}>Gilt 7 Tage ab Aktivierung. Kein Stacking während ein Boost aktiv ist.</span></div>
+                  </div>
+                  <div>
+                    <label style={labelStyle}>Anzahl Tokens</label>
+                    <input type="number" min="1" max="100" step="1" value={boostQuantity} onChange={(event) => setBoostQuantity(event.target.value)} style={inputStyle} />
+                  </div>
+                  <div>
+                    <label style={labelStyle}>Notiz</label>
+                    <input type="text" value={boostNote} onChange={(event) => setBoostNote(event.target.value)} style={inputStyle} />
+                  </div>
+                  <button type="submit" disabled={grantingBoost} style={primaryButtonStyle}>{grantingBoost ? "Verteile..." : "+10 %-Boosttoken vergeben"}</button>
+                </form>
+              </div>
             </section>
 
             <section style={cardStyle}>
-              <div style={sectionHeaderStyle}><h2 style={sectionTitleStyle}>Pack-/Boost Übersicht</h2></div>
+              <div style={sectionHeaderStyle}><h2 style={sectionTitleStyle}>Token-Übersicht</h2></div>
               <InfoGrid
                 items={[
-                  ["Pack Tokens gesamt", String(packRewards.length)],
-                  ["Pending Tokens", String(pendingTokens)],
-                  ["Boost-Käufe", String(boostPurchases.length)],
-                  ["Boost-Coins ausgegeben", formatNumber(boostCoinsSpent)],
-                  ["Daily Claims", String(dailyClaims.length)],
+                  ["Verfügbare Pack Tokens", `${pendingPackTokenQuantity} · je 5 Karten`],
+                  ["Verfügbare Boost Tokens", `${pendingBoostTokenQuantity} · je 7 Tage`],
+                  ["Aktiver Boost", activeBoostTokenQuantity > 0 ? "Ja · +10 % Drop-Chancen" : "Nein"],
+                  ["Tokens verfügbar gesamt", String(totalPendingTokenQuantity)],
+                  ["Tokens / Historie", String(packRewards.length)],
                 ]}
               />
+              <p style={hintStyle}>Pack Token und Boost Token sind bewusst getrennte Inventar-Gegenstände. Ein Boost Token kann nicht zu einem Karten-Pack werden.</p>
             </section>
           </div>
 
           <section style={cardStyle}>
             <div style={sectionHeaderStyle}>
               <div>
-                <h2 style={sectionTitleStyle}>Pack Tokens / Event Rewards</h2>
-                <p style={sectionTextStyle}>Pending Tokens sind normalerweise noch nicht eingelöst.</p>
+                <h2 style={sectionTitleStyle}>Inventar-Tokens & Historie</h2>
+                <p style={sectionTextStyle}>Pack Token: immer 5 Karten. Boost Token: +10 % bessere Drop-Chancen für 7 Tage ab Aktivierung.</p>
               </div>
-              <span style={sectionCountStyle}>{packLoading ? "Lade..." : `${filteredPackRewards.length} Tokens`}</span>
+              <span style={sectionCountStyle}>{packLoading ? "Lade..." : `${filteredPackRewards.length} Einträge`}</span>
             </div>
-            <input type="text" placeholder="Token suchen: pack, status, id..." value={packSearch} onChange={(event) => setPackSearch(event.target.value)} style={{ ...inputStyle, marginBottom: "16px" }} />
+            <input type="text" placeholder="Token suchen: Pack, Boost, Status, Notiz oder ID..." value={packSearch} onChange={(event) => setPackSearch(event.target.value)} style={{ ...inputStyle, marginBottom: "16px" }} />
             <PackRewardGrid items={filteredPackRewards} />
           </section>
 
           <section style={cardStyle}>
             <div style={sectionHeaderStyle}>
-              <h2 style={sectionTitleStyle}>Boost-Pack-Käufe / Historie</h2>
+              <h2 style={sectionTitleStyle}>Frühere Boost-Pack-Käufe</h2>
               <span style={sectionCountStyle}>{boostPurchases.length} Einträge</span>
             </div>
-            <JsonCardGrid items={boostPurchases} emptyText="Keine Boost-Pack-Käufe gefunden." />
+            <p style={sectionTextStyle}>Diese Historie ist getrennt von den Inventar-Tokens oben und dient nur der Nachvollziehbarkeit älterer Shop-Käufe.</p>
+            <JsonCardGrid items={boostPurchases} emptyText="Keine früheren Boost-Pack-Käufe gefunden." />
           </section>
 
           <section style={cardStyle}>
@@ -960,56 +1009,71 @@ export default function AdminUserDetailPage() {
               <div>
                 <h2 style={sectionTitleStyle}>Kartenkatalog</h2>
                 <p style={sectionTextStyle}>
-                  Es werden ausschließlich aktive Karten geladen – also die Karten, die dein Flutter-Frontend ebenfalls aus dem Katalog lädt.
+                  Aktive Karten aus dem echten Frontend-Katalog. Nach der Auswahl kannst du den Katalog einklappen und direkt oben die Karte vergeben.
                 </p>
               </div>
-              <span style={sectionCountStyle}>
-                {catalogLoading ? "Lade..." : `${catalogCards.length} Karten`}
-              </span>
+              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                <span style={sectionCountStyle}>{catalogLoading ? "Lade..." : `${catalogCards.length} Karten`}</span>
+                <button type="button" onClick={() => setCatalogCollapsed((value) => !value)} style={secondaryButtonStyle}>
+                  {catalogCollapsed ? "▸ Katalog anzeigen" : "▾ Katalog einklappen"}
+                </button>
+              </div>
             </div>
 
-            <form onSubmit={handleCatalogSearch} style={catalogFilterStyle}>
-              <input
-                type="text"
-                placeholder="Name, Sport, Serie oder Karten-ID suchen"
-                value={catalogSearch}
-                onChange={(event) => setCatalogSearch(event.target.value)}
-                style={inputStyle}
-              />
-              <select
-                value={catalogRarity}
-                onChange={(event) => setCatalogRarity(event.target.value as CatalogRarity)}
-                style={inputStyle}
-              >
-                <option value="all">Alle Seltenheiten</option>
-                <option value="basic">Basic</option>
-                <option value="common">Common</option>
-                <option value="rare">Rare</option>
-                <option value="epic">Epic</option>
-                <option value="legendary">Legendary</option>
-                <option value="ultra">Ultra</option>
-              </select>
-              <label style={checkRowStyle}>
-                <input
-                  type="checkbox"
-                  checked={includeSetCompletion}
-                  onChange={(event) => setIncludeSetCompletion(event.target.checked)}
-                />
-                <span>Set-Completion anzeigen</span>
-              </label>
-              <button type="submit" disabled={catalogLoading} style={secondaryButtonStyle}>
-                {catalogLoading ? "Suche..." : "Katalog suchen"}
-              </button>
-            </form>
-
-            {catalogLoading ? (
-              <p style={emptyTextStyle}>Katalog wird geladen...</p>
+            {catalogCollapsed ? (
+              <div style={selectedCardBoxStyle}>
+                {selectedCatalogCard ? (
+                  <div style={selectedCardRowStyle}>
+                    <span style={rarityBadgeStyleFor(getCardRarity(selectedCatalogCard))}>{getCardRarity(selectedCatalogCard).toUpperCase()}</span>
+                    <span style={selectedCardNameStyle}>Ausgewählt: {cardDisplayName(selectedCatalogCard)}</span>
+                  </div>
+                ) : (
+                  <span style={emptyTextStyle}>Der Katalog ist eingeklappt. Öffne ihn, um eine Karte auszuwählen.</span>
+                )}
+              </div>
             ) : (
-              <CatalogCardGrid
-                cards={catalogCards}
-                selectedId={selectedCatalogCard ? readString(selectedCatalogCard, "id") : ""}
-                onSelect={setSelectedCatalogCard}
-              />
+              <>
+                <form onSubmit={handleCatalogSearch} style={catalogFilterStyle}>
+                  <input
+                    type="text"
+                    placeholder="Name, Sport, Serie oder Karten-ID suchen"
+                    value={catalogSearch}
+                    onChange={(event) => setCatalogSearch(event.target.value)}
+                    style={inputStyle}
+                  />
+                  <select
+                    value={catalogRarity}
+                    onChange={(event) => setCatalogRarity(event.target.value as CatalogRarity)}
+                    style={inputStyle}
+                  >
+                    <option value="all">Alle Seltenheiten</option>
+                    <option value="basic">Basic</option>
+                    <option value="common">Common</option>
+                    <option value="rare">Rare</option>
+                    <option value="epic">Epic</option>
+                    <option value="legendary">Legendary</option>
+                    <option value="ultra">Ultra</option>
+                  </select>
+                  <label style={checkRowStyle}>
+                    <input type="checkbox" checked={includeSetCompletion} onChange={(event) => setIncludeSetCompletion(event.target.checked)} />
+                    <span>Set-Completion anzeigen</span>
+                  </label>
+                  <button type="submit" disabled={catalogLoading} style={secondaryButtonStyle}>{catalogLoading ? "Suche..." : "Katalog suchen"}</button>
+                </form>
+
+                {catalogLoading ? (
+                  <p style={emptyTextStyle}>Katalog wird geladen...</p>
+                ) : (
+                  <CatalogCardGrid
+                    cards={catalogCards}
+                    selectedId={selectedCatalogCard ? readString(selectedCatalogCard, "id") : ""}
+                    onSelect={(card) => {
+                      setSelectedCatalogCard(card);
+                      setCatalogCollapsed(true);
+                    }}
+                  />
+                )}
+              </>
             )}
           </section>
 
@@ -1444,53 +1508,122 @@ function summarizeRarities(cards: JsonMap[]) {
     .join(", ");
 }
 
+function normalizeInventoryTokenKey(raw: string) {
+  const value = raw.trim().toLowerCase().replaceAll("-", "_").replaceAll(" ", "_");
+  if (["boost", "boostpack", "boost_pack", "boost_token", "drop_boost", "rarity_boost"].includes(value)) {
+    return "boost_pack";
+  }
+  if (["pack_token", "token", "extra", "extra_pack", "free", "free_pack", "pro", "pro_pack", "elite", "elite_pack", "master", "master_pack"].includes(value)) {
+    return "extra_pack";
+  }
+  return value;
+}
+
+function inventoryTokenTitle(token: JsonMap) {
+  switch (normalizeInventoryTokenKey(readString(token, "pack_key"))) {
+    case "boost_pack":
+      return "Boost Token";
+    case "extra_pack":
+      return "Pack Token";
+    case "basic_3_pack":
+      return "Basis-Pack";
+    case "common_3_pack":
+      return "Gewöhnliches Pack";
+    case "rare_3_pack":
+      return "Seltenes Pack";
+    case "epic_3_pack":
+      return "Episches Pack";
+    case "legendary_3_pack":
+      return "Legendäres Pack";
+    default:
+      return readString(token, "pack_name") || readString(token, "pack_key") || "Event-Token";
+  }
+}
+
+function inventoryTokenEffect(token: JsonMap) {
+  switch (normalizeInventoryTokenKey(readString(token, "pack_key"))) {
+    case "boost_pack":
+      return "+10 % bessere Drop-Chancen · 7 Tage ab Aktivierung";
+    case "extra_pack":
+      return "Immer 5 Karten · wird vom User selbst geöffnet";
+    case "basic_3_pack":
+    case "common_3_pack":
+    case "rare_3_pack":
+    case "epic_3_pack":
+    case "legendary_3_pack":
+      return "3 Karten";
+    default:
+      return "Event-Belohnung";
+  }
+}
+
+function tokenStatusLabel(status: string) {
+  switch (status.trim().toLowerCase()) {
+    case "pending":
+      return "Verfügbar";
+    case "active":
+      return "Aktiv";
+    case "consumed":
+      return "Eingelöst";
+    case "expired":
+      return "Abgelaufen";
+    default:
+      return status || "—";
+  }
+}
+
 function PackRewardGrid({ items }: { items: JsonMap[] }) {
   if (items.length === 0) {
-    return <p style={emptyTextStyle}>Keine Pack Tokens gefunden.</p>;
+    return <p style={emptyTextStyle}>Keine Inventar-Tokens gefunden.</p>;
   }
 
   return (
     <div style={cardGridStyle}>
       {items.map((token, index) => {
         const status = readString(token, "status") || "pending";
+        const statusLower = status.toLowerCase();
         const receivedAt = readString(token, "received_at") || readString(token, "created_at");
-        const openedAt = readString(token, "opened_at") || readString(token, "claimed_at");
-        const packTitle =
-          readString(token, "pack_name") ||
-          readString(token, "pack_key") ||
-          readString(token, "pack_tier") ||
-          readString(token, "reward_key") ||
-          "Pack Token";
+        const activatedAt = readString(token, "activated_at");
+        const expiresAt = readString(token, "expires_at");
+        const consumedAt = readString(token, "consumed_at") || readString(token, "opened_at") || readString(token, "claimed_at");
+        const quantity = Math.max(0, readNumber(token, "quantity"));
+        const isPending = statusLower === "pending";
+        const isActive = statusLower === "active";
 
         return (
           <div
             key={readString(token, "id") || `${index}`}
             style={{
               ...inventoryCardStyle,
-              border: `1px solid ${status.toLowerCase() === "pending" ? "#4DA3FF" : "#27312d"}`,
+              border: `1px solid ${isActive ? "#22c55e" : isPending ? "#4DA3FF" : "#27312d"}`,
             }}
           >
             <div style={cardTopRowStyle}>
-              <strong style={cardNameStyle}>{packTitle}</strong>
+              <strong style={cardNameStyle}>{inventoryTokenTitle(token)}</strong>
               <span
                 style={{
                   ...rarityBadgeStyle,
-                  background: status.toLowerCase() === "pending" ? "#102b4c" : "#163322",
-                  color: status.toLowerCase() === "pending" ? "#b7d8ff" : "#bbf7d0",
-                  borderColor: status.toLowerCase() === "pending" ? "#4DA3FF" : "#22c55e",
+                  background: isActive ? "#12361a" : isPending ? "#102b4c" : "#1d2a24",
+                  color: isActive ? "#bbf7d0" : isPending ? "#b7d8ff" : "#d1d5db",
+                  borderColor: isActive ? "#22c55e" : isPending ? "#4DA3FF" : "#475569",
                 }}
               >
-                {status}
+                {tokenStatusLabel(status)}
               </span>
             </div>
+
+            <p style={{ ...sectionTextStyle, marginTop: 0, marginBottom: "12px" }}>
+              {inventoryTokenEffect(token)}
+            </p>
 
             <InfoGrid
               compact
               items={[
+                ["Anzahl", String(quantity)],
                 ["Erhalten am", formatDate(receivedAt)],
-                ["Eingelöst am", openedAt ? formatDate(openedAt) : "Noch nicht eingelöst"],
-                ["Karten", String(readNumber(token, "cards_count") || readNumber(token, "card_count") || readNumber(token, "cards_per_open") || "—")],
-                ["Quelle", readString(token, "source") || readString(token, "provider") || "—"],
+                ["Aktiviert am", activatedAt ? formatDate(activatedAt) : "—"],
+                ["Gültig bis", expiresAt ? formatDate(expiresAt) : "—"],
+                ["Eingelöst am", consumedAt ? formatDate(consumedAt) : "—"],
                 ["Notiz", readString(token, "note") || readString(token, "admin_note") || "—"],
               ]}
             />
