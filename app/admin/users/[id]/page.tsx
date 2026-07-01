@@ -2024,7 +2024,7 @@ function AffiliateControlCard({ userId }: { userId: string }) {
             />
             <span>
               <strong>Coin-Käufe vergüten</strong>
-              <small>Für später vorbereitet; aktuell entsteht nur bei Abos automatisch eine Provision.</small>
+              <small>Aktiviert: Künftige erfolgreiche Coin-Käufe geworbener Nutzer erzeugen ebenfalls eine Provision. Bereits vergangene Käufe werden nicht rückwirkend vergütet.</small>
             </span>
           </label>
 
