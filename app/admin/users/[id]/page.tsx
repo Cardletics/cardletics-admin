@@ -723,6 +723,8 @@ export default function AdminUserDetailPage() {
               <p style={hintStyle}>Free setzt Preis auf 0. Paid Tiers nutzen Basic 1,99 €, Pro 2,99 €, Elite 4,99 €, Master 7,99 €.</p>
             </section>
           </div>
+
+          <AffiliateControlCard userId={userId} />
         </>
       )}
 
@@ -1768,3 +1770,400 @@ const marketErrorBoxStyle: CSSProperties = { display: "grid", gap: "4px", margin
 const marketTitleStyle: CSSProperties = { fontSize: "12px", fontWeight: 900 };
 const marketTextStyle: CSSProperties = { fontSize: "11px", lineHeight: 1.35 };
 const rawBoxStyle: CSSProperties = { background: "#0b0f0d", border: "1px solid #27312d", borderRadius: "14px", padding: "14px", color: "#cfe0d6", whiteSpace: "pre-wrap", overflowX: "auto" };
+
+
+
+type AffiliateJson = Record<string, unknown>;
+
+function AffiliateControlCard({ userId }: { userId: string }) {
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+  const [summary, setSummary] = useState<AffiliateJson>({});
+
+  const [enabled, setEnabled] = useState(false);
+  const [displayName, setDisplayName] = useState("");
+  const [code, setCode] = useState("");
+  const [commissionPercent, setCommissionPercent] = useState("15");
+  const [recurringCommission, setRecurringCommission] = useState(true);
+  const [appliesToSubscriptions, setAppliesToSubscriptions] = useState(true);
+  const [appliesToCoinPurchases, setAppliesToCoinPurchases] = useState(false);
+  const [minimumPayout, setMinimumPayout] = useState("25");
+  const [adminNote, setAdminNote] = useState("");
+
+  async function load() {
+    if (!userId) return;
+
+    setLoading(true);
+    setError(null);
+
+    const { data, error: rpcError } = await supabase.rpc(
+      "admin_get_user_affiliate_config",
+      { p_user_id: userId },
+    );
+
+    if (rpcError) {
+      setError(rpcError.message || "Affiliate-Konfiguration konnte nicht geladen werden.");
+      setLoading(false);
+      return;
+    }
+
+    const response = affiliateMap(data);
+    const profile = affiliateMap(response.profile);
+    const codes = Array.isArray(response.codes) ? response.codes : [];
+    const firstActiveCode = codes
+      .map((item) => affiliateMap(item))
+      .find((item) => item.active === true) || affiliateMap(codes[0]);
+
+    setEnabled(profile.is_enabled === true);
+    setDisplayName(affiliateText(profile.display_name));
+    setCode(affiliateText(firstActiveCode.code));
+    setCommissionPercent(String(affiliateNumber(profile.default_commission_percent, 15)));
+    setRecurringCommission(profile.recurring_commission !== false);
+    setAppliesToSubscriptions(profile.applies_to_subscriptions !== false);
+    setAppliesToCoinPurchases(profile.applies_to_coin_purchases === true);
+    setMinimumPayout(String(affiliateNumber(profile.minimum_payout_eur, 25)));
+    setAdminNote(affiliateText(profile.admin_note));
+    setSummary(affiliateMap(response.summary));
+    setLoading(false);
+  }
+
+  useEffect(() => {
+    load();
+  }, [userId]);
+
+  async function save(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    const commission = Number(commissionPercent.replace(",", "."));
+    const minimum = Number(minimumPayout.replace(",", "."));
+    const normalizedCode = code.trim().toUpperCase();
+
+    if (!Number.isFinite(commission) || commission < 0 || commission > 100) {
+      setError("Die Provision muss zwischen 0 und 100 % liegen.");
+      return;
+    }
+
+    if (!Number.isFinite(minimum) || minimum < 0) {
+      setError("Der Mindestbetrag muss 0 € oder höher sein.");
+      return;
+    }
+
+    if (enabled && !/^[A-Z0-9_-]{3,32}$/.test(normalizedCode)) {
+      setError("Der Code braucht 3–32 Zeichen: A–Z, Zahlen, _ oder -.");
+      return;
+    }
+
+    setSaving(true);
+    setError(null);
+    setSuccess(null);
+
+    const { error: rpcError } = await supabase.rpc(
+      "admin_save_user_affiliate_config",
+      {
+        p_user_id: userId,
+        p_is_enabled: enabled,
+        p_display_name: displayName.trim(),
+        p_code: normalizedCode,
+        p_commission_percent: commission,
+        p_recurring_commission: recurringCommission,
+        p_applies_to_subscriptions: appliesToSubscriptions,
+        p_applies_to_coin_purchases: appliesToCoinPurchases,
+        p_minimum_payout_eur: minimum,
+        p_admin_note: adminNote.trim(),
+      },
+    );
+
+    if (rpcError) {
+      const raw = rpcError.message || "Affiliate-Konfiguration konnte nicht gespeichert werden.";
+      const friendly = raw.includes("affiliate_code_already_assigned")
+        ? "Dieser Affiliate-Code ist bereits einem anderen Nutzer zugeordnet."
+        : raw.includes("invalid_affiliate_code")
+        ? "Der Affiliate-Code ist ungültig."
+        : raw;
+      setError(friendly);
+      setSaving(false);
+      return;
+    }
+
+    setSuccess(
+      enabled
+        ? "Affiliate-Zugang wurde gespeichert und ist in der App für diesen Nutzer sichtbar."
+        : "Affiliate-Zugang wurde deaktiviert. Der Bereich ist in der App nicht mehr sichtbar.",
+    );
+    setSaving(false);
+    await load();
+  }
+
+  const paidReferrals = affiliateNumber(summary.paid_referrals, 0);
+  const openBalance = affiliateNumber(summary.open_balance_eur, 0);
+  const reservedBalance = affiliateNumber(summary.reserved_balance_eur, 0);
+  const paidAmount = affiliateNumber(summary.paid_eur, 0);
+  const totalEarned = affiliateNumber(summary.total_earned_eur, 0);
+
+  return (
+    <section style={{ ...cardStyle, marginTop: "20px" }}>
+      <div style={sectionHeaderStyle}>
+        <div>
+          <h2 style={sectionTitleStyle}>Affiliate-Zugang</h2>
+          <p style={sectionTextStyle}>
+            Nur hier freigeschaltete Nutzer sehen den Affiliate-Button in den App-Einstellungen.
+            Code und Konditionen werden ausschließlich durch dich verwaltet.
+          </p>
+        </div>
+        <span
+          style={{
+            ...sectionCountStyle,
+            color: enabled ? "#86efac" : "#94a39b",
+            borderColor: enabled ? "#166534" : "#27312d",
+          }}
+        >
+          {loading ? "Lade..." : enabled ? "Aktiv" : "Nicht freigeschaltet"}
+        </span>
+      </div>
+
+      {error && <div style={affiliateErrorStyle}>{error}</div>}
+      {success && <div style={affiliateSuccessStyle}>{success}</div>}
+
+      <div style={affiliateGridStyle}>
+        <form onSubmit={save} style={formStyle}>
+          <label style={affiliateToggleStyle}>
+            <input
+              type="checkbox"
+              checked={enabled}
+              onChange={(event) => setEnabled(event.target.checked)}
+            />
+            <span>
+              <strong>Affiliate-Zugang freischalten</strong>
+              <small>Der Affiliate-Bereich wird nur bei aktivem Zugang in der App angezeigt.</small>
+            </span>
+          </label>
+
+          <div style={affiliateTwoInputGridStyle}>
+            <div>
+              <label style={labelStyle}>Anzeigename</label>
+              <input
+                type="text"
+                value={displayName}
+                onChange={(event) => setDisplayName(event.target.value)}
+                placeholder="z. B. Quisto"
+                style={inputStyle}
+              />
+            </div>
+            <div>
+              <label style={labelStyle}>Persönlicher Affiliate-Code</label>
+              <input
+                type="text"
+                value={code}
+                onChange={(event) => setCode(event.target.value.toUpperCase())}
+                placeholder="z. B. QUISTO15"
+                style={inputStyle}
+                autoCapitalize="characters"
+              />
+            </div>
+          </div>
+
+          <div style={affiliateTwoInputGridStyle}>
+            <div>
+              <label style={labelStyle}>Provision in %</label>
+              <input
+                type="number"
+                min="0"
+                max="100"
+                step="0.01"
+                value={commissionPercent}
+                onChange={(event) => setCommissionPercent(event.target.value)}
+                style={inputStyle}
+              />
+              <p style={hintStyle}>Vom Cardletics-Erlös nach MwSt.- und Store-Provision.</p>
+            </div>
+            <div>
+              <label style={labelStyle}>Mindestauszahlung in €</label>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={minimumPayout}
+                onChange={(event) => setMinimumPayout(event.target.value)}
+                style={inputStyle}
+              />
+              <p style={hintStyle}>Standard: 25,00 €.</p>
+            </div>
+          </div>
+
+          <label style={affiliateToggleStyle}>
+            <input
+              type="checkbox"
+              checked={recurringCommission}
+              onChange={(event) => setRecurringCommission(event.target.checked)}
+            />
+            <span>
+              <strong>Verlängerungen vergüten</strong>
+              <small>Standardmäßig aktiv. Ausschalten bedeutet: nur der erste bezahlte Abschluss zählt.</small>
+            </span>
+          </label>
+
+          <label style={affiliateToggleStyle}>
+            <input
+              type="checkbox"
+              checked={appliesToSubscriptions}
+              onChange={(event) => setAppliesToSubscriptions(event.target.checked)}
+            />
+            <span>
+              <strong>Abos vergüten</strong>
+              <small>Für Cardletics standardmäßig aktiv.</small>
+            </span>
+          </label>
+
+          <label style={affiliateToggleStyle}>
+            <input
+              type="checkbox"
+              checked={appliesToCoinPurchases}
+              onChange={(event) => setAppliesToCoinPurchases(event.target.checked)}
+            />
+            <span>
+              <strong>Coin-Käufe vergüten</strong>
+              <small>Für später vorbereitet; aktuell entsteht nur bei Abos automatisch eine Provision.</small>
+            </span>
+          </label>
+
+          <div>
+            <label style={labelStyle}>Interne Notiz</label>
+            <textarea
+              value={adminNote}
+              onChange={(event) => setAdminNote(event.target.value)}
+              placeholder="z. B. Vertrag, Ansprechpartner oder individuelle Vereinbarung"
+              rows={3}
+              style={{ ...inputStyle, resize: "vertical" }}
+            />
+          </div>
+
+          <button type="submit" disabled={loading || saving} style={primaryButtonStyle}>
+            {saving ? "Speichere Affiliate..." : enabled ? "Affiliate speichern" : "Affiliate-Zugang deaktiviert speichern"}
+          </button>
+        </form>
+
+        <div style={affiliateSummaryCardStyle}>
+          <h3 style={affiliateSummaryTitleStyle}>Partner-Übersicht</h3>
+          <AffiliateSummaryLine label="Paid Referrals" value={String(paidReferrals)} />
+          <AffiliateSummaryLine label="Offene Provision" value={affiliateMoney(openBalance)} highlight />
+          <AffiliateSummaryLine label="Auszahlung angefragt" value={affiliateMoney(reservedBalance)} />
+          <AffiliateSummaryLine label="Bereits ausgezahlt" value={affiliateMoney(paidAmount)} />
+          <AffiliateSummaryLine label="Gesamt verdient" value={affiliateMoney(totalEarned)} highlight />
+          <div style={affiliateSummaryHintStyle}>
+            Der Partner sieht ausschließlich diese eigenen, anonymisierten Daten in der App.
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function AffiliateSummaryLine({
+  label,
+  value,
+  highlight = false,
+}: {
+  label: string;
+  value: string;
+  highlight?: boolean;
+}) {
+  return (
+    <div style={affiliateSummaryLineStyle}>
+      <span style={{ color: highlight ? "#e7f1eb" : "#94a39b" }}>{label}</span>
+      <strong style={{ color: highlight ? "#86efac" : "#e7f1eb" }}>{value}</strong>
+    </div>
+  );
+}
+
+function affiliateMap(value: unknown): AffiliateJson {
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? (value as AffiliateJson)
+    : {};
+}
+
+function affiliateText(value: unknown): string {
+  return typeof value === "string" ? value : value == null ? "" : String(value);
+}
+
+function affiliateNumber(value: unknown, fallback = 0): number {
+  if (typeof value === "number") return Number.isFinite(value) ? value : fallback;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
+}
+
+function affiliateMoney(value: number): string {
+  return value.toLocaleString("de-DE", {
+    style: "currency",
+    currency: "EUR",
+  });
+}
+
+const affiliateGridStyle: CSSProperties = {
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fit, minmax(290px, 1fr))",
+  gap: "18px",
+};
+
+const affiliateTwoInputGridStyle: CSSProperties = {
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+  gap: "12px",
+};
+
+const affiliateToggleStyle: CSSProperties = {
+  display: "flex",
+  alignItems: "flex-start",
+  gap: "10px",
+  color: "#e7f1eb",
+  cursor: "pointer",
+  lineHeight: 1.35,
+};
+
+const affiliateSummaryCardStyle: CSSProperties = {
+  background: "#101714",
+  border: "1px solid #27312d",
+  borderRadius: "16px",
+  padding: "18px",
+  alignSelf: "start",
+};
+
+const affiliateSummaryTitleStyle: CSSProperties = {
+  margin: "0 0 14px 0",
+  color: "#e7f1eb",
+  fontSize: "17px",
+};
+
+const affiliateSummaryLineStyle: CSSProperties = {
+  display: "flex",
+  justifyContent: "space-between",
+  gap: "10px",
+  padding: "10px 0",
+  borderBottom: "1px solid #27312d",
+};
+
+const affiliateSummaryHintStyle: CSSProperties = {
+  marginTop: "14px",
+  color: "#94a39b",
+  fontSize: "12px",
+  lineHeight: 1.45,
+};
+
+const affiliateErrorStyle: CSSProperties = {
+  background: "#331717",
+  border: "1px solid #7f1d1d",
+  color: "#fecaca",
+  borderRadius: "14px",
+  padding: "12px 14px",
+  marginBottom: "14px",
+};
+
+const affiliateSuccessStyle: CSSProperties = {
+  background: "#163322",
+  border: "1px solid #166534",
+  color: "#bbf7d0",
+  borderRadius: "14px",
+  padding: "12px 14px",
+  marginBottom: "14px",
+};

@@ -9,6 +9,7 @@ const navItems = [
   { href: "/admin/users", label: "Users" },
   { href: "/admin/subscriptions", label: "Subscriptions" },
   { href: "/admin/revenue", label: "Revenue" },
+  { href: "/admin/affiliates", label: "Affiliates" },
   { href: "/admin/analytics", label: "Analytics" },
   { href: "/admin/game-data", label: "Game Data" },
 ];
