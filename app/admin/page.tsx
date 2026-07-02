@@ -51,6 +51,34 @@ type DashboardRow = {
   daily_revenue_chart: JsonArray | null;
 };
 
+type NetPeriod = "today" | "month" | "year" | "total";
+
+type NetChartItem = {
+  date: string;
+  label: string;
+  net_profit_eur: number | string | null;
+  payment_events: number | string | null;
+};
+
+type NetOverview = {
+  period: string;
+  timezone: string;
+  period_start: string | null;
+  period_end: string | null;
+  gross_eur: number | string | null;
+  vat_estimated_eur: number | string | null;
+  store_fee_eur: number | string | null;
+  affiliate_commission_eur: number | string | null;
+  net_profit_eur: number | string | null;
+  subscription_net_eur: number | string | null;
+  coin_net_eur: number | string | null;
+  payment_events: number | string | null;
+  subscription_events: number | string | null;
+  coin_purchase_events: number | string | null;
+  estimated_events: number | string | null;
+  daily_net_chart: JsonArray | null;
+};
+
 type LatestUser = {
   id: string;
   email: string | null;
@@ -70,16 +98,6 @@ type RevenueEvent = {
   email: string | null;
   username: string | null;
   created_at: string | null;
-};
-
-type ChartItem = {
-  date: string;
-  label: string;
-  subscription_revenue: number | string | null;
-  coin_revenue: number | string | null;
-  real_money: number | string | null;
-  subscription_count: number | string | null;
-  coin_purchase_count: number | string | null;
 };
 
 const emptyDashboard: DashboardRow = {
@@ -124,40 +142,106 @@ const emptyDashboard: DashboardRow = {
   daily_revenue_chart: [],
 };
 
+const emptyNetOverview: NetOverview = {
+  period: "today",
+  timezone: "Europe/Berlin",
+  period_start: null,
+  period_end: null,
+  gross_eur: 0,
+  vat_estimated_eur: 0,
+  store_fee_eur: 0,
+  affiliate_commission_eur: 0,
+  net_profit_eur: 0,
+  subscription_net_eur: 0,
+  coin_net_eur: 0,
+  payment_events: 0,
+  subscription_events: 0,
+  coin_purchase_events: 0,
+  estimated_events: 0,
+  daily_net_chart: [],
+};
+
+const periodOptions: { value: NetPeriod; label: string }[] = [
+  { value: "today", label: "Heute" },
+  { value: "month", label: "Monat" },
+  { value: "year", label: "Jahr" },
+  { value: "total", label: "Gesamt" },
+];
+
 export default function DashboardPage() {
   const [dashboard, setDashboard] = useState<DashboardRow>(emptyDashboard);
+  const [netOverview, setNetOverview] = useState<NetOverview>(emptyNetOverview);
+  const [netPeriod, setNetPeriod] = useState<NetPeriod>("today");
+  const [netReloadKey, setNetReloadKey] = useState(0);
+
   const [loading, setLoading] = useState(true);
+  const [netLoading, setNetLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [netError, setNetError] = useState<string | null>(null);
+
+  async function loadDashboard() {
+    setLoading(true);
+    setLoadError(null);
+
+    const { data, error } = await supabase.rpc("admin_dashboard_overview");
+
+    if (error) {
+      console.error("Fehler beim Laden des Dashboards:", error);
+      setDashboard(emptyDashboard);
+      setLoadError(error.message || "Dashboard konnte nicht geladen werden.");
+    } else {
+      const rows = (data as DashboardRow[] | null) || [];
+      setDashboard(rows[0] || emptyDashboard);
+    }
+
+    setLoading(false);
+  }
+
+  useEffect(() => {
+    void loadDashboard();
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
 
-    async function loadDashboard() {
-      setLoading(true);
-      setLoadError(null);
+    async function loadNetOverview() {
+      setNetLoading(true);
+      setNetError(null);
 
-      const { data, error } = await supabase.rpc("admin_dashboard_overview");
+      const { data, error } = await supabase.rpc(
+        "admin_dashboard_net_overview",
+        {
+          p_period: netPeriod,
+        },
+      );
 
       if (cancelled) return;
 
       if (error) {
-        console.error("Fehler beim Laden des Dashboards:", error);
-        setDashboard(emptyDashboard);
-        setLoadError(error.message || "Dashboard konnte nicht geladen werden.");
+        console.error("Fehler beim Laden des Nettogewinns:", error);
+        setNetOverview(emptyNetOverview);
+        setNetError(
+          error.message || "Nettogewinn konnte nicht geladen werden.",
+        );
       } else {
-        const rows = (data as DashboardRow[] | null) || [];
-        setDashboard(rows[0] || emptyDashboard);
+        const rows = (data as NetOverview[] | null) || [];
+        setNetOverview(rows[0] || emptyNetOverview);
       }
 
-      setLoading(false);
+      setNetLoading(false);
     }
 
-    loadDashboard();
+    void loadNetOverview();
 
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [netPeriod, netReloadKey]);
+
+  async function refreshAll() {
+    await loadDashboard();
+    setNetReloadKey((value) => value + 1);
+  }
 
   const latestUsers = useMemo(() => {
     return toObjectArray(dashboard.latest_users) as LatestUser[];
@@ -167,13 +251,13 @@ export default function DashboardPage() {
     return toObjectArray(dashboard.latest_revenue_events) as RevenueEvent[];
   }, [dashboard.latest_revenue_events]);
 
-  const chartData = useMemo(() => {
-    return toObjectArray(dashboard.daily_revenue_chart) as ChartItem[];
-  }, [dashboard.daily_revenue_chart]);
+  const netChartData = useMemo(() => {
+    return toObjectArray(netOverview.daily_net_chart) as NetChartItem[];
+  }, [netOverview.daily_net_chart]);
 
-  const maxRevenue = Math.max(
+  const maxNetAbsolute = Math.max(
     1,
-    ...chartData.map((item) => toNumber(item.real_money))
+    ...netChartData.map((item) => Math.abs(toNumber(item.net_profit_eur))),
   );
 
   const variantData = [
@@ -189,10 +273,17 @@ export default function DashboardPage() {
   return (
     <div style={pageStyle}>
       <div style={pageHeaderStyle}>
-        <h1 style={pageTitleStyle}>Dashboard</h1>
-        <p style={pageSubtitleStyle}>
-          Zentrale Admin-Übersicht für Nutzer, Economy, Abos, Revenue und letzte Aktivitäten.
-        </p>
+        <div>
+          <h1 style={pageTitleStyle}>Dashboard</h1>
+          <p style={pageSubtitleStyle}>
+            Zentrale Admin-Übersicht für Nutzer, Economy, Abos und den
+            geschätzten Cardletics-Nettogewinn.
+          </p>
+        </div>
+
+        <button type="button" onClick={refreshAll} style={refreshButtonStyle}>
+          Aktualisieren
+        </button>
       </div>
 
       {loadError && (
@@ -200,61 +291,210 @@ export default function DashboardPage() {
           <strong>Fehler beim Laden des Dashboards</strong>
           <p style={errorTextStyle}>{loadError}</p>
           <p style={errorHintStyle}>
-            Prüfe, ob die RPC <strong>admin_dashboard_overview</strong> existiert und du als Admin eingeloggt bist.
+            Prüfe, ob die RPC <strong>admin_dashboard_overview</strong>{" "}
+            existiert und du als Admin eingeloggt bist.
           </p>
         </div>
       )}
 
-      <section style={heroRevenueCardStyle}>
+      {netError && (
+        <div style={errorCardStyle}>
+          <strong>Fehler beim Laden des Nettogewinns</strong>
+          <p style={errorTextStyle}>{netError}</p>
+          <p style={errorHintStyle}>
+            Führe die neue SQL-Datei für{" "}
+            <strong>admin_dashboard_net_overview</strong> aus und lade die Seite
+            danach neu.
+          </p>
+        </div>
+      )}
+
+      <section style={heroNetCardStyle}>
         <div>
-          <div style={heroLabelStyle}>Echtgeld heute</div>
-          <div style={heroValueStyle}>{loading ? "..." : formatMoney(dashboard.real_money_today)}</div>
+          <div style={heroLabelStyle}>Geschätzter Nettogewinn</div>
+          <div style={heroValueStyle}>
+            {netLoading ? "..." : formatMoney(netOverview.net_profit_eur)}
+          </div>
           <div style={heroSublineStyle}>
-            {loading ? "Lade Vergleich..." : `${formatMoney(dashboard.real_money_7d)} in den letzten 7 Tagen`}
+            {periodLabel(netPeriod)} · Europe/Berlin · nach MwSt.,
+            Store-Gebühren und Affiliate-Provisionen
+          </div>
+
+          <div style={periodButtonsStyle}>
+            {periodOptions.map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                onClick={() => setNetPeriod(option.value)}
+                style={periodButtonStyle(netPeriod === option.value)}
+              >
+                {option.label}
+              </button>
+            ))}
           </div>
         </div>
 
         <div style={heroMetaGridStyle}>
-          <HeroMini title="30 Tage" value={loading ? "..." : formatMoney(dashboard.real_money_30d)} />
-          <HeroMini title="Gesamt" value={loading ? "..." : formatMoney(dashboard.real_money_total)} />
+          <HeroMini
+            title="Brutto"
+            value={netLoading ? "..." : formatMoney(netOverview.gross_eur)}
+          />
+          <HeroMini
+            title="MwSt. geschätzt"
+            value={
+              netLoading
+                ? "..."
+                : `− ${formatMoney(netOverview.vat_estimated_eur)}`
+            }
+          />
+          <HeroMini
+            title="Google / Apple"
+            value={
+              netLoading ? "..." : `− ${formatMoney(netOverview.store_fee_eur)}`
+            }
+          />
+          <HeroMini
+            title="Affiliate"
+            value={
+              netLoading
+                ? "..."
+                : `− ${formatMoney(netOverview.affiliate_commission_eur)}`
+            }
+          />
+        </div>
+
+        <div style={netFootnoteStyle}>
+          {netLoading
+            ? "Berechnung wird geladen..."
+            : `${formatNumber(netOverview.payment_events)} Zahlungsereignisse · ${formatNumber(netOverview.estimated_events)} geschätzte Alt-Ereignisse`}
         </div>
       </section>
 
-      <SectionTitle title="Schnellzugriff" subtitle="Direkt zu den wichtigsten Adminbereichen." />
+      <SectionTitle
+        title="Schnellzugriff"
+        subtitle="Direkt zu den wichtigsten Adminbereichen."
+      />
       <div style={quickGridStyle}>
-        <QuickLink href="/admin/users" title="Users" text="Nutzer suchen und Details öffnen" />
-        <QuickLink href="/admin/subscriptions" title="Subscriptions" text="Abos, Status und Affiliate prüfen" />
-        <QuickLink href="/admin/revenue" title="Revenue" text="Umsatz-Events und Zahlungen prüfen" />
-        <QuickLink href="/admin/analytics" title="Analytics" text="Aktivität und Kennzahlen ansehen" />
+        <QuickLink
+          href="/admin/users"
+          title="Users"
+          text="Nutzer suchen und Details öffnen"
+        />
+        <QuickLink
+          href="/admin/subscriptions"
+          title="Subscriptions"
+          text="Abos, Status und Affiliate prüfen"
+        />
+        <QuickLink
+          href="/admin/revenue"
+          title="Revenue"
+          text="Zahlungen, Kosten und einzelne Events prüfen"
+        />
+        <QuickLink
+          href="/admin/affiliates"
+          title="Affiliates"
+          text="Partner, Codes, Provisionen und Auszahlungen verwalten"
+        />
+        <QuickLink
+          href="/admin/analytics"
+          title="Analytics"
+          text="Aktivität und Kennzahlen ansehen"
+        />
       </div>
 
-      <SectionTitle title="Nutzer" subtitle="Registrierungen und Aktivität aus profiles." />
+      <SectionTitle
+        title="Nutzer"
+        subtitle="Registrierungen und Aktivität aus profiles."
+      />
       <div style={kpiGridStyle}>
-        <KpiCard title="User gesamt" value={loading ? "..." : formatNumber(dashboard.total_users)} />
-        <KpiCard title="Aktiv 15 Min." value={loading ? "..." : formatNumber(dashboard.active_15m)} accent="green" />
-        <KpiCard title="Aktiv 24 Std." value={loading ? "..." : formatNumber(dashboard.active_24h)} />
-        <KpiCard title="Aktiv 7 Tage" value={loading ? "..." : formatNumber(dashboard.active_7d)} />
-        <KpiCard title="Neue 24 Std." value={loading ? "..." : formatNumber(dashboard.new_24h)} />
-        <KpiCard title="Neue 7 Tage" value={loading ? "..." : formatNumber(dashboard.new_7d)} />
-        <KpiCard title="Neue 30 Tage" value={loading ? "..." : formatNumber(dashboard.new_30d)} />
+        <KpiCard
+          title="User gesamt"
+          value={loading ? "..." : formatNumber(dashboard.total_users)}
+        />
+        <KpiCard
+          title="Aktiv 15 Min."
+          value={loading ? "..." : formatNumber(dashboard.active_15m)}
+          accent="green"
+        />
+        <KpiCard
+          title="Aktiv 24 Std."
+          value={loading ? "..." : formatNumber(dashboard.active_24h)}
+        />
+        <KpiCard
+          title="Aktiv 7 Tage"
+          value={loading ? "..." : formatNumber(dashboard.active_7d)}
+        />
+        <KpiCard
+          title="Neue 24 Std."
+          value={loading ? "..." : formatNumber(dashboard.new_24h)}
+        />
+        <KpiCard
+          title="Neue 7 Tage"
+          value={loading ? "..." : formatNumber(dashboard.new_7d)}
+        />
+        <KpiCard
+          title="Neue 30 Tage"
+          value={loading ? "..." : formatNumber(dashboard.new_30d)}
+        />
       </div>
 
-      <SectionTitle title="Economy" subtitle="Coins, Card Points, interne Ausgaben und Rewards." />
+      <SectionTitle
+        title="Economy"
+        subtitle="Coins, Card Points, interne Ausgaben und Rewards."
+      />
       <div style={kpiGridStyle}>
-        <KpiCard title="Coins gesamt" value={loading ? "..." : formatNumber(dashboard.total_coins)} accent="orange" />
-        <KpiCard title="Ø Coins/User" value={loading ? "..." : formatNumber(dashboard.avg_coins)} />
-        <KpiCard title="Card Points gesamt" value={loading ? "..." : formatNumber(dashboard.total_card_points)} />
-        <KpiCard title="Boost-Coins ausgegeben" value={loading ? "..." : formatNumber(dashboard.boost_coins_spent_total)} />
-        <KpiCard title="Pending Pack Rewards" value={loading ? "..." : formatNumber(dashboard.pending_pack_rewards)} accent="orange" />
+        <KpiCard
+          title="Coins gesamt"
+          value={loading ? "..." : formatNumber(dashboard.total_coins)}
+          accent="orange"
+        />
+        <KpiCard
+          title="Ø Coins/User"
+          value={loading ? "..." : formatNumber(dashboard.avg_coins)}
+        />
+        <KpiCard
+          title="Card Points gesamt"
+          value={loading ? "..." : formatNumber(dashboard.total_card_points)}
+        />
+        <KpiCard
+          title="Boost-Coins ausgegeben"
+          value={
+            loading ? "..." : formatNumber(dashboard.boost_coins_spent_total)
+          }
+        />
+        <KpiCard
+          title="Pending Pack Rewards"
+          value={loading ? "..." : formatNumber(dashboard.pending_pack_rewards)}
+          accent="orange"
+        />
       </div>
 
-      <SectionTitle title="Subscriptions" subtitle="Abo-Verteilung und aktiver Monatswert." />
+      <SectionTitle
+        title="Subscriptions"
+        subtitle="Abo-Verteilung und aktiver Monatswert."
+      />
       <div style={kpiGridStyle}>
-        <KpiCard title="Abos gesamt" value={loading ? "..." : formatNumber(dashboard.total_subscriptions)} />
-        <KpiCard title="Aktive Abos" value={loading ? "..." : formatNumber(dashboard.active_subscriptions)} accent="green" />
-        <KpiCard title="Aktive bezahlt" value={loading ? "..." : formatNumber(dashboard.paid_active_subscriptions)} />
-        <KpiCard title="Aktiver Abo-Monatswert" value={loading ? "..." : formatMoney(dashboard.subscription_revenue_active)} />
-        <KpiCard title="Abo-Umsatz gesamt" value={loading ? "..." : formatMoney(dashboard.subscription_revenue_total)} />
+        <KpiCard
+          title="Abos gesamt"
+          value={loading ? "..." : formatNumber(dashboard.total_subscriptions)}
+        />
+        <KpiCard
+          title="Aktive Abos"
+          value={loading ? "..." : formatNumber(dashboard.active_subscriptions)}
+          accent="green"
+        />
+        <KpiCard
+          title="Aktive bezahlt"
+          value={
+            loading ? "..." : formatNumber(dashboard.paid_active_subscriptions)
+          }
+        />
+        <KpiCard
+          title="Aktiver Abo-Monatswert"
+          value={
+            loading ? "..." : formatMoney(dashboard.subscription_revenue_active)
+          }
+        />
       </div>
 
       <div style={cardStyle}>
@@ -285,44 +525,79 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <SectionTitle title="Revenue" subtitle="Echtgeld zählt nur aus Abos und Coin-Käufen. Boosts sind interne Coin-Ausgaben." />
+      <SectionTitle
+        title="Nettogewinn"
+        subtitle="Ausschließlich geschätzte Gewinne nach MwSt., Google-/Apple-Gebühren und Affiliate-Provisionen."
+      />
       <div style={kpiGridStyle}>
-        <KpiCard title="Echtgeld gesamt" value={loading ? "..." : formatMoney(dashboard.real_money_total)} accent="green" />
-        <KpiCard title="Echtgeld 30 Tage" value={loading ? "..." : formatMoney(dashboard.real_money_30d)} />
-        <KpiCard title="Coin-Umsatz gesamt" value={loading ? "..." : formatMoney(dashboard.coin_revenue_total)} />
-        <KpiCard title="Coin-Käufe gesamt" value={loading ? "..." : formatNumber(dashboard.coin_purchase_count)} />
-        <KpiCard title="Coin-Käufe 30 Tage" value={loading ? "..." : formatNumber(dashboard.coin_purchase_count_30d)} />
-        <KpiCard title="Boost-Käufe 30 Tage" value={loading ? "..." : formatNumber(dashboard.boost_purchase_count_30d)} />
+        <KpiCard
+          title="Netto aus Abos"
+          value={
+            netLoading ? "..." : formatMoney(netOverview.subscription_net_eur)
+          }
+          accent="green"
+        />
+        <KpiCard
+          title="Netto aus Coin-Käufen"
+          value={netLoading ? "..." : formatMoney(netOverview.coin_net_eur)}
+          accent="green"
+        />
+        <KpiCard
+          title="Abo-Zahlungen"
+          value={
+            netLoading ? "..." : formatNumber(netOverview.subscription_events)
+          }
+        />
+        <KpiCard
+          title="Coin-Zahlungen"
+          value={
+            netLoading ? "..." : formatNumber(netOverview.coin_purchase_events)
+          }
+        />
       </div>
 
       <div style={cardStyle}>
         <div style={sectionHeaderStyle}>
           <div>
-            <h3 style={sectionTitleStyle}>Revenue-Verlauf 14 Tage</h3>
-            <p style={sectionTextStyle}>Abos + Coin-Käufe nach Tag.</p>
+            <h3 style={sectionTitleStyle}>Nettogewinn-Verlauf · 14 Tage</h3>
+            <p style={sectionTextStyle}>
+              Tageswerte werden in der Zeitzone Europe/Berlin gruppiert.
+            </p>
           </div>
         </div>
 
-        {chartData.length === 0 ? (
+        {netChartData.length === 0 ? (
           <p style={sectionTextStyle}>Noch keine Chartdaten vorhanden.</p>
         ) : (
           <div style={chartGridStyle}>
-            {chartData.map((item) => {
-              const realMoney = toNumber(item.real_money);
+            {netChartData.map((item) => {
+              const value = toNumber(item.net_profit_eur);
+              const height = Math.max(
+                3,
+                (Math.abs(value) / maxNetAbsolute) * 50,
+              );
+
               return (
                 <div key={item.date} style={chartItemStyle}>
                   <div style={chartBarWrapperStyle}>
+                    <div style={chartBaselineStyle} />
                     <div
                       style={{
-                        width: "100%",
-                        height: `${Math.max(4, (realMoney / maxRevenue) * 100)}%`,
-                        background: "linear-gradient(180deg, #22c55e 0%, #16a34a 100%)",
-                        borderRadius: "10px 10px 0 0",
+                        ...chartNetBarStyle,
+                        height: `${height}%`,
+                        bottom: value >= 0 ? "50%" : undefined,
+                        top: value < 0 ? "50%" : undefined,
+                        background:
+                          value >= 0
+                            ? "linear-gradient(180deg, #86efac 0%, #16a34a 100%)"
+                            : "linear-gradient(180deg, #fb7185 0%, #b91c1c 100%)",
+                        borderRadius:
+                          value >= 0 ? "9px 9px 0 0" : "0 0 9px 9px",
                       }}
                     />
                   </div>
                   <strong style={chartLabelStyle}>{item.label}</strong>
-                  <span style={chartValueStyle}>{formatMoney(realMoney)}</span>
+                  <span style={chartValueStyle}>{formatMoney(value)}</span>
                 </div>
               );
             })}
@@ -337,7 +612,9 @@ export default function DashboardPage() {
               <h3 style={sectionTitleStyle}>Letzte Registrierungen</h3>
               <p style={sectionTextStyle}>Die neuesten Profile.</p>
             </div>
-            <Link href="/admin/users" style={smallLinkStyle}>Alle User</Link>
+            <Link href="/admin/users" style={smallLinkStyle}>
+              Alle User
+            </Link>
           </div>
 
           {latestUsers.length === 0 ? (
@@ -345,11 +622,19 @@ export default function DashboardPage() {
           ) : (
             <div style={listStyle}>
               {latestUsers.map((user) => (
-                <Link key={user.id} href={`/admin/users/${user.id}`} style={listItemLinkStyle}>
+                <Link
+                  key={user.id}
+                  href={`/admin/users/${user.id}`}
+                  style={listItemLinkStyle}
+                >
                   <div>
-                    <strong style={listTitleStyle}>{user.username || user.email || "Kein Username"}</strong>
+                    <strong style={listTitleStyle}>
+                      {user.username || user.email || "Kein Username"}
+                    </strong>
                     <div style={listSubStyle}>{user.email || user.id}</div>
-                    <div style={listSubStyle}>Registriert: {formatDate(user.created_at)}</div>
+                    <div style={listSubStyle}>
+                      Registriert: {formatDate(user.created_at)}
+                    </div>
                   </div>
                   <div style={listRightStyle}>
                     <div>{formatNumber(user.coins)} Coins</div>
@@ -364,24 +649,40 @@ export default function DashboardPage() {
         <div style={cardStyle}>
           <div style={sectionHeaderStyle}>
             <div>
-              <h3 style={sectionTitleStyle}>Letzte Echtgeld-Events</h3>
-              <p style={sectionTextStyle}>Abos und Coin-Käufe.</p>
+              <h3 style={sectionTitleStyle}>Letzte Zahlungsereignisse</h3>
+              <p style={sectionTextStyle}>
+                Ohne Brutto-Umsatzanzeige im Dashboard.
+              </p>
             </div>
-            <Link href="/admin/revenue" style={smallLinkStyle}>Revenue</Link>
+            <Link href="/admin/revenue" style={smallLinkStyle}>
+              Revenue
+            </Link>
           </div>
 
           {latestRevenueEvents.length === 0 ? (
-            <p style={sectionTextStyle}>Noch keine Revenue Events vorhanden.</p>
+            <p style={sectionTextStyle}>
+              Noch keine Zahlungsereignisse vorhanden.
+            </p>
           ) : (
             <div style={listStyle}>
               {latestRevenueEvents.map((event) => (
-                <Link key={`${event.kind}-${event.id}`} href={`/admin/users/${event.user_id}`} style={listItemLinkStyle}>
+                <Link
+                  key={`${event.kind}-${event.id}`}
+                  href={`/admin/users/${event.user_id}`}
+                  style={listItemLinkStyle}
+                >
                   <div>
-                    <strong style={listTitleStyle}>{kindLabel(event.kind)} · {event.label || "—"}</strong>
-                    <div style={listSubStyle}>{event.username || event.email || event.user_id}</div>
-                    <div style={listSubStyle}>{formatDate(event.created_at)}</div>
+                    <strong style={listTitleStyle}>
+                      {kindLabel(event.kind)} · {event.label || "—"}
+                    </strong>
+                    <div style={listSubStyle}>
+                      {event.username || event.email || event.user_id}
+                    </div>
+                    <div style={listSubStyle}>
+                      {formatDate(event.created_at)}
+                    </div>
                   </div>
-                  <div style={listRightStyle}>{formatMoney(event.amount_eur)}</div>
+                  <div style={paymentRecordedStyle}>Erfasst</div>
                 </Link>
               ))}
             </div>
@@ -392,7 +693,13 @@ export default function DashboardPage() {
   );
 }
 
-function SectionTitle({ title, subtitle }: { title: string; subtitle: string }) {
+function SectionTitle({
+  title,
+  subtitle,
+}: {
+  title: string;
+  subtitle: string;
+}) {
   return (
     <div style={sectionTitleBlockStyle}>
       <h2 style={sectionMainTitleStyle}>{title}</h2>
@@ -414,8 +721,8 @@ function KpiCard({
     accent === "green"
       ? connectedValueStyle
       : accent === "orange"
-      ? orangeValueStyle
-      : kpiValueStyle;
+        ? orangeValueStyle
+        : kpiValueStyle;
 
   return (
     <div style={kpiCardStyle}>
@@ -434,7 +741,15 @@ function HeroMini({ title, value }: { title: string; value: string }) {
   );
 }
 
-function QuickLink({ href, title, text }: { href: string; title: string; text: string }) {
+function QuickLink({
+  href,
+  title,
+  text,
+}: {
+  href: string;
+  title: string;
+  text: string;
+}) {
   return (
     <Link href={href} style={quickLinkStyle}>
       <strong style={quickTitleStyle}>{title}</strong>
@@ -454,7 +769,9 @@ function toNumber(value: number | string | null | undefined) {
 
 function toObjectArray(value: JsonArray | null | undefined) {
   if (!Array.isArray(value)) return [];
-  return value.filter((item) => typeof item === "object" && item !== null) as JsonObject[];
+  return value.filter(
+    (item) => typeof item === "object" && item !== null,
+  ) as JsonObject[];
 }
 
 function formatNumber(value: number | string | null | undefined) {
@@ -470,7 +787,9 @@ function formatMoney(value: number | string | null | undefined) {
 
 function formatDate(value: string | null | undefined) {
   if (!value) return "—";
-  return new Date(value).toLocaleString("de-DE");
+  return new Date(value).toLocaleString("de-DE", {
+    timeZone: "Europe/Berlin",
+  });
 }
 
 function kindLabel(kind: string) {
@@ -479,9 +798,29 @@ function kindLabel(kind: string) {
   return kind;
 }
 
+function periodLabel(period: NetPeriod) {
+  switch (period) {
+    case "today":
+      return "Heute";
+    case "month":
+      return "Dieser Monat";
+    case "year":
+      return "Dieses Jahr";
+    case "total":
+      return "Gesamter Zeitraum";
+  }
+}
+
 const pageStyle: CSSProperties = { width: "100%" };
 
-const pageHeaderStyle: CSSProperties = { marginBottom: "20px" };
+const pageHeaderStyle: CSSProperties = {
+  display: "flex",
+  alignItems: "flex-start",
+  justifyContent: "space-between",
+  gap: "14px",
+  flexWrap: "wrap",
+  marginBottom: "20px",
+};
 
 const pageTitleStyle: CSSProperties = {
   marginTop: 0,
@@ -496,6 +835,16 @@ const pageSubtitleStyle: CSSProperties = {
   lineHeight: 1.5,
 };
 
+const refreshButtonStyle: CSSProperties = {
+  border: "1px solid #365446",
+  background: "#172b20",
+  color: "#bbf7d0",
+  borderRadius: "12px",
+  padding: "11px 14px",
+  fontWeight: 800,
+  cursor: "pointer",
+};
+
 const errorCardStyle: CSSProperties = {
   background: "#331717",
   border: "1px solid #7f1d1d",
@@ -506,16 +855,20 @@ const errorCardStyle: CSSProperties = {
 };
 
 const errorTextStyle: CSSProperties = { margin: "8px 0 0 0", color: "#fecaca" };
-const errorHintStyle: CSSProperties = { margin: "8px 0 0 0", color: "#fca5a5", lineHeight: 1.5 };
+const errorHintStyle: CSSProperties = {
+  margin: "8px 0 0 0",
+  color: "#fca5a5",
+  lineHeight: 1.5,
+};
 
-const heroRevenueCardStyle: CSSProperties = {
+const heroNetCardStyle: CSSProperties = {
   background: "linear-gradient(135deg, #14532d 0%, #0f172a 100%)",
   border: "1px solid #2f5f45",
   borderRadius: "20px",
   padding: "20px",
   boxShadow: "0 8px 30px rgba(0,0,0,0.22)",
   display: "grid",
-  gap: "16px",
+  gap: "18px",
   marginBottom: "20px",
 };
 
@@ -526,7 +879,7 @@ const heroLabelStyle: CSSProperties = {
 };
 
 const heroValueStyle: CSSProperties = {
-  fontSize: "34px",
+  fontSize: "38px",
   fontWeight: 900,
   color: "white",
   lineHeight: 1.1,
@@ -536,13 +889,33 @@ const heroValueStyle: CSSProperties = {
 const heroSublineStyle: CSSProperties = {
   marginTop: "10px",
   color: "#bbf7d0",
-  fontSize: "15px",
+  fontSize: "14px",
   fontWeight: 700,
+  lineHeight: 1.45,
 };
+
+const periodButtonsStyle: CSSProperties = {
+  display: "flex",
+  gap: "8px",
+  flexWrap: "wrap",
+  marginTop: "16px",
+};
+
+function periodButtonStyle(active: boolean): CSSProperties {
+  return {
+    border: active ? "1px solid #bbf7d0" : "1px solid rgba(255,255,255,0.2)",
+    background: active ? "#dcfce7" : "rgba(255,255,255,0.07)",
+    color: active ? "#123020" : "#f0fdf4",
+    borderRadius: "999px",
+    padding: "9px 13px",
+    fontWeight: 900,
+    cursor: "pointer",
+  };
+}
 
 const heroMetaGridStyle: CSSProperties = {
   display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
+  gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
   gap: "12px",
 };
 
@@ -562,9 +935,24 @@ const heroMetaLabelStyle: CSSProperties = {
 
 const heroMetaValueStyle: CSSProperties = { color: "white", fontSize: "18px" };
 
+const netFootnoteStyle: CSSProperties = {
+  color: "rgba(255,255,255,0.68)",
+  fontSize: "12px",
+  borderTop: "1px solid rgba(255,255,255,0.12)",
+  paddingTop: "12px",
+};
+
 const sectionTitleBlockStyle: CSSProperties = { margin: "26px 0 12px 0" };
-const sectionMainTitleStyle: CSSProperties = { margin: 0, color: "#e7f1eb", fontSize: "22px" };
-const sectionMainSubtitleStyle: CSSProperties = { margin: "6px 0 0 0", color: "#94a39b", lineHeight: 1.5 };
+const sectionMainTitleStyle: CSSProperties = {
+  margin: 0,
+  color: "#e7f1eb",
+  fontSize: "22px",
+};
+const sectionMainSubtitleStyle: CSSProperties = {
+  margin: "6px 0 0 0",
+  color: "#94a39b",
+  lineHeight: 1.5,
+};
 
 const quickGridStyle: CSSProperties = {
   display: "grid",
@@ -602,9 +990,21 @@ const kpiCardStyle: CSSProperties = {
   boxShadow: "0 8px 30px rgba(0,0,0,0.16)",
 };
 
-const kpiTitleStyle: CSSProperties = { margin: 0, fontSize: "14px", color: "#94a39b" };
-const kpiValueStyle: CSSProperties = { margin: "10px 0 0 0", fontSize: "24px", color: "#e7f1eb", wordBreak: "break-word" };
-const connectedValueStyle: CSSProperties = { ...kpiValueStyle, color: "#86efac" };
+const kpiTitleStyle: CSSProperties = {
+  margin: 0,
+  fontSize: "14px",
+  color: "#94a39b",
+};
+const kpiValueStyle: CSSProperties = {
+  margin: "10px 0 0 0",
+  fontSize: "24px",
+  color: "#e7f1eb",
+  wordBreak: "break-word",
+};
+const connectedValueStyle: CSSProperties = {
+  ...kpiValueStyle,
+  color: "#86efac",
+};
 const orangeValueStyle: CSSProperties = { ...kpiValueStyle, color: "#fdba74" };
 
 const cardStyle: CSSProperties = {
@@ -626,13 +1026,32 @@ const sectionHeaderStyle: CSSProperties = {
 };
 
 const sectionTitleStyle: CSSProperties = { margin: 0, color: "#e7f1eb" };
-const sectionTextStyle: CSSProperties = { margin: "6px 0 0 0", color: "#94a39b", lineHeight: 1.5 };
+const sectionTextStyle: CSSProperties = {
+  margin: "6px 0 0 0",
+  color: "#94a39b",
+  lineHeight: 1.5,
+};
 
 const barListStyle: CSSProperties = { display: "grid", gap: "14px" };
-const barRowStyle: CSSProperties = { display: "grid", gridTemplateColumns: "80px 1fr 70px", alignItems: "center", gap: "12px" };
+const barRowStyle: CSSProperties = {
+  display: "grid",
+  gridTemplateColumns: "80px 1fr 70px",
+  alignItems: "center",
+  gap: "12px",
+};
 const barLabelStyle: CSSProperties = { color: "#cfe0d6", fontWeight: 800 };
-const barTrackStyle: CSSProperties = { height: "14px", background: "#0f1512", border: "1px solid #27312d", borderRadius: "999px", overflow: "hidden" };
-const barValueStyle: CSSProperties = { color: "#e7f1eb", fontWeight: 800, textAlign: "right" };
+const barTrackStyle: CSSProperties = {
+  height: "14px",
+  background: "#0f1512",
+  border: "1px solid #27312d",
+  borderRadius: "999px",
+  overflow: "hidden",
+};
+const barValueStyle: CSSProperties = {
+  color: "#e7f1eb",
+  fontWeight: 800,
+  textAlign: "right",
+};
 
 const chartGridStyle: CSSProperties = {
   display: "grid",
@@ -642,15 +1061,88 @@ const chartGridStyle: CSSProperties = {
   minHeight: "220px",
 };
 
-const chartItemStyle: CSSProperties = { display: "flex", flexDirection: "column", alignItems: "center", gap: "8px", minWidth: 0 };
-const chartBarWrapperStyle: CSSProperties = { height: "145px", width: "100%", maxWidth: "44px", display: "flex", alignItems: "flex-end", justifyContent: "center", background: "#0f1512", borderRadius: "12px", overflow: "hidden", border: "1px solid #27312d" };
-const chartLabelStyle: CSSProperties = { color: "#cfe0d6", fontSize: "11px", textAlign: "center" };
-const chartValueStyle: CSSProperties = { color: "#94a39b", fontSize: "11px", textAlign: "center" };
+const chartItemStyle: CSSProperties = {
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "center",
+  gap: "8px",
+  minWidth: 0,
+};
+const chartBarWrapperStyle: CSSProperties = {
+  height: "150px",
+  width: "100%",
+  maxWidth: "48px",
+  position: "relative",
+  overflow: "hidden",
+  background: "#0f1512",
+  borderRadius: "12px",
+  border: "1px solid #27312d",
+};
+const chartBaselineStyle: CSSProperties = {
+  position: "absolute",
+  left: 0,
+  right: 0,
+  top: "50%",
+  height: "1px",
+  background: "#50645a",
+};
+const chartNetBarStyle: CSSProperties = {
+  position: "absolute",
+  left: "7px",
+  right: "7px",
+};
+const chartLabelStyle: CSSProperties = {
+  color: "#cfe0d6",
+  fontSize: "11px",
+  textAlign: "center",
+};
+const chartValueStyle: CSSProperties = {
+  color: "#94a39b",
+  fontSize: "11px",
+  textAlign: "center",
+};
 
-const twoColumnGridStyle: CSSProperties = { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "20px" };
-const smallLinkStyle: CSSProperties = { color: "#86efac", textDecoration: "none", fontWeight: 800 };
+const twoColumnGridStyle: CSSProperties = {
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
+  gap: "20px",
+};
+const smallLinkStyle: CSSProperties = {
+  color: "#86efac",
+  textDecoration: "none",
+  fontWeight: 800,
+};
 const listStyle: CSSProperties = { display: "grid", gap: "12px" };
-const listItemLinkStyle: CSSProperties = { display: "flex", justifyContent: "space-between", gap: "12px", background: "#101714", border: "1px solid #27312d", borderRadius: "14px", padding: "14px", textDecoration: "none" };
-const listTitleStyle: CSSProperties = { display: "block", color: "#e7f1eb", marginBottom: "6px" };
-const listSubStyle: CSSProperties = { color: "#94a39b", fontSize: "13px", lineHeight: 1.45, wordBreak: "break-word" };
-const listRightStyle: CSSProperties = { color: "#e7f1eb", fontWeight: 800, textAlign: "right", whiteSpace: "nowrap" };
+const listItemLinkStyle: CSSProperties = {
+  display: "flex",
+  justifyContent: "space-between",
+  gap: "12px",
+  background: "#101714",
+  border: "1px solid #27312d",
+  borderRadius: "14px",
+  padding: "14px",
+  textDecoration: "none",
+};
+const listTitleStyle: CSSProperties = {
+  display: "block",
+  color: "#e7f1eb",
+  marginBottom: "6px",
+};
+const listSubStyle: CSSProperties = {
+  color: "#94a39b",
+  fontSize: "13px",
+  lineHeight: 1.45,
+  wordBreak: "break-word",
+};
+const listRightStyle: CSSProperties = {
+  color: "#e7f1eb",
+  fontWeight: 800,
+  textAlign: "right",
+  whiteSpace: "nowrap",
+};
+const paymentRecordedStyle: CSSProperties = {
+  color: "#86efac",
+  fontWeight: 800,
+  whiteSpace: "nowrap",
+  alignSelf: "center",
+};
