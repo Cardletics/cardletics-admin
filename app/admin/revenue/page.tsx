@@ -6,7 +6,8 @@ import type { CSSProperties, ReactNode } from "react";
 import { supabase } from "../../../lib/supabase";
 
 type RevenueKind = "subscription" | "coin_purchase";
-type DateFilter = "all" | "today" | "7d" | "30d" | "90d";
+type DateFilter = "all" | "today" | "7d" | "30d" | "90d" | "month" | "year";
+type NetPeriod = "today" | "month" | "year" | "total";
 
 type RevenueEvent = {
   id: string;
@@ -29,6 +30,51 @@ type RevenueEvent = {
   is_estimate: boolean | null;
   created_at: string;
 };
+
+type NetOverview = {
+  period: string;
+  timezone: string;
+  period_start: string | null;
+  period_end: string | null;
+  gross_eur: number | string | null;
+  vat_estimated_eur: number | string | null;
+  store_fee_eur: number | string | null;
+  affiliate_commission_eur: number | string | null;
+  net_profit_eur: number | string | null;
+  subscription_net_eur: number | string | null;
+  coin_net_eur: number | string | null;
+  payment_events: number | string | null;
+  subscription_events: number | string | null;
+  coin_purchase_events: number | string | null;
+  estimated_events: number | string | null;
+  daily_net_chart: unknown[] | null;
+};
+
+const emptyNetOverview: NetOverview = {
+  period: "month",
+  timezone: "Europe/Berlin",
+  period_start: null,
+  period_end: null,
+  gross_eur: 0,
+  vat_estimated_eur: 0,
+  store_fee_eur: 0,
+  affiliate_commission_eur: 0,
+  net_profit_eur: 0,
+  subscription_net_eur: 0,
+  coin_net_eur: 0,
+  payment_events: 0,
+  subscription_events: 0,
+  coin_purchase_events: 0,
+  estimated_events: 0,
+  daily_net_chart: [],
+};
+
+const netPeriodOptions: { value: NetPeriod; label: string }[] = [
+  { value: "today", label: "Heute" },
+  { value: "month", label: "Monat" },
+  { value: "year", label: "Jahr" },
+  { value: "total", label: "Gesamt" },
+];
 
 type FeeRule = {
   id: string;
@@ -78,6 +124,12 @@ export default function RevenuePage() {
   const [dateFilter, setDateFilter] = useState<DateFilter>("30d");
   const [ruleDraft, setRuleDraft] = useState<RuleDraft>(emptyRuleDraft);
 
+  const [netPeriod, setNetPeriod] = useState<NetPeriod>("month");
+  const [netOverview, setNetOverview] = useState<NetOverview>(emptyNetOverview);
+  const [netLoading, setNetLoading] = useState(true);
+  const [netError, setNetError] = useState<string | null>(null);
+  const [netRefreshToken, setNetRefreshToken] = useState(0);
+
   async function load() {
     setLoading(true);
     setError(null);
@@ -105,8 +157,40 @@ export default function RevenuePage() {
   }
 
   useEffect(() => {
-    load();
+    void load();
   }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadNetOverview() {
+      setNetLoading(true);
+      setNetError(null);
+
+      const { data, error } = await supabase.rpc("admin_dashboard_net_overview", {
+        p_period: netPeriod,
+      });
+
+      if (cancelled) return;
+
+      if (error) {
+        console.error("Fehler beim Laden des Nettoertrags:", error);
+        setNetOverview(emptyNetOverview);
+        setNetError(error.message || "Nettoertrag konnte nicht geladen werden.");
+      } else {
+        const rows = (data as NetOverview[] | null) || [];
+        setNetOverview(rows[0] || emptyNetOverview);
+      }
+
+      setNetLoading(false);
+    }
+
+    void loadNetOverview();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [netPeriod, netRefreshToken]);
 
   const filteredEvents = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -149,10 +233,10 @@ export default function RevenuePage() {
     for (const event of filteredEvents) {
       const date = new Date(event.created_at);
       if (Number.isNaN(date.getTime())) continue;
-      const key = date.toLocaleDateString("sv-SE");
+      const key = berlinDateKey(date);
       const item = byDate.get(key) || {
         key,
-        label: date.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit" }),
+        label: date.toLocaleDateString("de-DE", { timeZone: "Europe/Berlin", day: "2-digit", month: "2-digit" }),
         net: 0,
         gross: 0,
       };
@@ -227,22 +311,46 @@ export default function RevenuePage() {
         <div>
           <h1 style={titleStyle}>Revenue</h1>
           <p style={subtitleStyle}>
-            Bruttoumsatz, geschätzte MwSt., Google-/Apple-Provision, Affiliate-Provision und erwarteter Cardletics-Erlös.
+            Dein geschätzter Nettoertrag nach MwSt., Google-/Apple-Gebühren und Affiliate-Provisionen – mit allen Zahlungsereignissen im Detail.
           </p>
         </div>
-        <button type="button" onClick={load} style={secondaryButtonStyle} disabled={loading}>
-          {loading ? "Lade..." : "Neu laden"}
+        <button
+          type="button"
+          onClick={() => {
+            void load();
+            setNetRefreshToken((current) => current + 1);
+          }}
+          style={secondaryButtonStyle}
+          disabled={loading || netLoading}
+        >
+          {loading || netLoading ? "Lade..." : "Neu laden"}
         </button>
       </div>
 
       {error && <div style={errorBoxStyle}>{error}</div>}
       {message && <div style={successBoxStyle}>{message}</div>}
+      {netError && (
+        <div style={errorBoxStyle}>
+          <strong>Fehler beim Laden des Nettoertrags</strong>
+          <div style={{ marginTop: "6px" }}>{netError}</div>
+          <div style={{ marginTop: "6px", color: "#fca5a5", fontSize: "12px" }}>
+            Führe den SQL-Hotfix für <strong>admin_dashboard_net_overview</strong> aus und lade die Seite neu.
+          </div>
+        </div>
+      )}
 
       <div style={noteStyle}>
         <strong>Schätzung, nicht Store-Abrechnung:</strong> Die Werte werden pro Zahlung mit der jeweils gültigen Gebührenregel gespeichert. Finale Auszahlungen können später über Apple- und Google-Finanzberichte importiert werden.
       </div>
 
-      <FinancialOverview title="Gesamt im gefilterten Zeitraum" stats={totalStats} />
+      <NetProfitOverview
+        netOverview={netOverview}
+        netPeriod={netPeriod}
+        netLoading={netLoading}
+        onChangePeriod={setNetPeriod}
+      />
+
+      <FinancialOverview title="Gefilterte Ereignisse im Detail" stats={totalStats} />
 
       <div style={providerGridStyle}>
         <FinancialOverview title="Google Play" stats={googleStats} compact />
@@ -281,6 +389,8 @@ export default function RevenuePage() {
             <option value="7d">Letzte 7 Tage</option>
             <option value="30d">Letzte 30 Tage</option>
             <option value="90d">Letzte 90 Tage</option>
+            <option value="month">Dieser Monat · Europe/Berlin</option>
+            <option value="year">Dieses Jahr · Europe/Berlin</option>
           </select>
         </div>
       </section>
@@ -321,7 +431,7 @@ export default function RevenuePage() {
         <div style={sectionHeaderStyle}>
           <div>
             <h2 style={sectionTitleStyle}>Revenue-Ereignisse</h2>
-            <p style={sectionTextStyle}>„Netto“ ist der geschätzte Erlös von Cardletics nach allen dargestellten Abzügen.</p>
+            <p style={sectionTextStyle}>„Nettoertrag“ ist der geschätzte Erlös von Cardletics nach MwSt., Store-Gebühren und Affiliate-Provisionen.</p>
           </div>
         </div>
 
@@ -445,13 +555,77 @@ export default function RevenuePage() {
   );
 }
 
+function NetProfitOverview({
+  netOverview,
+  netPeriod,
+  netLoading,
+  onChangePeriod,
+}: {
+  netOverview: NetOverview;
+  netPeriod: NetPeriod;
+  netLoading: boolean;
+  onChangePeriod: (period: NetPeriod) => void;
+}) {
+  const totals = [
+    ["Brutto", value(netOverview.gross_eur), "default"],
+    ["MwSt. geschätzt", -value(netOverview.vat_estimated_eur), "muted"],
+    ["Google / Apple", -value(netOverview.store_fee_eur), "muted"],
+    ["Affiliate", -value(netOverview.affiliate_commission_eur), "muted"],
+  ] as const;
+
+  return (
+    <section style={netHeroStyle}>
+      <div style={netHeroHeaderStyle}>
+        <div>
+          <div style={netHeroLabelStyle}>Geschätzter Nettoertrag</div>
+          <div style={netHeroValueStyle}>
+            {netLoading ? "..." : formatMoney(value(netOverview.net_profit_eur))}
+          </div>
+          <p style={netHeroTextStyle}>
+            {netPeriodLabel(netPeriod)} · Europe/Berlin · nach MwSt., Store-Gebühren und Affiliate-Provisionen
+          </p>
+        </div>
+        <div style={netPeriodButtonsStyle}>
+          {netPeriodOptions.map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              onClick={() => onChangePeriod(option.value)}
+              style={netPeriodButtonStyle(netPeriod === option.value)}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div style={financialGridStyle}>
+        {totals.map(([label, amount, tone]) => (
+          <div key={label} style={netMetricStyle}>
+            <span style={financialLabelStyle}>{label}</span>
+            <strong style={{ ...financialValueStyle, color: tone === "muted" ? "#cfe0d6" : "#e7f1eb" }}>
+              {netLoading ? "..." : amount < 0 ? `− ${formatMoney(Math.abs(amount))}` : formatMoney(amount)}
+            </strong>
+          </div>
+        ))}
+      </div>
+
+      <div style={netFootnoteStyle}>
+        {netLoading
+          ? "Berechnung wird geladen..."
+          : `${formatNumber(value(netOverview.payment_events))} Zahlungsereignisse · ${formatNumber(value(netOverview.estimated_events))} geschätzte Alt-Ereignisse · Abos netto: ${formatMoney(value(netOverview.subscription_net_eur))} · Coin-Käufe netto: ${formatMoney(value(netOverview.coin_net_eur))}`}
+      </div>
+    </section>
+  );
+}
+
 function FinancialOverview({ title, stats, compact = false }: { title: string; stats: FinancialStats; compact?: boolean }) {
   const entries = [
     ["Kundenumsatz brutto", stats.gross, "default"],
     ["MwSt. geschätzt", -stats.vat, "muted"],
     ["Store-Provision", -stats.storeFee, "muted"],
     ["Affiliate-Provisionen", -stats.affiliate, "muted"],
-    ["Cardletics-Erlös", stats.net, "green"],
+    ["Cardletics-Nettoertrag", stats.net, "green"],
   ] as const;
 
   return (
@@ -530,18 +704,53 @@ function dateValue(raw: string): number {
   return Number.isNaN(date) ? 0 : date;
 }
 
+function berlinDateParts(date: Date): { year: string; month: string; day: string } {
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Europe/Berlin",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(date);
+
+  const valueFor = (type: string) => parts.find((part) => part.type === type)?.value || "";
+  return { year: valueFor("year"), month: valueFor("month"), day: valueFor("day") };
+}
+
+function berlinDateKey(date: Date): string {
+  const parts = berlinDateParts(date);
+  return `${parts.year}-${parts.month}-${parts.day}`;
+}
+
 function isInsideDate(raw: string, filter: DateFilter): boolean {
   const timestamp = dateValue(raw);
   if (!timestamp) return false;
+
+  const eventDate = new Date(timestamp);
   const now = new Date();
+  const eventParts = berlinDateParts(eventDate);
+  const nowParts = berlinDateParts(now);
 
   if (filter === "today") {
-    const date = new Date(timestamp);
-    return date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth() && date.getDate() === now.getDate();
+    return berlinDateKey(eventDate) === berlinDateKey(now);
+  }
+
+  if (filter === "month") {
+    return eventParts.year === nowParts.year && eventParts.month === nowParts.month;
+  }
+
+  if (filter === "year") {
+    return eventParts.year === nowParts.year;
   }
 
   const days = filter === "7d" ? 7 : filter === "30d" ? 30 : filter === "90d" ? 90 : 0;
   return days === 0 || timestamp >= now.getTime() - days * 24 * 60 * 60 * 1000;
+}
+
+function netPeriodLabel(period: NetPeriod): string {
+  if (period === "today") return "Heute";
+  if (period === "month") return "Dieser Monat";
+  if (period === "year") return "Dieses Jahr";
+  return "Gesamt";
 }
 
 function formatMoney(amount: number): string {
@@ -559,7 +768,7 @@ function formatPercent(amount: number): string {
 function formatDate(raw: string | null | undefined): string {
   if (!raw) return "—";
   const date = new Date(raw);
-  return Number.isNaN(date.getTime()) ? raw : date.toLocaleString("de-DE");
+  return Number.isNaN(date.getTime()) ? raw : date.toLocaleString("de-DE", { timeZone: "Europe/Berlin" });
 }
 
 function formatDateOnly(raw: string | null | undefined): string {
@@ -581,6 +790,15 @@ const headerStyle: CSSProperties = { display: "flex", justifyContent: "space-bet
 const titleStyle: CSSProperties = { margin: 0, color: "#e7f1eb", fontSize: "30px" };
 const subtitleStyle: CSSProperties = { margin: "8px 0 0 0", color: "#94a39b", lineHeight: 1.5, maxWidth: "850px" };
 const noteStyle: CSSProperties = { marginBottom: "20px", padding: "13px 15px", borderRadius: "14px", background: "#302612", border: "1px solid #71571a", color: "#fde68a", lineHeight: 1.5 };
+const netHeroStyle: CSSProperties = { marginBottom: "20px", padding: "20px", borderRadius: "18px", border: "1px solid #365b43", background: "linear-gradient(120deg, #1d4e2d 0%, #17211f 50%, #16213a 100%)", boxShadow: "0 8px 30px rgba(0,0,0,0.16)" };
+const netHeroHeaderStyle: CSSProperties = { display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "16px", flexWrap: "wrap", marginBottom: "16px" };
+const netHeroLabelStyle: CSSProperties = { color: "#d7eadf", fontSize: "14px", fontWeight: 800 };
+const netHeroValueStyle: CSSProperties = { color: "#ffffff", fontSize: "38px", lineHeight: 1.12, fontWeight: 900, marginTop: "5px" };
+const netHeroTextStyle: CSSProperties = { margin: "8px 0 0", color: "#d7eadf", fontWeight: 700, lineHeight: 1.45 };
+const netPeriodButtonsStyle: CSSProperties = { display: "flex", flexWrap: "wrap", gap: "8px" };
+function netPeriodButtonStyle(active: boolean): CSSProperties { return { minHeight: "40px", padding: "8px 13px", borderRadius: "999px", border: active ? "1px solid #d8f7dc" : "1px solid #52745d", background: active ? "#edf9ef" : "rgba(5, 16, 10, 0.28)", color: active ? "#12361b" : "#e6f3e8", fontWeight: 900, cursor: "pointer" }; }
+const netMetricStyle: CSSProperties = { background: "rgba(8, 18, 13, 0.36)", border: "1px solid rgba(226, 245, 231, 0.16)", borderRadius: "14px", padding: "14px" };
+const netFootnoteStyle: CSSProperties = { marginTop: "16px", paddingTop: "14px", borderTop: "1px solid rgba(226, 245, 231, 0.16)", color: "#c9dfcf", fontSize: "12px", lineHeight: 1.5 };
 const errorBoxStyle: CSSProperties = { background: "#331717", border: "1px solid #7f1d1d", color: "#fecaca", borderRadius: "14px", padding: "14px", marginBottom: "16px" };
 const successBoxStyle: CSSProperties = { background: "#163322", border: "1px solid #166534", color: "#bbf7d0", borderRadius: "14px", padding: "14px", marginBottom: "16px" };
 const secondaryButtonStyle: CSSProperties = { minHeight: "42px", padding: "9px 14px", borderRadius: "12px", border: "1px solid #27312d", background: "#101714", color: "#e7f1eb", fontWeight: 800, cursor: "pointer" };

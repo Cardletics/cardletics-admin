@@ -218,10 +218,10 @@ export default function DashboardPage() {
       if (cancelled) return;
 
       if (error) {
-        console.error("Fehler beim Laden des Nettogewinns:", error);
+        console.error("Fehler beim Laden des Nettoertrags:", error);
         setNetOverview(emptyNetOverview);
         setNetError(
-          error.message || "Nettogewinn konnte nicht geladen werden.",
+          error.message || "Nettoertrag konnte nicht geladen werden.",
         );
       } else {
         const rows = (data as NetOverview[] | null) || [];
@@ -277,7 +277,7 @@ export default function DashboardPage() {
           <h1 style={pageTitleStyle}>Dashboard</h1>
           <p style={pageSubtitleStyle}>
             Zentrale Admin-Übersicht für Nutzer, Economy, Abos und den
-            geschätzten Cardletics-Nettogewinn.
+            geschätzten Cardletics-Nettoertrag.
           </p>
         </div>
 
@@ -299,7 +299,7 @@ export default function DashboardPage() {
 
       {netError && (
         <div style={errorCardStyle}>
-          <strong>Fehler beim Laden des Nettogewinns</strong>
+          <strong>Fehler beim Laden des Nettoertrags</strong>
           <p style={errorTextStyle}>{netError}</p>
           <p style={errorHintStyle}>
             Führe die neue SQL-Datei für{" "}
@@ -311,7 +311,7 @@ export default function DashboardPage() {
 
       <section style={heroNetCardStyle}>
         <div>
-          <div style={heroLabelStyle}>Geschätzter Nettogewinn</div>
+          <div style={heroLabelStyle}>Geschätzter Nettoertrag</div>
           <div style={heroValueStyle}>
             {netLoading ? "..." : formatMoney(netOverview.net_profit_eur)}
           </div>
@@ -526,7 +526,7 @@ export default function DashboardPage() {
       </div>
 
       <SectionTitle
-        title="Nettogewinn"
+        title="Nettoertrag"
         subtitle="Ausschließlich geschätzte Gewinne nach MwSt., Google-/Apple-Gebühren und Affiliate-Provisionen."
       />
       <div style={kpiGridStyle}>
@@ -559,7 +559,7 @@ export default function DashboardPage() {
       <div style={cardStyle}>
         <div style={sectionHeaderStyle}>
           <div>
-            <h3 style={sectionTitleStyle}>Nettogewinn-Verlauf · 14 Tage</h3>
+            <h3 style={sectionTitleStyle}>Nettoertrag-Verlauf · 14 Tage</h3>
             <p style={sectionTextStyle}>
               Tageswerte werden in der Zeitzone Europe/Berlin gruppiert.
             </p>
