@@ -23,16 +23,15 @@ type UserDetail = {
 };
 
 type CoinMode = "set" | "add" | "subtract";
-type SubscriptionVariant = "free" | "basic" | "pro" | "elite" | "master";
+type SubscriptionVariant = "free" | "elite" | "master";
 type SubscriptionStatus = "active" | "trialing" | "cancelled" | "expired";
 
 type TabKey = "overview" | "packs" | "cards" | "raw";
 
 const variantOptions: { value: SubscriptionVariant; label: string }[] = [
   { value: "free", label: "Free" },
-  { value: "basic", label: "Basic" },
-  { value: "pro", label: "Pro" },
-  { value: "elite", label: "Elite" },
+  // Club bleibt technisch `elite`, damit bestehende Store-IDs, Daten und App-Enums kompatibel bleiben.
+  { value: "elite", label: "Club" },
   { value: "master", label: "Master" },
 ];
 
@@ -70,7 +69,6 @@ export default function AdminUserDetailPage() {
   const [subscriptionStatus, setSubscriptionStatus] =
     useState<SubscriptionStatus>("active");
   const [subscriptionMonths, setSubscriptionMonths] = useState("1");
-  const [subscriptionProvider, setSubscriptionProvider] = useState("admin");
   const [savingSubscription, setSavingSubscription] = useState(false);
 
   const [grantQuantity, setGrantQuantity] = useState("1");
@@ -134,7 +132,6 @@ export default function AdminUserDetailPage() {
     if (subscription) {
       setSubscriptionVariant(normalizeVariant(readString(subscription, "variant")));
       setSubscriptionStatus(normalizeStatus(readString(subscription, "status")));
-      setSubscriptionProvider(readString(subscription, "provider") || "admin");
 
       const effectiveTier = normalizeVariant(readString(subscription, "variant"));
       setConditionTier(effectiveTier);
@@ -526,7 +523,8 @@ export default function AdminUserDetailPage() {
       p_variant: subscriptionVariant,
       p_status: subscriptionStatus,
       p_months: months,
-      p_provider: subscriptionProvider || "admin",
+      // Manuelle Änderungen im Admin-Backend sind immer Geschenke und zählen nicht als Umsatz.
+      p_provider: "admin",
     });
 
     if (error) {
@@ -716,11 +714,14 @@ export default function AdminUserDetailPage() {
                 </div>
                 <div>
                   <label style={labelStyle}>Provider</label>
-                  <input type="text" value={subscriptionProvider} onChange={(event) => setSubscriptionProvider(event.target.value)} style={inputStyle} />
+                  <div style={selectedCardBoxStyle}>
+                    <strong>admin</strong>
+                    <span style={sectionTextStyle}>Manuell vergebenes Abo · 0,00 € Umsatz</span>
+                  </div>
                 </div>
                 <button type="submit" disabled={savingSubscription} style={primaryButtonStyle}>{savingSubscription ? "Speichere..." : "Abo speichern"}</button>
               </form>
-              <p style={hintStyle}>Free setzt Preis auf 0. Paid Tiers nutzen Basic 1,99 €, Pro 2,99 €, Elite 4,99 €, Master 7,99 €.</p>
+              <p style={hintStyle}>Aktuelle Tarife: Free · Club 4,99 € · Master 9,99 €. Manuell über das Admin-Backend vergebene Abos werden als Geschenk mit 0,00 € Umsatz gespeichert.</p>
             </section>
           </div>
 
@@ -1696,9 +1697,19 @@ function readBoolean(source: JsonMap | null | undefined, key: string) {
 function formatNumber(value: unknown) { return Math.round(readNumber(value)).toLocaleString("de-DE"); }
 function formatMoney(value: unknown) { return readNumber(value).toLocaleString("de-DE", { style: "currency", currency: "EUR" }); }
 function formatDate(dateString?: string | null) { if (!dateString) return "—"; const date = new Date(dateString); if (Number.isNaN(date.getTime())) return "—"; return date.toLocaleString("de-DE"); }
-function normalizeVariant(value: string): SubscriptionVariant { const variant = value.toLowerCase().trim(); if (variant === "basic") return "basic"; if (variant === "pro") return "pro"; if (variant === "elite") return "elite"; if (variant === "master") return "master"; return "free"; }
+function normalizeVariant(value: string): SubscriptionVariant {
+  const variant = value.toLowerCase().trim();
+  if (variant === "basic" || variant === "pro" || variant === "club" || variant === "elite") return "elite";
+  if (variant === "master") return "master";
+  return "free";
+}
 function normalizeStatus(value: string): SubscriptionStatus { const status = value.toLowerCase().trim(); if (status === "trialing") return "trialing"; if (status === "cancelled") return "cancelled"; if (status === "expired") return "expired"; return "active"; }
-function labelVariant(value: string) { const variant = normalizeVariant(value); return variant.charAt(0).toUpperCase() + variant.slice(1); }
+function labelVariant(value: string) {
+  const variant = normalizeVariant(value);
+  if (variant === "elite") return "Club";
+  if (variant === "master") return "Master";
+  return "Free";
+}
 
 const pageStyle: CSSProperties = { width: "100%" };
 const pageHeaderStyle: CSSProperties = { display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "14px", flexWrap: "wrap", marginBottom: "20px" };
