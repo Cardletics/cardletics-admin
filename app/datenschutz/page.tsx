@@ -9,10 +9,13 @@ export default function PrivacyPage() {
           <span style={eyebrowStyle}>Datenschutz</span>
           <h1 style={titleStyle}>Datenschutzerklärung</h1>
           <p style={subtitleStyle}>Für die Website und die App Cardletics.</p>
-          <p style={metaStyle}>Stand: 15.05.2026</p>
+          <p style={metaStyle}>Stand: 29.08.2026</p>
           <div style={heroActionsStyle}>
             <Link href="/" style={backButtonStyle}>
               Zurück zur Startseite
+            </Link>
+            <Link href="/konto-loeschen" style={secondaryButtonStyle}>
+              Konto löschen
             </Link>
           </div>
         </div>
@@ -89,21 +92,28 @@ export default function PrivacyPage() {
               deiner gewählten Sichtbarkeitseinstellungen.
             </li>
             <li>
-              <strong>Gesundheits- und Bewegungsdaten:</strong> insbesondere
-              Schrittzahlen sowie – je nach erteilter Berechtigung und
-              Datenquelle – Daten zu Fahrradfahren, Rudern, Schwimmen,
-              Workouts, Trainingsdauer, Distanzen und daraus berechnete
-              Cardletics-Bewegungspunkte.
+              <strong>Gesundheits- und Bewegungsdaten:</strong> Wenn du ausdrücklich
+              einwilligst und die erforderlichen Systemberechtigungen erteilst,
+              kann Cardletics Bewegungsdaten verarbeiten. Unter Android werden
+              derzeit insbesondere Schrittzahlen verwendet. Unter iOS können
+              insbesondere Schrittzahlen, Schwimmdistanzen und Workout-Daten
+              verarbeitet werden. Aus Workout-Daten können je nach in Apple
+              Health vorhandener Aktivitätsart auch bewegungsbezogene
+              Informationen, beispielsweise zu Fahrradaktivitäten, abgeleitet
+              werden. Die Daten werden ausschließlich für bewegungsbezogene
+              Spiel-, Fortschritts- und Belohnungsfunktionen von Cardletics
+              verwendet.
             </li>
             <li>
-              <strong>Daten aus Fitness-Apps und Fitness-Plattformen:</strong>
-              wenn du entsprechende Quellen verbindest oder über dein Gerät
-              freigibst, können Bewegungsdaten aus Apple Health/HealthKit,
-              Android Health Connect oder kompatiblen Drittanbieter-Apps und
-              Diensten wie Strava, Garmin, Fitbit, Samsung Health, Google Fit
-              oder vergleichbaren Fitnessdiensten verarbeitet werden. Die
-              Verarbeitung erfolgt nur im Umfang der von dir erteilten
-              Freigaben.
+              <strong>Daten aus Fitness- und Gesundheitsplattformen:</strong>
+              Cardletics greift derzeit auf die vom Betriebssystem
+              bereitgestellten Gesundheitsplattformen Apple Health/HealthKit bzw.
+              Android Health Connect zu. Cardletics stellt keine direkte
+              Verbindung zu Diensten wie Strava, Garmin, Fitbit, Samsung Health,
+              Google Fit oder vergleichbaren Fitnessdiensten her. Soweit solche
+              Dienste Daten in Apple Health oder Health Connect bereitstellen und
+              diese Daten dort für Cardletics freigegeben sind, können sie
+              indirekt Bestandteil der von Cardletics gelesenen Daten sein.
             </li>
             <li>
               <strong>Abonnement- und Kaufdaten:</strong> Abo-Modell
@@ -132,9 +142,11 @@ export default function PrivacyPage() {
               Zugriffen, Server-Logdaten, Fehler- und Sicherheitsdaten.
             </li>
             <li>
-              <strong>Push-Informationen:</strong> Informationen zur
-              Zustellung und Verwaltung von Push-Benachrichtigungen in der App,
-              soweit du Push-Benachrichtigungen aktiviert hast.
+              <strong>Benachrichtigungsinformationen:</strong> Informationen,
+              die erforderlich sind, um lokale Benachrichtigungen auf deinem
+              Gerät anzuzeigen und die zugehörige Berechtigung zu verwalten.
+              In der derzeitigen App-Version verwendet Cardletics hierfür keine
+              eigene serverseitige Push-Zustellung.
             </li>
           </ul>
         </Section>
@@ -155,7 +167,7 @@ export default function PrivacyPage() {
             <li>Abwicklung von Coin-Käufen, In-App-Käufen und Abonnements</li>
             <li>Bereitstellung und Absicherung des internen Marketplaces</li>
             <li>Interne Zuordnung von Referral- und Affiliate-Vorgängen</li>
-            <li>Anzeige von Spielhinweisen und Angeboten per Push-Benachrichtigung</li>
+            <li>Anzeige von spielbezogenen Hinweisen und Erinnerungen durch lokale Benachrichtigungen</li>
             <li>Bearbeitung von Support- und Kontaktanfragen</li>
             <li>Fehleranalyse, Systemsicherheit und Missbrauchsprävention</li>
             <li>Erfüllung gesetzlicher Aufbewahrungs- und Nachweispflichten</li>
@@ -191,7 +203,7 @@ export default function PrivacyPage() {
             <li>
               <strong>Art. 6 Abs. 1 lit. a DSGVO</strong> für Verarbeitungen auf
               Grundlage einer Einwilligung, insbesondere bei optionalen
-              Funktionen wie Push-Benachrichtigungen, Standortfreigabe,
+              Funktionen wie Benachrichtigungen, Standortfreigabe,
               Fitness-/Health-Anbindung oder optionalen Profil- und
               Sichtbarkeitsfunktionen.
             </li>
@@ -204,37 +216,60 @@ export default function PrivacyPage() {
 
         <Section title="6. Gesundheits-, Bewegungs- und Fitnessdaten">
           <p>
-            In der App können – nach ausdrücklicher Einwilligung – gesundheits-
-            bzw. bewegungsbezogene Daten verarbeitet werden. Dazu gehören
-            insbesondere Schrittzahlen sowie Daten zu Fahrradfahren, Rudern,
-            Schwimmen, Workouts, Distanzen und Trainingsdauer.
+            Die Nutzung von Gesundheits- und Bewegungsdaten ist freiwillig.
+            Cardletics verarbeitet solche Daten nur, wenn du zuvor ausdrücklich
+            in die Verarbeitung eingewilligt und die erforderlichen
+            Berechtigungen auf deinem Gerät erteilt hast.
           </p>
           <p>
-            Je nach Gerät und Betriebssystem können Daten über Apple
-            Health/HealthKit, Android Health Connect oder kompatible
-            Drittanbieter-Apps und Fitnessplattformen bereitgestellt werden.
-            Dazu können beispielsweise Strava, Garmin, Fitbit, Samsung Health,
-            Google Fit oder vergleichbare Dienste gehören, sofern du diese mit
-            deinem Gerät oder mit Cardletics verbindest und entsprechende
-            Berechtigungen erteilst.
-          </p>
-          <p>Diese Daten werden verwendet für:</p>
-          <ul style={listStyle}>
-            <li>interne Spielfunktionen und Fortschrittsmechaniken,</li>
-            <li>bewegungsbezogene Ziele, Stufen, Drops und Belohnungen,</li>
-            <li>Anzeige deines Bewegungsfortschritts innerhalb der App,</li>
-            <li>Missbrauchs- und Plausibilitätsprüfungen, soweit erforderlich.</li>
-          </ul>
-          <p>
-            Cardletics ersetzt keine medizinische Beratung und ist kein
-            Medizinprodukt. Die Bewegungsdaten dienen ausschließlich Spiel-,
-            Motivations- und Fortschrittsfunktionen innerhalb der App.
+            Unter Android verwendet Cardletics derzeit insbesondere
+            Schrittzahlen. Unter iOS können insbesondere Schrittzahlen,
+            Schwimmdistanzen und Workout-Daten aus Apple Health verarbeitet
+            werden. Je nach in Apple Health vorhandenem Workout können daraus
+            auch Informationen über bestimmte Aktivitätsarten, beispielsweise
+            Fahrradaktivitäten, hervorgehen.
           </p>
           <p>
-            Du kannst Berechtigungen jederzeit mit Wirkung für die Zukunft
-            widerrufen, insbesondere über die Einstellungen in der App oder in
-            den Berechtigungs-Einstellungen deines Geräts bzw. der jeweiligen
-            Fitness-App.
+            Die Daten werden insbesondere verwendet für bewegungsbezogene
+            Spielfunktionen, Fortschrittsanzeigen, Ziele sowie
+            bewegungsabhängige Karten, Drops und Belohnungen.
+          </p>
+          <p>
+            <strong>
+              Die Freigabe von Gesundheits- und Bewegungsdaten ist keine
+              Voraussetzung für die grundsätzliche Nutzung von Cardletics.
+            </strong>{" "}
+            Wenn du nicht einwilligst oder keine Systemberechtigung erteilst,
+            kannst du Cardletics in einem eingeschränkten Modus weiterhin
+            nutzen. Funktionen, Fortschritte oder Belohnungen, die
+            Bewegungsdaten voraussetzen, stehen dann nicht oder nur
+            eingeschränkt zur Verfügung.
+          </p>
+          <p>
+            Ohne deine Einwilligung greift Cardletics nicht auf die für
+            Cardletics vorgesehenen Gesundheits- und Bewegungsdaten zu. Eine
+            zunächst abgelehnte Freigabe kann später freiwillig in der App
+            aktiviert werden.
+          </p>
+          <p>
+            Du kannst eine erteilte Einwilligung jederzeit mit Wirkung für die
+            Zukunft in Cardletics widerrufen. Zusätzlich kannst du die
+            entsprechenden Zugriffsrechte in den Einstellungen deines
+            Betriebssystems ändern oder entziehen. Nach einem Widerruf greift
+            Cardletics nicht mehr auf neue Gesundheits- und Bewegungsdaten zu,
+            solange keine erneute Einwilligung erfolgt.
+          </p>
+          <p>
+            Bereits im Rahmen der bisherigen Nutzung erzeugte Spiel- oder
+            Fortschrittsdaten können weiterhin Bestandteil deines
+            Cardletics-Kontos sein, bis sie gelöscht werden oder dein Konto
+            gelöscht wird, soweit keine gesetzlichen Pflichten einer Löschung
+            entgegenstehen.
+          </p>
+          <p>
+            Cardletics ist kein Medizinprodukt und ersetzt keine medizinische
+            Beratung. Gesundheits- und Bewegungsdaten werden ausschließlich für
+            Spiel-, Motivations- und Fortschrittsfunktionen verwendet.
           </p>
         </Section>
 
@@ -255,11 +290,17 @@ export default function PrivacyPage() {
             <li>Freundschaftsstatus oder Interaktionsmöglichkeiten.</li>
           </ul>
           <p>
-            Die Umgebung-/Radar-Funktion ist optional. Du kannst Standortzugriff
-            und Sichtbarkeit in der App oder über die Geräteeinstellungen
-            deaktivieren. Soweit technisch möglich, wird für die Anzeige keine
-            öffentliche genaue Adresse angezeigt. Standortdaten werden nicht
-            für öffentliche Profile außerhalb der App veröffentlicht.
+            Die Umgebung-/Radar-Funktion ist optional. Du kannst die Sichtbarkeit
+            sowie den Standortzugriff jederzeit deaktivieren. Bei deaktivierter
+            Radar-Sichtbarkeit wirst du anderen Nutzern nicht mehr über diese
+            Funktion angezeigt und Cardletics verwendet deinen Standort nicht
+            mehr für die aktive Umgebungssichtbarkeit. Eine Deaktivierung der
+            Radar-Funktion bewirkt jedoch nicht automatisch die Löschung bereits
+            im Cardletics-System gespeicherter Standortwerte. Diese können bis zu
+            ihrer Überschreibung, Löschung oder bis zur Löschung des
+            Nutzerkontos gespeichert bleiben, soweit sie technisch oder für
+            Sicherheits- und Nachweiszwecke noch erforderlich sind. Cardletics
+            veröffentlicht keine genaue Adresse als öffentliches Nutzerprofil.
           </p>
         </Section>
 
@@ -284,17 +325,24 @@ export default function PrivacyPage() {
           </p>
         </Section>
 
-        <Section title="9. Push-Benachrichtigungen">
+        <Section title="9. Benachrichtigungen">
           <p>
-            Die App kann Push-Benachrichtigungen versenden, um dich über
-            Spielhinweise, Angebote, Freundschaftsanfragen, Chatnachrichten,
-            Gruppenereignisse und relevante In-App-Ereignisse zu informieren.
+            Cardletics kann lokale Benachrichtigungen auf deinem Gerät anzeigen,
+            beispielsweise für spielbezogene Erinnerungen oder Hinweise.
           </p>
           <p>
-            Push-Benachrichtigungen erfolgen nur, wenn du sie auf deinem Gerät
-            zugelassen hast. Du kannst Push-Benachrichtigungen jederzeit in den
-            Geräteeinstellungen oder – soweit verfügbar – in den
-            App-Einstellungen deaktivieren.
+            Für die Anzeige solcher Benachrichtigungen kann Cardletics die
+            Benachrichtigungsberechtigung des Betriebssystems anfordern. Du
+            kannst diese Berechtigung jederzeit in den Einstellungen deines
+            Geräts deaktivieren.
+          </p>
+          <p>
+            In der derzeitigen App-Version verwendet Cardletics für diese
+            Funktion keine serverseitige Push-Zustellung und speichert hierfür
+            keinen eigenen Push-Token zur Zustellung über einen
+            Cardletics-Push-Dienst. Sollten zukünftig echte serverseitige
+            Push-Benachrichtigungen eingeführt werden, wird diese
+            Datenschutzerklärung entsprechend angepasst.
           </p>
         </Section>
 
@@ -349,7 +397,14 @@ export default function PrivacyPage() {
             insbesondere Name, E-Mail-Adresse, Betreff und Nachricht, zur
             Bearbeitung deiner Anfrage.
           </p>
-          <p>Support erfolgt derzeit per E-Mail.</p>
+          <p>
+            Support erfolgt derzeit per E-Mail unter
+            <strong> support@cardletics.com</strong>.
+          </p>
+          <p>
+            Für Anfragen zur Löschung deines Nutzerkontos kannst du außerdem
+            <strong> delete@cardletics.com</strong> verwenden.
+          </p>
         </Section>
 
         <Section title="13. Hosting, Infrastruktur und eingesetzte Dienste">
@@ -371,25 +426,36 @@ export default function PrivacyPage() {
           </p>
         </Section>
 
-        <Section title="14. Empfänger der Daten und Drittanbieter">
+        <Section title="14. Empfänger, Plattformen und Datenquellen">
           <p>
             Personenbezogene Daten werden nur an Dritte weitergegeben, soweit
             dies zur Erfüllung der beschriebenen Zwecke erforderlich ist,
             gesetzlich vorgeschrieben ist oder eine wirksame Einwilligung
             vorliegt.
           </p>
-          <p>Empfänger können insbesondere sein:</p>
+          <p>Hierzu können insbesondere gehören:</p>
           <ul style={listStyle}>
             <li>Vercel als Hosting-Dienstleister</li>
-            <li>Supabase als Backend-, Datenbank-, Realtime- und Storage-Dienstleister</li>
+            <li>
+              Supabase als Backend-, Datenbank-, Realtime- und
+              Storage-Dienstleister
+            </li>
             <li>Apple App Store für iOS-In-App-Käufe und Abonnements</li>
             <li>Google Play Billing für Android-In-App-Käufe und Abonnements</li>
-            <li>Apple Health/HealthKit, soweit du Health-Daten auf iOS freigibst</li>
-            <li>Android Health Connect, soweit du Health-Daten auf Android freigibst</li>
             <li>
-              optionale Fitnessdienste wie Strava, Garmin, Fitbit, Samsung
-              Health, Google Fit oder vergleichbare Dienste, soweit du diese
-              verbindest oder über dein Gerät freigibst
+              Apple Health/HealthKit als auf iOS verwendete System-Datenquelle,
+              soweit du den Zugriff ausdrücklich freigibst
+            </li>
+            <li>
+              Android Health Connect als auf Android verwendete
+              System-Datenquelle, soweit du den Zugriff ausdrücklich freigibst
+            </li>
+            <li>
+              Fitnessdienste wie Strava, Garmin, Fitbit, Samsung Health, Google
+              Fit oder vergleichbare Dienste werden derzeit nicht unmittelbar
+              von Cardletics angebunden. Daten solcher Dienste können Cardletics
+              nur indirekt erreichen, wenn sie zuvor in Apple Health oder Health
+              Connect übernommen wurden und dort für Cardletics freigegeben sind.
             </li>
             <li>
               Steuerberater, soweit dies zur ordnungsgemäßen Buchhaltung und
@@ -421,41 +487,55 @@ export default function PrivacyPage() {
         </Section>
 
         <Section title="16. Speicherdauer">
-          <ul style={listStyle}>
-            <li>
-              Nutzerkonten speichern wir grundsätzlich bis zur Löschung des
-              Kontos; bei Inaktivität kann eine Löschung nach
-              <strong> 3 Jahren</strong> erfolgen.
-            </li>
-            <li>
-              Kauf- und abrechnungsrelevante Daten speichern wir für
-              <strong> 10 Jahre</strong>, soweit gesetzliche Aufbewahrungspflichten bestehen.
-            </li>
-            <li>
-              Spiel-, Inventar-, Freunde-, Gruppen- und Chatdaten speichern wir
-              grundsätzlich solange, wie dein Nutzerkonto besteht oder die Daten
-              für die jeweilige Funktion erforderlich sind.
-            </li>
-            <li>
-              Standort-/Präsenzdaten für die Umgebung-/Radar-Funktion werden
-              grundsätzlich nur solange verarbeitet, wie die Funktion aktiv ist
-              und die Daten für Anzeige, Aktualisierung oder Sicherheit
-              erforderlich sind. Bei Deaktivierung der Funktion können
-              Sichtbarkeit und Standortfreigabe beendet werden.
-            </li>
-            <li>
-              Gesundheits- und Bewegungsdaten speichern wir grundsätzlich nur
-              solange, wie dies für Fortschritt, Belohnungen, Nachvollziehbarkeit
-              und Missbrauchsprävention erforderlich ist, maximal jedoch bis zu
-              <strong> 5 Jahre</strong>, sofern keine frühere Löschung,
-              Deaktivierung oder ein Widerruf erfolgt.
-            </li>
-            <li>
-              Logdaten und Fehlerlogs speichern wir nur solange, wie dies für
-              Sicherheit, Fehleranalyse und Missbrauchsprävention erforderlich
-              ist, maximal jedoch bis zu <strong> 5 Jahre</strong>.
-            </li>
-          </ul>
+          <p>
+            Wir speichern personenbezogene Daten grundsätzlich nur solange, wie
+            dies für den jeweiligen Verarbeitungszweck erforderlich ist oder
+            gesetzliche Aufbewahrungspflichten bestehen.
+          </p>
+          <p>
+            Nutzerkonto-, Profil-, Spiel- und Inventardaten werden grundsätzlich
+            für die Dauer des Nutzerkontos gespeichert. Bei Löschung des
+            Nutzerkontos werden personenbezogene Daten gelöscht oder anonymisiert,
+            soweit sie nicht aufgrund gesetzlicher Pflichten oder zur
+            Geltendmachung, Ausübung oder Verteidigung von Rechtsansprüchen
+            weiterhin benötigt werden.
+          </p>
+          <p>
+            Freunde-, Gruppen-, Chat- und sonstige Social-Daten werden
+            grundsätzlich solange gespeichert, wie dies für die jeweilige
+            Funktion und das Nutzerkonto erforderlich ist. Einzelne Inhalte
+            können früher gelöscht werden, soweit entsprechende Löschfunktionen
+            vorgesehen sind.
+          </p>
+          <p>
+            Standortdaten der Umgebung-/Radar-Funktion werden verarbeitet, soweit
+            dies für die Funktion erforderlich ist. Eine Deaktivierung der
+            Radar-Sichtbarkeit beendet nicht automatisch die Speicherung bereits
+            vorhandener Standortwerte. Diese werden gelöscht, überschrieben oder
+            spätestens im Zusammenhang mit der Kontolöschung entfernt, soweit
+            keine anderweitige Rechtsgrundlage oder gesetzliche Pflicht eine
+            weitere Speicherung erfordert.
+          </p>
+          <p>
+            Nach Widerruf der Einwilligung greift Cardletics nicht mehr auf neue
+            Gesundheits- und Bewegungsdaten zu. Bereits daraus erzeugte oder
+            gespeicherte Spiel- und Fortschrittsdaten können bis zu ihrer
+            Löschung oder der Löschung des Nutzerkontos gespeichert bleiben,
+            soweit eine weitere Speicherung zulässig ist.
+          </p>
+          <p>
+            Kauf-, Zahlungs- und Abrechnungsdaten werden solange gespeichert, wie
+            dies zur Vertragsabwicklung und aufgrund steuer-, handels- oder
+            sonstiger gesetzlicher Aufbewahrungspflichten erforderlich ist.
+          </p>
+          <p>
+            Technische Server-, Sicherheits- und Fehlerdaten werden nur solange
+            gespeichert, wie dies für Betrieb, Sicherheit, Fehleranalyse oder
+            Missbrauchsprävention erforderlich ist. Soweit solche Daten durch
+            eingesetzte Infrastruktur- oder Plattformanbieter verarbeitet werden,
+            können zusätzlich deren technisch vorgegebene Aufbewahrungsfristen
+            gelten.
+          </p>
         </Section>
 
         <Section title="17. Kinder und Minderjährige">
@@ -524,6 +604,11 @@ export default function PrivacyPage() {
               widerrufen.
             </li>
           </ul>
+          <p>
+            Für die Löschung deines Nutzerkontos kannst du die Seite
+            <Link href="/konto-loeschen"> /konto-loeschen</Link> nutzen oder uns
+            unter <strong>delete@cardletics.com</strong> kontaktieren.
+          </p>
           <p>
             Außerdem hast du das Recht, dich bei einer zuständigen
             Datenschutzaufsichtsbehörde zu beschweren.
@@ -598,6 +683,7 @@ function PageFooter() {
         <Link href="/datenschutz" style={footerLinkStyle}>Datenschutz</Link>
         <Link href="/agb" style={footerLinkStyle}>AGB</Link>
         <Link href="/kontakt" style={footerLinkStyle}>Kontakt</Link>
+        <Link href="/konto-loeschen" style={footerLinkStyle}>Konto löschen</Link>
       </nav>
     </footer>
   );
@@ -673,6 +759,20 @@ const backButtonStyle: CSSProperties = {
   borderRadius: "12px",
   background: "#22c55e",
   color: "#08130c",
+  fontWeight: 700,
+  textDecoration: "none",
+};
+
+const secondaryButtonStyle: CSSProperties = {
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  minHeight: "44px",
+  padding: "10px 14px",
+  borderRadius: "12px",
+  background: "transparent",
+  color: "#bbf7d0",
+  border: "1px solid #2f5f45",
   fontWeight: 700,
   textDecoration: "none",
 };

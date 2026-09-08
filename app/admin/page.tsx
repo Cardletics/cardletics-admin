@@ -269,6 +269,10 @@ export default function DashboardPage() {
   ];
 
   const maxVariant = Math.max(1, ...variantData.map((item) => item.value));
+  const totalDeductions =
+    toNumber(netOverview.vat_estimated_eur) +
+    toNumber(netOverview.store_fee_eur) +
+    toNumber(netOverview.affiliate_commission_eur);
 
   return (
     <div style={pageStyle}>
@@ -311,13 +315,14 @@ export default function DashboardPage() {
 
       <section style={heroNetCardStyle}>
         <div>
-          <div style={heroLabelStyle}>Geschätzter Nettoertrag</div>
+          <div style={heroEyebrowStyle}>Deine Einnahmen nach allen Abzügen</div>
+          <div style={heroLabelStyle}>{netPeriodHeading(netPeriod)}</div>
           <div style={heroValueStyle}>
             {netLoading ? "..." : formatMoney(netOverview.net_profit_eur)}
           </div>
           <div style={heroSublineStyle}>
-            {periodLabel(netPeriod)} · Europe/Berlin · nach MwSt.,
-            Store-Gebühren und Affiliate-Provisionen
+            Das bleibt für Cardletics nach MwSt., Google-/Apple-Gebühren und
+            Affiliate-Provisionen übrig.
           </div>
 
           <div style={periodButtonsStyle}>
@@ -336,37 +341,56 @@ export default function DashboardPage() {
 
         <div style={heroMetaGridStyle}>
           <HeroMini
-            title="Brutto"
+            title="Kundenumsatz vor Abzügen"
             value={netLoading ? "..." : formatMoney(netOverview.gross_eur)}
           />
           <HeroMini
-            title="MwSt. geschätzt"
-            value={
-              netLoading
-                ? "..."
-                : `− ${formatMoney(netOverview.vat_estimated_eur)}`
-            }
-          />
-          <HeroMini
-            title="Google / Apple"
-            value={
-              netLoading ? "..." : `− ${formatMoney(netOverview.store_fee_eur)}`
-            }
-          />
-          <HeroMini
-            title="Affiliate"
-            value={
-              netLoading
-                ? "..."
-                : `− ${formatMoney(netOverview.affiliate_commission_eur)}`
-            }
+            title="Alle Abzüge zusammen"
+            value={netLoading ? "..." : `− ${formatMoney(totalDeductions)}`}
           />
         </div>
+
+        <details style={heroBreakdownStyle}>
+          <summary style={heroBreakdownSummaryStyle}>
+            Abzüge im Detail anzeigen
+          </summary>
+          <div style={heroBreakdownGridStyle}>
+            <HeroMini
+              title="MwSt. geschätzt"
+              value={
+                netLoading
+                  ? "..."
+                  : `− ${formatMoney(netOverview.vat_estimated_eur)}`
+              }
+            />
+            <HeroMini
+              title="Google / Apple"
+              value={
+                netLoading
+                  ? "..."
+                  : `− ${formatMoney(netOverview.store_fee_eur)}`
+              }
+            />
+            <HeroMini
+              title="Affiliate-Provisionen"
+              value={
+                netLoading
+                  ? "..."
+                  : `− ${formatMoney(netOverview.affiliate_commission_eur)}`
+              }
+            />
+          </div>
+        </details>
 
         <div style={netFootnoteStyle}>
           {netLoading
             ? "Berechnung wird geladen..."
-            : `${formatNumber(netOverview.payment_events)} Zahlungsereignisse · ${formatNumber(netOverview.estimated_events)} geschätzte Alt-Ereignisse`}
+            : `${formatNumber(netOverview.payment_events)} Zahlungsereignisse · ${formatNumber(netOverview.estimated_events)} geschätzte Alt-Ereignisse · Zeitraum: ${periodLabel(netPeriod)} (Europe/Berlin)`}
+          <br />
+          <span style={netFootnoteMutedStyle}>
+            Hosting, Werbung, Personal und weitere betriebliche Kosten sind hier
+            nicht enthalten.
+          </span>
         </div>
       </section>
 
@@ -526,8 +550,8 @@ export default function DashboardPage() {
       </div>
 
       <SectionTitle
-        title="Nettoertrag"
-        subtitle="Ausschließlich geschätzte Gewinne nach MwSt., Google-/Apple-Gebühren und Affiliate-Provisionen."
+        title="Nettoertrag nach Quelle"
+        subtitle="Aufteilung des oben ausgewählten Zeitraums in Abos und Coin-Käufe."
       />
       <div style={kpiGridStyle}>
         <KpiCard
@@ -798,6 +822,19 @@ function kindLabel(kind: string) {
   return kind;
 }
 
+function netPeriodHeading(period: NetPeriod) {
+  switch (period) {
+    case "today":
+      return "Dein Nettoertrag heute";
+    case "month":
+      return "Dein Nettoertrag diesen Monat";
+    case "year":
+      return "Dein Nettoertrag dieses Jahr";
+    case "total":
+      return "Dein Nettoertrag gesamt";
+  }
+}
+
 function periodLabel(period: NetPeriod) {
   switch (period) {
     case "today":
@@ -872,14 +909,24 @@ const heroNetCardStyle: CSSProperties = {
   marginBottom: "20px",
 };
 
+const heroEyebrowStyle: CSSProperties = {
+  fontSize: "13px",
+  letterSpacing: "0.04em",
+  textTransform: "uppercase",
+  color: "#bbf7d0",
+  fontWeight: 900,
+  marginBottom: "8px",
+};
+
 const heroLabelStyle: CSSProperties = {
-  fontSize: "14px",
-  color: "rgba(255,255,255,0.75)",
+  fontSize: "21px",
+  color: "white",
+  fontWeight: 900,
   marginBottom: "8px",
 };
 
 const heroValueStyle: CSSProperties = {
-  fontSize: "38px",
+  fontSize: "52px",
   fontWeight: 900,
   color: "white",
   lineHeight: 1.1,
@@ -935,11 +982,35 @@ const heroMetaLabelStyle: CSSProperties = {
 
 const heroMetaValueStyle: CSSProperties = { color: "white", fontSize: "18px" };
 
+const heroBreakdownStyle: CSSProperties = {
+  borderTop: "1px solid rgba(255,255,255,0.12)",
+  paddingTop: "14px",
+};
+
+const heroBreakdownSummaryStyle: CSSProperties = {
+  color: "#dcfce7",
+  cursor: "pointer",
+  fontWeight: 800,
+  fontSize: "14px",
+};
+
+const heroBreakdownGridStyle: CSSProperties = {
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
+  gap: "12px",
+  marginTop: "12px",
+};
+
 const netFootnoteStyle: CSSProperties = {
   color: "rgba(255,255,255,0.68)",
   fontSize: "12px",
   borderTop: "1px solid rgba(255,255,255,0.12)",
   paddingTop: "12px",
+  lineHeight: 1.55,
+};
+
+const netFootnoteMutedStyle: CSSProperties = {
+  color: "rgba(255,255,255,0.5)",
 };
 
 const sectionTitleBlockStyle: CSSProperties = { margin: "26px 0 12px 0" };

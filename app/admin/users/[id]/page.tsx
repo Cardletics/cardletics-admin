@@ -30,7 +30,7 @@ type TabKey = "overview" | "packs" | "cards" | "raw";
 
 const variantOptions: { value: SubscriptionVariant; label: string }[] = [
   { value: "free", label: "Free" },
-  // Club bleibt technisch `elite`, damit bestehende Store-IDs, Daten und App-Enums kompatibel bleiben.
+  // Club bleibt technisch `elite`, damit Store-IDs/DB-Werte kompatibel bleiben.
   { value: "elite", label: "Club" },
   { value: "master", label: "Master" },
 ];
@@ -564,7 +564,7 @@ export default function AdminUserDetailPage() {
     }
 
     const inserted = readNumber(data as JsonMap, "inserted") || quantity;
-    setMessage(`${inserted} Pack Token(s) mit je 5 Karten verteilt.`);
+    setMessage(`${inserted} Pack Token(s) mit je 2 Karten verteilt.`);
     setGrantingPack(false);
     await Promise.all([loadDetail(), loadPacks()]);
   }
@@ -736,7 +736,7 @@ export default function AdminUserDetailPage() {
               <div style={sectionHeaderStyle}>
                 <div>
                   <h2 style={sectionTitleStyle}>Inventar-Tokens vergeben</h2>
-                  <p style={sectionTextStyle}>Die Tokens erscheinen im Inventar des Users. Ein Pack Token öffnet immer genau 5 Karten. Ein Boost Token wird vom User selbst aktiviert und gilt dann 7 Tage.</p>
+                  <p style={sectionTextStyle}>Die Tokens erscheinen im Inventar des Users. Ein Pack Token öffnet immer genau 2 Karten. Ein Boost Token wird vom User selbst aktiviert und gilt dann 7 Tage.</p>
                 </div>
               </div>
 
@@ -744,7 +744,7 @@ export default function AdminUserDetailPage() {
                 <form onSubmit={handleGrantPackSubmit} style={formStyle}>
                   <div>
                     <label style={labelStyle}>Pack Token</label>
-                    <div style={selectedCardBoxStyle}><strong>5 Karten pro Token</strong><span style={sectionTextStyle}>Der User öffnet den Token selbst im Inventar.</span></div>
+                    <div style={selectedCardBoxStyle}><strong>2 Karten pro Token</strong><span style={sectionTextStyle}>Der User öffnet den Token selbst im Inventar.</span></div>
                   </div>
                   <div>
                     <label style={labelStyle}>Anzahl Tokens</label>
@@ -754,7 +754,7 @@ export default function AdminUserDetailPage() {
                     <label style={labelStyle}>Notiz</label>
                     <input type="text" value={grantNote} onChange={(event) => setGrantNote(event.target.value)} style={inputStyle} />
                   </div>
-                  <button type="submit" disabled={grantingPack} style={primaryButtonStyle}>{grantingPack ? "Verteile..." : "5-Karten-Packtoken vergeben"}</button>
+                  <button type="submit" disabled={grantingPack} style={primaryButtonStyle}>{grantingPack ? "Verteile..." : "2-Karten-Packtoken vergeben"}</button>
                 </form>
 
                 <form onSubmit={handleGrantBoostSubmit} style={formStyle}>
@@ -779,7 +779,7 @@ export default function AdminUserDetailPage() {
               <div style={sectionHeaderStyle}><h2 style={sectionTitleStyle}>Token-Übersicht</h2></div>
               <InfoGrid
                 items={[
-                  ["Verfügbare Pack Tokens", `${pendingPackTokenQuantity} · je 5 Karten`],
+                  ["Verfügbare Pack Tokens", `${pendingPackTokenQuantity} · je 2 Karten`],
                   ["Verfügbare Boost Tokens", `${pendingBoostTokenQuantity} · je 7 Tage`],
                   ["Aktiver Boost", activeBoostTokenQuantity > 0 ? "Ja · +10 % Drop-Chancen" : "Nein"],
                   ["Tokens verfügbar gesamt", String(totalPendingTokenQuantity)],
@@ -794,7 +794,7 @@ export default function AdminUserDetailPage() {
             <div style={sectionHeaderStyle}>
               <div>
                 <h2 style={sectionTitleStyle}>Inventar-Tokens & Historie</h2>
-                <p style={sectionTextStyle}>Pack Token: immer 5 Karten. Boost Token: +10 % bessere Drop-Chancen für 7 Tage ab Aktivierung.</p>
+                <p style={sectionTextStyle}>Pack Token: immer 2 Karten. Boost Token: +10 % bessere Drop-Chancen für 7 Tage ab Aktivierung.</p>
               </div>
               <span style={sectionCountStyle}>{packLoading ? "Lade..." : `${filteredPackRewards.length} Einträge`}</span>
             </div>
@@ -1548,7 +1548,7 @@ function inventoryTokenEffect(token: JsonMap) {
     case "boost_pack":
       return "+10 % bessere Drop-Chancen · 7 Tage ab Aktivierung";
     case "extra_pack":
-      return "Immer 5 Karten · wird vom User selbst geöffnet";
+      return "Immer 2 Karten · wird vom User selbst geöffnet";
     case "basic_3_pack":
     case "common_3_pack":
     case "rare_3_pack":
