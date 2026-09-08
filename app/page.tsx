@@ -642,6 +642,206 @@ const translations: Record<LanguageKey, Translation> = {
   },
 };
 
+
+type RoadmapItem = {
+  period: string;
+  status: string;
+  title: string;
+  text: string;
+  progress: number;
+};
+
+type RoadmapCopy = {
+  eyebrow: string;
+  title: string;
+  text: string;
+  progressLabel: string;
+  items: RoadmapItem[];
+};
+
+const roadmapTranslations: Record<LanguageKey, RoadmapCopy> = {
+  de: {
+    eyebrow: "Roadmap & Updates",
+    title: "Was als Nächstes kommt",
+    text: "Cardletics steht kurz vor dem ersten öffentlichen Release. Hier siehst du, woran wir gerade arbeiten und was danach geplant ist.",
+    progressLabel: "Fortschritt",
+    items: [
+      { period: "September 2026", status: "Aktuell", title: "Release vorbereiten", text: "Homepage, Rechtliches und E-Mail-System sind vorbereitet. Jetzt folgen Store-Screenshots, letzte Angaben und der finale Release-Check.", progress: 85 },
+      { period: "September / Oktober 2026", status: "Als Nächstes", title: "Store-Review & Launch", text: "Finale Android- und iOS-Builds werden eingereicht. Nach der Freigabe geht Cardletics im App Store und bei Google Play live.", progress: 30 },
+      { period: "November – Dezember 2026", status: "Danach", title: "Community & neue Inhalte", text: "Erste Events, neue Karten und Sets, Affiliate-Ausbau und Verbesserungen anhand des Nutzerfeedbacks.", progress: 10 },
+      { period: "Q1 2027", status: "Geplant", title: "Wachstum & neue Features", text: "Mehr Community-Funktionen, neue Spielideen und die nächste Entwicklungsstufe von Cardletics.", progress: 5 },
+    ],
+  },
+  en: {
+    eyebrow: "Roadmap & Updates",
+    title: "What comes next",
+    text: "Cardletics is close to its first public release. Here is what we are working on now and what is planned next.",
+    progressLabel: "Progress",
+    items: [
+      { period: "September 2026", status: "Current", title: "Prepare the release", text: "The website, legal pages and email system are prepared. Next are store screenshots, final listing details and the last release checks.", progress: 85 },
+      { period: "September / October 2026", status: "Up next", title: "Store review & launch", text: "Final Android and iOS builds will be submitted. After approval, Cardletics will go live on the App Store and Google Play.", progress: 30 },
+      { period: "November – December 2026", status: "After launch", title: "Community & new content", text: "First events, new cards and sets, affiliate expansion and improvements based on user feedback.", progress: 10 },
+      { period: "Q1 2027", status: "Planned", title: "Growth & new features", text: "More community features, new gameplay ideas and the next stage of Cardletics development.", progress: 5 },
+    ],
+  },
+  es: {
+    eyebrow: "Hoja de ruta y novedades",
+    title: "Lo que viene después",
+    text: "Cardletics está cerca de su primer lanzamiento público. Aquí puedes ver en qué trabajamos ahora y qué está previsto después.",
+    progressLabel: "Progreso",
+    items: [
+      { period: "Septiembre de 2026", status: "Actual", title: "Preparar el lanzamiento", text: "La web, los textos legales y el sistema de correo están preparados. Ahora siguen las capturas de las tiendas, los últimos datos y la revisión final.", progress: 85 },
+      { period: "Septiembre / octubre de 2026", status: "A continuación", title: "Revisión de tiendas y lanzamiento", text: "Se enviarán las versiones finales de Android e iOS. Tras la aprobación, Cardletics estará disponible en App Store y Google Play.", progress: 30 },
+      { period: "Noviembre – diciembre de 2026", status: "Después", title: "Comunidad y nuevo contenido", text: "Primeros eventos, nuevas cartas y sets, ampliación del programa de afiliados y mejoras según los comentarios de los usuarios.", progress: 10 },
+      { period: "T1 2027", status: "Planificado", title: "Crecimiento y nuevas funciones", text: "Más funciones de comunidad, nuevas ideas de juego y la siguiente etapa de desarrollo de Cardletics.", progress: 5 },
+    ],
+  },
+  fr: {
+    eyebrow: "Feuille de route & nouveautés",
+    title: "La suite de Cardletics",
+    text: "Cardletics approche de sa première sortie publique. Voici ce sur quoi nous travaillons actuellement et ce qui est prévu ensuite.",
+    progressLabel: "Progression",
+    items: [
+      { period: "Septembre 2026", status: "En cours", title: "Préparer la sortie", text: "Le site, les pages juridiques et le système d’e-mail sont prêts. Restent les captures des stores, les dernières informations et les contrôles finaux.", progress: 85 },
+      { period: "Septembre / octobre 2026", status: "Prochaine étape", title: "Validation des stores & lancement", text: "Les versions finales Android et iOS seront soumises. Après validation, Cardletics sera disponible sur l’App Store et Google Play.", progress: 30 },
+      { period: "Novembre – décembre 2026", status: "Ensuite", title: "Communauté & nouveaux contenus", text: "Premiers événements, nouvelles cartes et collections, développement de l’affiliation et améliorations basées sur les retours utilisateurs.", progress: 10 },
+      { period: "T1 2027", status: "Prévu", title: "Croissance & nouvelles fonctions", text: "Davantage de fonctions communautaires, de nouvelles idées de gameplay et la prochaine étape du développement de Cardletics.", progress: 5 },
+    ],
+  },
+  pt: {
+    eyebrow: "Roadmap & novidades",
+    title: "O que vem a seguir",
+    text: "Cardletics está perto do primeiro lançamento público. Aqui você vê no que estamos trabalhando agora e o que está planejado para depois.",
+    progressLabel: "Progresso",
+    items: [
+      { period: "Setembro de 2026", status: "Atual", title: "Preparar o lançamento", text: "Site, páginas legais e sistema de e-mail estão preparados. Agora vêm as capturas das lojas, os últimos dados e a revisão final do lançamento.", progress: 85 },
+      { period: "Setembro / outubro de 2026", status: "A seguir", title: "Revisão das lojas & lançamento", text: "As versões finais para Android e iOS serão enviadas. Após a aprovação, Cardletics ficará disponível na App Store e no Google Play.", progress: 30 },
+      { period: "Novembro – dezembro de 2026", status: "Depois", title: "Comunidade & novos conteúdos", text: "Primeiros eventos, novas cartas e conjuntos, expansão do programa de afiliados e melhorias com base no feedback dos usuários.", progress: 10 },
+      { period: "1º trimestre de 2027", status: "Planejado", title: "Crescimento & novos recursos", text: "Mais recursos de comunidade, novas ideias de gameplay e a próxima fase de desenvolvimento do Cardletics.", progress: 5 },
+    ],
+  },
+  zh: {
+    eyebrow: "路线图与更新",
+    title: "接下来会发生什么",
+    text: "Cardletics 即将迎来首次公开发布。这里展示我们目前正在推进的工作以及接下来的计划。",
+    progressLabel: "进度",
+    items: [
+      { period: "2026 年 9 月", status: "当前", title: "准备发布", text: "官网、法律页面和邮件系统已准备完成。接下来将完成商店截图、最后的上架信息和发布前检查。", progress: 85 },
+      { period: "2026 年 9 月 / 10 月", status: "下一步", title: "商店审核与上线", text: "最终 Android 和 iOS 版本将提交审核。通过后，Cardletics 将在 App Store 和 Google Play 正式上线。", progress: 30 },
+      { period: "2026 年 11 月 – 12 月", status: "随后", title: "社区与新内容", text: "推出首批活动、新卡牌与系列，扩展联盟计划，并根据用户反馈持续改进。", progress: 10 },
+      { period: "2027 年第一季度", status: "计划中", title: "增长与新功能", text: "加入更多社区功能、新的玩法创意，并进入 Cardletics 的下一阶段开发。", progress: 5 },
+    ],
+  },
+  hi: {
+    eyebrow: "रोडमैप और अपडेट",
+    title: "आगे क्या आने वाला है",
+    text: "Cardletics अपने पहले सार्वजनिक रिलीज़ के करीब है। यहाँ आप देख सकते हैं कि अभी किस पर काम हो रहा है और आगे क्या योजना है।",
+    progressLabel: "प्रगति",
+    items: [
+      { period: "सितंबर 2026", status: "अभी", title: "रिलीज़ की तैयारी", text: "वेबसाइट, कानूनी पेज और ई-मेल सिस्टम तैयार हैं। अब स्टोर स्क्रीनशॉट, अंतिम लिस्टिंग विवरण और रिलीज़ से पहले की अंतिम जाँच बाकी है।", progress: 85 },
+      { period: "सितंबर / अक्टूबर 2026", status: "अगला", title: "स्टोर रिव्यू और लॉन्च", text: "Android और iOS के अंतिम बिल्ड सबमिट किए जाएंगे। मंजूरी के बाद Cardletics App Store और Google Play पर लाइव होगा।", progress: 30 },
+      { period: "नवंबर – दिसंबर 2026", status: "उसके बाद", title: "कम्युनिटी और नया कंटेंट", text: "पहले इवेंट, नए कार्ड और सेट, अफ़िलिएट विस्तार और यूज़र फ़ीडबैक के आधार पर सुधार।", progress: 10 },
+      { period: "Q1 2027", status: "योजना", title: "विकास और नई सुविधाएँ", text: "अधिक कम्युनिटी फीचर, नए गेमप्ले विचार और Cardletics के विकास का अगला चरण।", progress: 5 },
+    ],
+  },
+  ar: {
+    eyebrow: "خارطة الطريق والتحديثات",
+    title: "ما الذي سيأتي بعد ذلك",
+    text: "Cardletics يقترب من أول إطلاق عام. هنا يمكنك رؤية ما نعمل عليه الآن وما هو مخطط له بعد ذلك.",
+    progressLabel: "التقدم",
+    items: [
+      { period: "سبتمبر 2026", status: "حاليًا", title: "الاستعداد للإطلاق", text: "تم تجهيز الموقع والصفحات القانونية ونظام البريد الإلكتروني. الخطوة التالية هي صور المتاجر والبيانات النهائية وفحوصات الإصدار الأخيرة.", progress: 85 },
+      { period: "سبتمبر / أكتوبر 2026", status: "التالي", title: "مراجعة المتاجر والإطلاق", text: "سيتم إرسال الإصدارات النهائية لنظامي Android وiOS. بعد الموافقة، سيتم إطلاق Cardletics على App Store وGoogle Play.", progress: 30 },
+      { period: "نوفمبر – ديسمبر 2026", status: "بعد ذلك", title: "المجتمع ومحتوى جديد", text: "أولى الفعاليات وبطاقات ومجموعات جديدة وتوسيع برنامج الشراكة وتحسينات بناءً على ملاحظات المستخدمين.", progress: 10 },
+      { period: "الربع الأول 2027", status: "مخطط", title: "النمو وميزات جديدة", text: "مزيد من ميزات المجتمع وأفكار لعب جديدة والمرحلة التالية من تطوير Cardletics.", progress: 5 },
+    ],
+  },
+  bn: {
+    eyebrow: "রোডম্যাপ ও আপডেট",
+    title: "এরপর কী আসছে",
+    text: "Cardletics প্রথম পাবলিক রিলিজের খুব কাছাকাছি। এখন কী নিয়ে কাজ চলছে এবং এরপর কী পরিকল্পনা আছে তা এখানে দেখা যাবে।",
+    progressLabel: "অগ্রগতি",
+    items: [
+      { period: "সেপ্টেম্বর 2026", status: "বর্তমান", title: "রিলিজ প্রস্তুতি", text: "ওয়েবসাইট, আইনি পেজ এবং ই-মেইল সিস্টেম প্রস্তুত। এখন স্টোর স্ক্রিনশট, শেষ তথ্য এবং চূড়ান্ত রিলিজ চেক বাকি।", progress: 85 },
+      { period: "সেপ্টেম্বর / অক্টোবর 2026", status: "পরবর্তী", title: "স্টোর রিভিউ ও লঞ্চ", text: "চূড়ান্ত Android ও iOS বিল্ড জমা দেওয়া হবে। অনুমোদনের পর Cardletics App Store ও Google Play-এ লাইভ হবে।", progress: 30 },
+      { period: "নভেম্বর – ডিসেম্বর 2026", status: "তারপর", title: "কমিউনিটি ও নতুন কনটেন্ট", text: "প্রথম ইভেন্ট, নতুন কার্ড ও সেট, অ্যাফিলিয়েট সম্প্রসারণ এবং ব্যবহারকারীর মতামতের ভিত্তিতে উন্নতি।", progress: 10 },
+      { period: "Q1 2027", status: "পরিকল্পিত", title: "বৃদ্ধি ও নতুন ফিচার", text: "আরও কমিউনিটি ফিচার, নতুন গেমপ্লে ধারণা এবং Cardletics উন্নয়নের পরবর্তী ধাপ।", progress: 5 },
+    ],
+  },
+  ru: {
+    eyebrow: "Дорожная карта и обновления",
+    title: "Что будет дальше",
+    text: "Cardletics приближается к первому публичному релизу. Здесь показано, над чем мы работаем сейчас и что запланировано дальше.",
+    progressLabel: "Прогресс",
+    items: [
+      { period: "Сентябрь 2026", status: "Сейчас", title: "Подготовка релиза", text: "Сайт, юридические страницы и почтовая система готовы. Далее — скриншоты для магазинов, последние данные и финальная проверка релиза.", progress: 85 },
+      { period: "Сентябрь / октябрь 2026", status: "Следующий шаг", title: "Проверка магазинов и запуск", text: "Финальные сборки Android и iOS будут отправлены на проверку. После одобрения Cardletics выйдет в App Store и Google Play.", progress: 30 },
+      { period: "Ноябрь – декабрь 2026", status: "После запуска", title: "Сообщество и новый контент", text: "Первые события, новые карты и наборы, развитие партнёрской программы и улучшения по отзывам пользователей.", progress: 10 },
+      { period: "1 квартал 2027", status: "В планах", title: "Рост и новые функции", text: "Больше функций сообщества, новые игровые идеи и следующий этап развития Cardletics.", progress: 5 },
+    ],
+  },
+  ja: {
+    eyebrow: "ロードマップ & アップデート",
+    title: "これからの予定",
+    text: "Cardletics は最初の一般公開に近づいています。現在取り組んでいることと、その後の予定をご覧いただけます。",
+    progressLabel: "進捗",
+    items: [
+      { period: "2026年9月", status: "現在", title: "リリース準備", text: "Webサイト、法的ページ、メールシステムの準備は完了しています。次はストア用スクリーンショット、最終情報、リリース前チェックです。", progress: 85 },
+      { period: "2026年9月 / 10月", status: "次のステップ", title: "ストア審査 & ローンチ", text: "Android と iOS の最終ビルドを提出します。承認後、Cardletics は App Store と Google Play で公開されます。", progress: 30 },
+      { period: "2026年11月 – 12月", status: "その後", title: "コミュニティ & 新コンテンツ", text: "最初のイベント、新しいカードとセット、アフィリエイトの拡張、ユーザーフィードバックに基づく改善を進めます。", progress: 10 },
+      { period: "2027年 Q1", status: "予定", title: "成長 & 新機能", text: "より多くのコミュニティ機能、新しいゲームプレイのアイデア、Cardletics の次の開発段階へ進みます。", progress: 5 },
+    ],
+  },
+  tr: {
+    eyebrow: "Yol haritası & güncellemeler",
+    title: "Sırada ne var",
+    text: "Cardletics ilk herkese açık sürümüne çok yakın. Şu anda üzerinde çalıştığımız ve sonrasında planladığımız adımları burada görebilirsin.",
+    progressLabel: "İlerleme",
+    items: [
+      { period: "Eylül 2026", status: "Şu anda", title: "Sürümü hazırlamak", text: "Web sitesi, yasal sayfalar ve e-posta sistemi hazır. Sırada mağaza ekran görüntüleri, son listeleme bilgileri ve final sürüm kontrolleri var.", progress: 85 },
+      { period: "Eylül / Ekim 2026", status: "Sıradaki", title: "Mağaza incelemesi & lansman", text: "Son Android ve iOS sürümleri gönderilecek. Onaydan sonra Cardletics App Store ve Google Play'de yayına girecek.", progress: 30 },
+      { period: "Kasım – Aralık 2026", status: "Sonrasında", title: "Topluluk & yeni içerikler", text: "İlk etkinlikler, yeni kartlar ve setler, affiliate programının genişletilmesi ve kullanıcı geri bildirimlerine dayalı iyileştirmeler.", progress: 10 },
+      { period: "2027 Q1", status: "Planlandı", title: "Büyüme & yeni özellikler", text: "Daha fazla topluluk özelliği, yeni oynanış fikirleri ve Cardletics geliştirmesinin bir sonraki aşaması.", progress: 5 },
+    ],
+  },
+  vi: {
+    eyebrow: "Lộ trình & cập nhật",
+    title: "Điều gì sẽ đến tiếp theo",
+    text: "Cardletics đang tiến gần đến bản phát hành công khai đầu tiên. Đây là những gì chúng tôi đang thực hiện và kế hoạch tiếp theo.",
+    progressLabel: "Tiến độ",
+    items: [
+      { period: "Tháng 9/2026", status: "Hiện tại", title: "Chuẩn bị phát hành", text: "Website, trang pháp lý và hệ thống e-mail đã sẵn sàng. Tiếp theo là ảnh chụp cửa hàng, thông tin cuối cùng và kiểm tra phát hành.", progress: 85 },
+      { period: "Tháng 9 / 10/2026", status: "Tiếp theo", title: "Duyệt cửa hàng & ra mắt", text: "Các bản Android và iOS cuối cùng sẽ được gửi duyệt. Sau khi được chấp thuận, Cardletics sẽ có mặt trên App Store và Google Play.", progress: 30 },
+      { period: "Tháng 11 – 12/2026", status: "Sau đó", title: "Cộng đồng & nội dung mới", text: "Các sự kiện đầu tiên, thẻ và bộ mới, mở rộng chương trình affiliate và cải tiến dựa trên phản hồi người dùng.", progress: 10 },
+      { period: "Q1 2027", status: "Đã lên kế hoạch", title: "Tăng trưởng & tính năng mới", text: "Thêm tính năng cộng đồng, ý tưởng gameplay mới và giai đoạn phát triển tiếp theo của Cardletics.", progress: 5 },
+    ],
+  },
+  id: {
+    eyebrow: "Roadmap & pembaruan",
+    title: "Apa yang akan hadir berikutnya",
+    text: "Cardletics sudah dekat dengan rilis publik pertamanya. Di sini kamu bisa melihat apa yang sedang dikerjakan dan rencana berikutnya.",
+    progressLabel: "Progres",
+    items: [
+      { period: "September 2026", status: "Saat ini", title: "Menyiapkan rilis", text: "Website, halaman legal, dan sistem e-mail sudah siap. Berikutnya adalah screenshot store, detail listing terakhir, dan pemeriksaan final sebelum rilis.", progress: 85 },
+      { period: "September / Oktober 2026", status: "Berikutnya", title: "Review store & peluncuran", text: "Build final Android dan iOS akan dikirim. Setelah disetujui, Cardletics akan tersedia di App Store dan Google Play.", progress: 30 },
+      { period: "November – Desember 2026", status: "Setelah itu", title: "Komunitas & konten baru", text: "Event pertama, kartu dan set baru, perluasan program afiliasi, serta peningkatan berdasarkan masukan pengguna.", progress: 10 },
+      { period: "Q1 2027", status: "Direncanakan", title: "Pertumbuhan & fitur baru", text: "Lebih banyak fitur komunitas, ide gameplay baru, dan tahap pengembangan Cardletics berikutnya.", progress: 5 },
+    ],
+  },
+  ur: {
+    eyebrow: "روڈ میپ اور اپ ڈیٹس",
+    title: "آگے کیا آنے والا ہے",
+    text: "Cardletics اپنی پہلی عوامی ریلیز کے قریب ہے۔ یہاں آپ دیکھ سکتے ہیں کہ ابھی کس چیز پر کام ہو رہا ہے اور آگے کیا منصوبہ ہے۔",
+    progressLabel: "پیش رفت",
+    items: [
+      { period: "ستمبر 2026", status: "موجودہ", title: "ریلیز کی تیاری", text: "ویب سائٹ، قانونی صفحات اور ای میل سسٹم تیار ہیں۔ اب اسٹور اسکرین شاٹس، آخری معلومات اور حتمی ریلیز چیک باقی ہیں۔", progress: 85 },
+      { period: "ستمبر / اکتوبر 2026", status: "اگلا", title: "اسٹور ریویو اور لانچ", text: "Android اور iOS کے حتمی بلڈ جمع کیے جائیں گے۔ منظوری کے بعد Cardletics App Store اور Google Play پر لائیو ہو جائے گا۔", progress: 30 },
+      { period: "نومبر – دسمبر 2026", status: "اس کے بعد", title: "کمیونٹی اور نیا مواد", text: "ابتدائی ایونٹس، نئے کارڈز اور سیٹس، افیلیٹ پروگرام کی توسیع اور صارفین کے فیڈبیک کی بنیاد پر بہتری۔", progress: 10 },
+      { period: "Q1 2027", status: "منصوبہ بند", title: "ترقی اور نئی خصوصیات", text: "مزید کمیونٹی فیچرز، نئے گیم پلے آئیڈیاز اور Cardletics کی ترقی کا اگلا مرحلہ۔", progress: 5 },
+    ],
+  },
+};
+
 const languageOptions: { key: LanguageKey; label: string; countryCode: string }[] = [
   { key: "de", label: "Deutsch", countryCode: "de" },
   { key: "en", label: "English", countryCode: "gb" },
@@ -688,6 +888,7 @@ export default function HomePage() {
   const languageDidMountRef = useRef(false);
 
   const t = translations[language];
+  const roadmap = roadmapTranslations[language];
   const screenshots = useMemo<ScreenshotItem[]>(() => t.screenshots, [t]);
   const selectedShot = selectedShotIndex !== null ? screenshots[selectedShotIndex] : null;
   const dir = language === "ar" || language === "ur" ? "rtl" : "ltr";
@@ -896,6 +1097,32 @@ export default function HomePage() {
         </div>
       </section>
 
+
+      <section style={sectionStyle}>
+        <div style={{ ...roadmapPanelStyle, padding: isMobile ? "18px" : "24px" }}>
+          <div style={sectionHeaderStyle}>
+            <div style={sectionEyebrowStyle}>{roadmap.eyebrow}</div>
+            <h2 style={{ ...sectionTitleStyle, fontSize: isMobile ? "28px" : "clamp(28px, 4vw, 42px)" }}>
+              {roadmap.title}
+            </h2>
+            <p style={{ ...sectionTextStyle, maxWidth: "820px" }}>{roadmap.text}</p>
+          </div>
+
+          <div style={roadmapListStyle}>
+            {roadmap.items.map((item, index) => (
+              <RoadmapStep
+                key={`${item.period}-${item.title}`}
+                item={item}
+                index={index}
+                isLast={index === roadmap.items.length - 1}
+                isMobile={isMobile}
+                progressLabel={roadmap.progressLabel}
+              />
+            ))}
+          </div>
+        </div>
+      </section>
+
       <section style={sectionStyle}>
         <div style={{ ...affiliatePanelStyle, flexDirection: isMobile ? "column" : "row", alignItems: isMobile ? "flex-start" : "center", padding: isMobile ? "18px" : "24px" }}>
           <div style={affiliateTextColStyle}>
@@ -1049,6 +1276,77 @@ function StepCard({
       <div style={stepNumberStyle}>{number}</div>
       <h3 style={stepTitleStyle}>{title}</h3>
       <p style={stepTextStyle}>{text}</p>
+    </div>
+  );
+}
+
+
+function RoadmapStep({
+  item,
+  index,
+  isLast,
+  isMobile,
+  progressLabel,
+}: {
+  item: RoadmapItem;
+  index: number;
+  isLast: boolean;
+  isMobile: boolean;
+  progressLabel: string;
+}) {
+  const isCurrent = index === 0;
+
+  return (
+    <div
+      style={{
+        ...roadmapItemWrapStyle,
+        gridTemplateColumns: isMobile ? "42px minmax(0, 1fr)" : "56px minmax(0, 1fr)",
+      }}
+    >
+      <div style={roadmapRailStyle}>
+        <div
+          style={{
+            ...roadmapMarkerStyle,
+            ...(isCurrent ? roadmapMarkerCurrentStyle : null),
+          }}
+        >
+          {index + 1}
+        </div>
+        {!isLast && <div style={roadmapConnectorStyle} />}
+      </div>
+
+      <div style={{ ...roadmapCardStyle, padding: isMobile ? "16px" : "20px" }}>
+        <div style={{ ...roadmapCardTopStyle, alignItems: isMobile ? "flex-start" : "center" }}>
+          <div>
+            <div style={roadmapPeriodStyle}>{item.period}</div>
+            <h3 style={roadmapTitleStyle}>{item.title}</h3>
+          </div>
+          <span
+            style={{
+              ...roadmapStatusStyle,
+              ...(isCurrent ? roadmapStatusCurrentStyle : null),
+            }}
+          >
+            {item.status}
+          </span>
+        </div>
+
+        <p style={roadmapTextStyle}>{item.text}</p>
+
+        <div style={roadmapProgressHeaderStyle}>
+          <span>{progressLabel}</span>
+          <strong>{item.progress}%</strong>
+        </div>
+        <div style={roadmapProgressTrackStyle} aria-hidden="true">
+          <div
+            style={{
+              ...roadmapProgressFillStyle,
+              width: `${item.progress}%`,
+              opacity: isCurrent ? 1 : 0.72,
+            }}
+          />
+        </div>
+      </div>
     </div>
   );
 }
@@ -1605,6 +1903,154 @@ const screenshotTextStyle: React.CSSProperties = {
   color: "#94a39b",
   lineHeight: 1.6,
   fontSize: "14px",
+};
+
+
+const roadmapPanelStyle: React.CSSProperties = {
+  background:
+    "linear-gradient(135deg, rgba(34,197,94,0.09) 0%, rgba(17,23,20,0.98) 38%, rgba(14,24,36,0.96) 100%)",
+  border: "1px solid #2b3b33",
+  borderRadius: "24px",
+  boxShadow: "0 14px 34px rgba(0,0,0,0.18)",
+};
+
+const roadmapListStyle: React.CSSProperties = {
+  display: "grid",
+  gap: "0",
+  marginTop: "20px",
+};
+
+const roadmapItemWrapStyle: React.CSSProperties = {
+  display: "grid",
+  gap: "12px",
+  alignItems: "stretch",
+};
+
+const roadmapRailStyle: React.CSSProperties = {
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "center",
+  minHeight: "100%",
+};
+
+const roadmapMarkerStyle: React.CSSProperties = {
+  width: "34px",
+  height: "34px",
+  borderRadius: "999px",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  flex: "0 0 auto",
+  background: "#17201c",
+  border: "1px solid #35433d",
+  color: "#a9b7b0",
+  fontSize: "13px",
+  fontWeight: 900,
+  boxShadow: "0 8px 20px rgba(0,0,0,0.2)",
+};
+
+const roadmapMarkerCurrentStyle: React.CSSProperties = {
+  background: "#22c55e",
+  borderColor: "#4ade80",
+  color: "#07120b",
+  boxShadow: "0 0 0 5px rgba(34,197,94,0.1), 0 10px 24px rgba(34,197,94,0.2)",
+};
+
+const roadmapConnectorStyle: React.CSSProperties = {
+  width: "2px",
+  flex: 1,
+  minHeight: "44px",
+  margin: "8px 0",
+  borderRadius: "999px",
+  background: "linear-gradient(180deg, rgba(34,197,94,0.42), rgba(74,222,128,0.08))",
+};
+
+const roadmapCardStyle: React.CSSProperties = {
+  marginBottom: "14px",
+  background: "rgba(20,27,24,0.88)",
+  border: "1px solid #29352f",
+  borderRadius: "18px",
+  boxShadow: "0 8px 24px rgba(0,0,0,0.14)",
+};
+
+const roadmapCardTopStyle: React.CSSProperties = {
+  display: "flex",
+  justifyContent: "space-between",
+  gap: "12px",
+  flexWrap: "wrap",
+};
+
+const roadmapPeriodStyle: React.CSSProperties = {
+  marginBottom: "5px",
+  color: "#86efac",
+  fontSize: "12px",
+  fontWeight: 800,
+  letterSpacing: "0.05em",
+  textTransform: "uppercase",
+};
+
+const roadmapTitleStyle: React.CSSProperties = {
+  margin: 0,
+  color: "#ffffff",
+  fontSize: "19px",
+  lineHeight: 1.3,
+};
+
+const roadmapStatusStyle: React.CSSProperties = {
+  display: "inline-flex",
+  alignItems: "center",
+  minHeight: "28px",
+  padding: "5px 10px",
+  borderRadius: "999px",
+  border: "1px solid #34423c",
+  background: "rgba(255,255,255,0.035)",
+  color: "#aab8b1",
+  fontSize: "11px",
+  fontWeight: 800,
+  whiteSpace: "nowrap",
+};
+
+const roadmapStatusCurrentStyle: React.CSSProperties = {
+  borderColor: "rgba(74,222,128,0.34)",
+  background: "rgba(34,197,94,0.12)",
+  color: "#bbf7d0",
+};
+
+const roadmapTextStyle: React.CSSProperties = {
+  margin: "12px 0 14px 0",
+  color: "#94a39b",
+  fontSize: "14px",
+  lineHeight: 1.65,
+};
+
+const roadmapProgressHeaderStyle: React.CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "space-between",
+  gap: "12px",
+  marginBottom: "7px",
+  color: "#83928b",
+  fontSize: "11px",
+  fontWeight: 800,
+  letterSpacing: "0.03em",
+  textTransform: "uppercase",
+};
+
+const roadmapProgressTrackStyle: React.CSSProperties = {
+  width: "100%",
+  height: "7px",
+  overflow: "hidden",
+  borderRadius: "999px",
+  background: "#0c120f",
+  border: "1px solid rgba(255,255,255,0.04)",
+};
+
+const roadmapProgressFillStyle: React.CSSProperties = {
+  height: "100%",
+  borderRadius: "999px",
+  background: "linear-gradient(90deg, #22c55e 0%, #4ade80 55%, #38bdf8 100%)",
+  boxShadow: "0 0 16px rgba(34,197,94,0.18)",
+  transition: "width 220ms ease",
 };
 
 const affiliatePanelStyle: React.CSSProperties = {
