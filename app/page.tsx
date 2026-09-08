@@ -1285,7 +1285,7 @@ export default function HomePage() {
           <p style={sectionTextStyle}>{t.whatText}</p>
         </div>
 
-        <div style={{ ...featureGridStyle, gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fit, minmax(240px, 1fr))" }}>
+        <div style={{ ...featureGridStyle, gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fit, minmax(300px, 1fr))" }}>
           {t.features.map((feature) => <FeatureCard key={feature.title} title={feature.title} text={feature.text} />)}
         </div>
       </section>
@@ -1552,7 +1552,7 @@ function ScreenshotCard({
           <div style={phoneFrameInnerStyle}>
             <div style={phoneNotchStyle} />
             <div style={screenshotRealWrapStyle}>
-              <img src={fileName} alt={title} style={screenshotImageStyle} loading="lazy" decoding="async" draggable={false} />
+              <img src={`${fileName}?v=20260908-3`} alt={title} width={1206} height={2622} style={screenshotImageStyle} loading="lazy" decoding="async" draggable={false} />
             </div>
           </div>
         </div>
@@ -1645,7 +1645,7 @@ function Lightbox({
 
         <div style={lightboxContentStyle}>
           <div style={lightboxPhoneWrapStyle}>
-            <img src={item.fileName} alt={item.title} style={lightboxImageStyle} decoding="async" draggable={false} />
+            <img src={`${item.fileName}?v=20260908-3`} alt={item.title} width={1206} height={2622} style={lightboxImageStyle} decoding="async" draggable={false} />
           </div>
 
           <div style={lightboxSwipeHintStyle}>{labels.swipeHint}</div>
@@ -2023,7 +2023,7 @@ const screenshotButtonStyle: React.CSSProperties = {
 
 const phoneFrameOuterStyle: React.CSSProperties = {
   width: "100%",
-  maxWidth: "320px",
+  maxWidth: "380px",
   margin: "0 auto",
   padding: "8px",
   borderRadius: "36px",
@@ -2414,7 +2414,7 @@ const lightboxContentStyle: React.CSSProperties = {
 };
 
 const lightboxPhoneWrapStyle: React.CSSProperties = {
-  width: "min(82vw, 330px)",
+  width: "min(92vw, 560px)",
   aspectRatio: "1206 / 2622",
   margin: "0 auto",
   borderRadius: "28px",
@@ -2429,7 +2429,7 @@ const lightboxPhoneWrapStyle: React.CSSProperties = {
 const lightboxImageStyle: React.CSSProperties = {
   width: "100%",
   height: "100%",
-  objectFit: "cover",
+  objectFit: "contain",
   objectPosition: "center top",
   display: "block",
 };
