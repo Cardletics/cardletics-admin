@@ -2414,20 +2414,22 @@ const lightboxContentStyle: React.CSSProperties = {
 };
 
 const lightboxPhoneWrapStyle: React.CSSProperties = {
-  width: "100%",
-  maxWidth: "360px",
+  width: "min(82vw, 330px)",
+  aspectRatio: "1206 / 2622",
   margin: "0 auto",
   borderRadius: "28px",
   overflow: "hidden",
-  background: "#000000",
-  boxShadow: "0 18px 40px rgba(0,0,0,0.35)",
+  background:
+    "linear-gradient(180deg, rgba(24,46,35,0.96) 0%, rgba(8,18,13,0.98) 100%)",
+  border: "1px solid rgba(134,239,172,0.18)",
+  boxShadow:
+    "0 22px 54px rgba(0,0,0,0.42), 0 0 0 1px rgba(255,255,255,0.03)",
 };
 
 const lightboxImageStyle: React.CSSProperties = {
   width: "100%",
-  height: "auto",
-  maxHeight: "72vh",
-  objectFit: "contain",
+  height: "100%",
+  objectFit: "cover",
   objectPosition: "center top",
   display: "block",
 };
