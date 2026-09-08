@@ -1552,7 +1552,7 @@ function ScreenshotCard({
           <div style={phoneFrameInnerStyle}>
             <div style={phoneNotchStyle} />
             <div style={screenshotRealWrapStyle}>
-              <img src={fileName} alt={title} style={screenshotImageStyle} />
+              <img src={fileName} alt={title} style={screenshotImageStyle} loading="lazy" decoding="async" draggable={false} />
             </div>
           </div>
         </div>
@@ -1645,7 +1645,7 @@ function Lightbox({
 
         <div style={lightboxContentStyle}>
           <div style={lightboxPhoneWrapStyle}>
-            <img src={item.fileName} alt={item.title} style={lightboxImageStyle} />
+            <img src={item.fileName} alt={item.title} style={lightboxImageStyle} decoding="async" draggable={false} />
           </div>
 
           <div style={lightboxSwipeHintStyle}>{labels.swipeHint}</div>
@@ -2023,7 +2023,7 @@ const screenshotButtonStyle: React.CSSProperties = {
 
 const phoneFrameOuterStyle: React.CSSProperties = {
   width: "100%",
-  maxWidth: "350px",
+  maxWidth: "320px",
   margin: "0 auto",
   padding: "8px",
   borderRadius: "36px",
@@ -2057,7 +2057,7 @@ const phoneNotchStyle: React.CSSProperties = {
 const screenshotRealWrapStyle: React.CSSProperties = {
   position: "relative",
   width: "100%",
-  aspectRatio: "1080 / 2070",
+  aspectRatio: "1206 / 2622",
   borderRadius: "24px",
   overflow: "hidden",
   background: "#000000",
@@ -2066,7 +2066,7 @@ const screenshotRealWrapStyle: React.CSSProperties = {
 const screenshotImageStyle: React.CSSProperties = {
   width: "100%",
   height: "100%",
-  objectFit: "cover",
+  objectFit: "contain",
   objectPosition: "center top",
   display: "block",
 };
@@ -2359,6 +2359,9 @@ const lightboxShellStyle: React.CSSProperties = {
   position: "relative",
   width: "100%",
   maxWidth: "620px",
+  maxHeight: "calc(100vh - 24px)",
+  overflowY: "auto",
+  overscrollBehavior: "contain",
   touchAction: "pan-y",
 };
 
@@ -2412,7 +2415,7 @@ const lightboxContentStyle: React.CSSProperties = {
 
 const lightboxPhoneWrapStyle: React.CSSProperties = {
   width: "100%",
-  maxWidth: "380px",
+  maxWidth: "360px",
   margin: "0 auto",
   borderRadius: "28px",
   overflow: "hidden",
@@ -2423,6 +2426,9 @@ const lightboxPhoneWrapStyle: React.CSSProperties = {
 const lightboxImageStyle: React.CSSProperties = {
   width: "100%",
   height: "auto",
+  maxHeight: "72vh",
+  objectFit: "contain",
+  objectPosition: "center top",
   display: "block",
 };
 
