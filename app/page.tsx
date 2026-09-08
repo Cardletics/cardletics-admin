@@ -1637,9 +1637,9 @@ function Lightbox({
     <div
       style={{
         ...lightboxOverlayStyle,
-        alignItems: isMobile ? "flex-start" : "center",
-        overflowY: "auto",
-        padding: isMobile ? "12px 8px 28px" : "20px",
+        alignItems: "center",
+        overflow: "hidden",
+        padding: isMobile ? "8px" : "16px",
       }}
       onClick={onClose}
     >
@@ -1647,9 +1647,9 @@ function Lightbox({
         style={{
           ...lightboxShellStyle,
           maxWidth: isMobile ? "100%" : "620px",
-          maxHeight: "none",
-          overflow: "visible",
-          margin: isMobile ? "0 auto" : undefined,
+          maxHeight: isMobile ? "calc(100vh - 16px)" : "calc(100vh - 32px)",
+          overflow: "hidden",
+          margin: "0 auto",
         }}
         onClick={(e) => e.stopPropagation()}
         onTouchStart={handleTouchStart}
@@ -1686,15 +1686,17 @@ function Lightbox({
         <div
           style={{
             ...lightboxContentStyle,
-            padding: isMobile ? "12px 8px 14px" : "18px",
+            padding: isMobile ? "8px 8px 10px" : "14px",
           }}
         >
           <div
             style={{
               ...lightboxPhoneWrapStyle,
-              width: isMobile ? "min(88vw, 390px)" : "min(72vw, 480px)",
-              maxWidth: "none",
+              width: "auto",
+              height: isMobile ? "min(64vh, 560px)" : "min(70vh, 650px)",
+              maxWidth: isMobile ? "76vw" : "48vw",
               aspectRatio: "1206 / 2622",
+              flexShrink: 1,
             }}
           >
             <img
@@ -1710,7 +1712,12 @@ function Lightbox({
 
           <div style={lightboxSwipeHintStyle}>{labels.swipeHint}</div>
 
-          <div style={lightboxTextStyle}>
+          <div
+            style={{
+              ...lightboxTextStyle,
+              marginTop: isMobile ? "7px" : "10px",
+            }}
+          >
             <h3 style={lightboxTitleStyle}>{item.title}</h3>
             <p style={lightboxDescStyle}>{item.text}</p>
 
