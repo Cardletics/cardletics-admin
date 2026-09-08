@@ -1285,7 +1285,7 @@ export default function HomePage() {
           <p style={sectionTextStyle}>{t.whatText}</p>
         </div>
 
-        <div style={{ ...featureGridStyle, gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fit, minmax(300px, 1fr))" }}>
+        <div style={{ ...featureGridStyle, gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fit, minmax(240px, 1fr))" }}>
           {t.features.map((feature) => <FeatureCard key={feature.title} title={feature.title} text={feature.text} />)}
         </div>
       </section>
@@ -1313,7 +1313,14 @@ export default function HomePage() {
 
           <div style={{ ...screensGridStyle, gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fit, minmax(240px, 1fr))" }}>
             {screenshots.map((shot, index) => (
-              <ScreenshotCard key={shot.fileName} title={shot.title} text={shot.text} fileName={shot.fileName} onOpen={() => setSelectedShotIndex(index)} />
+              <ScreenshotCard
+                key={shot.fileName}
+                title={shot.title}
+                text={shot.text}
+                fileName={shot.fileName}
+                isMobile={isMobile}
+                onOpen={() => setSelectedShotIndex(index)}
+              />
             ))}
           </div>
         </div>
@@ -1385,6 +1392,7 @@ export default function HomePage() {
       {selectedShot && selectedShotIndex !== null && (
         <Lightbox
           item={selectedShot}
+          isMobile={isMobile}
           labels={{ close: t.close, prev: t.prev, next: t.next, swipeHint: t.swipeHint }}
           onClose={() => setSelectedShotIndex(null)}
           onPrev={() => setSelectedShotIndex((prev) => {
@@ -1538,21 +1546,37 @@ function ScreenshotCard({
   title,
   text,
   fileName,
+  isMobile,
   onOpen,
 }: {
   title: string;
   text: string;
   fileName: string;
+  isMobile: boolean;
   onOpen: () => void;
 }) {
   return (
     <div style={screenshotCardStyle}>
       <button type="button" onClick={onOpen} style={screenshotButtonStyle}>
-        <div style={phoneFrameOuterStyle}>
+        <div
+          style={{
+            ...phoneFrameOuterStyle,
+            maxWidth: isMobile ? "230px" : "310px",
+          }}
+        >
           <div style={phoneFrameInnerStyle}>
             <div style={phoneNotchStyle} />
             <div style={screenshotRealWrapStyle}>
-              <img src={`${fileName}?v=20260908-3`} alt={title} width={1206} height={2622} style={screenshotImageStyle} loading="lazy" decoding="async" draggable={false} />
+              <img
+                src={`${fileName}?v=iphone-1206x2622`}
+                alt={title}
+                width={1206}
+                height={2622}
+                style={screenshotImageStyle}
+                loading="lazy"
+                decoding="async"
+                draggable={false}
+              />
             </div>
           </div>
         </div>
@@ -1568,12 +1592,14 @@ function ScreenshotCard({
 
 function Lightbox({
   item,
+  isMobile,
   labels,
   onClose,
   onPrev,
   onNext,
 }: {
   item: ScreenshotItem;
+  isMobile: boolean;
   labels: { close: string; prev: string; next: string; swipeHint: string };
   onClose: () => void;
   onPrev: () => void;
@@ -1608,9 +1634,23 @@ function Lightbox({
   }
 
   return (
-    <div style={lightboxOverlayStyle} onClick={onClose}>
+    <div
+      style={{
+        ...lightboxOverlayStyle,
+        alignItems: isMobile ? "flex-start" : "center",
+        overflowY: "auto",
+        padding: isMobile ? "12px 8px 28px" : "20px",
+      }}
+      onClick={onClose}
+    >
       <div
-        style={lightboxShellStyle}
+        style={{
+          ...lightboxShellStyle,
+          maxWidth: isMobile ? "100%" : "620px",
+          maxHeight: "none",
+          overflow: "visible",
+          margin: isMobile ? "0 auto" : undefined,
+        }}
         onClick={(e) => e.stopPropagation()}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
@@ -1643,9 +1683,29 @@ function Lightbox({
           ›
         </button>
 
-        <div style={lightboxContentStyle}>
-          <div style={lightboxPhoneWrapStyle}>
-            <img src={`${item.fileName}?v=20260908-3`} alt={item.title} width={1206} height={2622} style={lightboxImageStyle} decoding="async" draggable={false} />
+        <div
+          style={{
+            ...lightboxContentStyle,
+            padding: isMobile ? "12px 8px 14px" : "18px",
+          }}
+        >
+          <div
+            style={{
+              ...lightboxPhoneWrapStyle,
+              width: isMobile ? "min(88vw, 390px)" : "min(72vw, 480px)",
+              maxWidth: "none",
+              aspectRatio: "1206 / 2622",
+            }}
+          >
+            <img
+              src={`${item.fileName}?v=iphone-1206x2622`}
+              alt={item.title}
+              width={1206}
+              height={2622}
+              style={lightboxImageStyle}
+              decoding="async"
+              draggable={false}
+            />
           </div>
 
           <div style={lightboxSwipeHintStyle}>{labels.swipeHint}</div>
@@ -2023,7 +2083,7 @@ const screenshotButtonStyle: React.CSSProperties = {
 
 const phoneFrameOuterStyle: React.CSSProperties = {
   width: "100%",
-  maxWidth: "380px",
+  maxWidth: "350px",
   margin: "0 auto",
   padding: "8px",
   borderRadius: "36px",
@@ -2359,9 +2419,6 @@ const lightboxShellStyle: React.CSSProperties = {
   position: "relative",
   width: "100%",
   maxWidth: "620px",
-  maxHeight: "calc(100vh - 24px)",
-  overflowY: "auto",
-  overscrollBehavior: "contain",
   touchAction: "pan-y",
 };
 
@@ -2414,16 +2471,14 @@ const lightboxContentStyle: React.CSSProperties = {
 };
 
 const lightboxPhoneWrapStyle: React.CSSProperties = {
-  width: "min(92vw, 560px)",
-  aspectRatio: "1206 / 2622",
+  width: "100%",
+  maxWidth: "380px",
   margin: "0 auto",
   borderRadius: "28px",
   overflow: "hidden",
-  background:
-    "linear-gradient(180deg, rgba(24,46,35,0.96) 0%, rgba(8,18,13,0.98) 100%)",
-  border: "1px solid rgba(134,239,172,0.18)",
-  boxShadow:
-    "0 22px 54px rgba(0,0,0,0.42), 0 0 0 1px rgba(255,255,255,0.03)",
+  background: "#101714",
+  border: "1px solid rgba(134,239,172,0.14)",
+  boxShadow: "0 18px 40px rgba(0,0,0,0.35)",
 };
 
 const lightboxImageStyle: React.CSSProperties = {
