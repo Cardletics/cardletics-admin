@@ -9,12 +9,12 @@ export default function PrivacyPage() {
           <span style={eyebrowStyle}>Datenschutz</span>
           <h1 style={titleStyle}>Datenschutzerklärung</h1>
           <p style={subtitleStyle}>Für die Website und die App Cardletics.</p>
-          <p style={metaStyle}>Stand: 29.08.2026</p>
+          <p style={metaStyle}>Stand: 08.09.2026</p>
           <div style={heroActionsStyle}>
             <Link href="/" style={backButtonStyle}>
               Zurück zur Startseite
             </Link>
-            <Link href="/konto-loeschen" style={secondaryButtonStyle}>
+            <Link href="/delete" style={secondaryButtonStyle}>
               Konto löschen
             </Link>
           </div>
@@ -36,7 +36,7 @@ export default function PrivacyPage() {
             <br />
             Deutschland
             <br />
-            E-Mail: info@cardletics.com
+            E-Mail: datenschutz@cardletics.com
           </p>
         </Section>
 
@@ -117,7 +117,7 @@ export default function PrivacyPage() {
             </li>
             <li>
               <strong>Abonnement- und Kaufdaten:</strong> Abo-Modell
-              (Kostenlos, Basic, Pro, Elite, Master), Status, Laufzeit,
+              (Free, Club oder Master), Status, Laufzeit,
               Kaufhistorien, Coin-Käufe, Coin-Verbrauch und technische
               Bestätigungsdaten der jeweiligen App-Store-Plattform.
             </li>
@@ -291,15 +291,14 @@ export default function PrivacyPage() {
           </ul>
           <p>
             Die Umgebung-/Radar-Funktion ist optional. Du kannst die Sichtbarkeit
-            sowie den Standortzugriff jederzeit deaktivieren. Bei deaktivierter
-            Radar-Sichtbarkeit wirst du anderen Nutzern nicht mehr über diese
-            Funktion angezeigt und Cardletics verwendet deinen Standort nicht
-            mehr für die aktive Umgebungssichtbarkeit. Eine Deaktivierung der
-            Radar-Funktion bewirkt jedoch nicht automatisch die Löschung bereits
-            im Cardletics-System gespeicherter Standortwerte. Diese können bis zu
-            ihrer Überschreibung, Löschung oder bis zur Löschung des
-            Nutzerkontos gespeichert bleiben, soweit sie technisch oder für
-            Sicherheits- und Nachweiszwecke noch erforderlich sind. Cardletics
+            sowie den Standortzugriff jederzeit deaktivieren. Beim Deaktivieren
+            des Radars werden die Radar-Sichtbarkeit beendet und die in der
+            aktiven Cardletics-Präsenzzeile gespeicherten präzisen Koordinaten
+            sowie der Zeitpunkt der Standortaktualisierung entfernt. Cardletics
+            verwendet den Standort dann nicht mehr für die aktive
+            Umgebungssichtbarkeit. Technische Sicherheits- oder Serverprotokolle
+            der eingesetzten Infrastruktur können unabhängig davon nach den
+            jeweiligen technischen Speicherfristen bestehen bleiben. Cardletics
             veröffentlicht keine genaue Adresse als öffentliches Nutzerprofil.
           </p>
         </Section>
@@ -369,10 +368,8 @@ export default function PrivacyPage() {
           </p>
           <p>Folgende Abo-Modelle können verarbeitet werden:</p>
           <ul style={listStyle}>
-            <li>Kostenlos</li>
-            <li>Basic</li>
-            <li>Pro</li>
-            <li>Elite</li>
+            <li>Free</li>
+            <li>Club</li>
             <li>Master</li>
           </ul>
           <p>
@@ -402,8 +399,9 @@ export default function PrivacyPage() {
             <strong> support@cardletics.com</strong>.
           </p>
           <p>
-            Für Anfragen zur Löschung deines Nutzerkontos kannst du außerdem
-            <strong> delete@cardletics.com</strong> verwenden.
+            Für Anfragen zur Löschung deines Nutzerkontos kannst du die Seite
+            <Link href="/delete"> /delete</Link> nutzen oder dich an
+            <strong> support@cardletics.com</strong> wenden.
           </p>
         </Section>
 
@@ -418,6 +416,20 @@ export default function PrivacyPage() {
             Über Supabase können insbesondere Nutzerkonten, Datenbankeinträge,
             Chat- und Gruppendaten, Standort-/Präsenzdaten, Bilder und sonstige
             Dateien in Storage-Systemen verarbeitet werden.
+          </p>
+          <p>
+            Für E-Mail-Postfächer und die Bearbeitung eingehender Nachrichten
+            nutzen wir <strong>IONOS</strong>. Für transaktionale System-E-Mails,
+            insbesondere Account- und Passwort-Reset-Nachrichten, nutzen wir
+            <strong>Resend</strong>. Dabei können insbesondere E-Mail-Adresse,
+            Nachrichteninhalt, Betreff, Versandzeitpunkt und technische
+            Zustellinformationen verarbeitet werden.
+          </p>
+          <p>
+            Auf der Website werden derzeit Länderflaggen im Sprachmenü über
+            <strong>FlagCDN (flagcdn.com)</strong> geladen. Beim Abruf dieser
+            Grafiken kann technisch insbesondere die IP-Adresse des aufrufenden
+            Geräts an den Anbieter übertragen werden.
           </p>
           <p>
             Im Rahmen des technischen Betriebs können Server- und
@@ -440,6 +452,9 @@ export default function PrivacyPage() {
               Supabase als Backend-, Datenbank-, Realtime- und
               Storage-Dienstleister
             </li>
+            <li>IONOS für E-Mail-Postfächer und E-Mail-Kommunikation</li>
+            <li>Resend für transaktionale Account- und Passwort-E-Mails</li>
+            <li>FlagCDN für die Bereitstellung von Länderflaggen im Sprachmenü der Website</li>
             <li>Apple App Store für iOS-In-App-Käufe und Abonnements</li>
             <li>Google Play Billing für Android-In-App-Käufe und Abonnements</li>
             <li>
@@ -509,12 +524,12 @@ export default function PrivacyPage() {
           </p>
           <p>
             Standortdaten der Umgebung-/Radar-Funktion werden verarbeitet, soweit
-            dies für die Funktion erforderlich ist. Eine Deaktivierung der
-            Radar-Sichtbarkeit beendet nicht automatisch die Speicherung bereits
-            vorhandener Standortwerte. Diese werden gelöscht, überschrieben oder
-            spätestens im Zusammenhang mit der Kontolöschung entfernt, soweit
-            keine anderweitige Rechtsgrundlage oder gesetzliche Pflicht eine
-            weitere Speicherung erfordert.
+            dies für die Funktion erforderlich ist. Beim Deaktivieren des Radars
+            werden die präzisen Koordinaten und der Zeitpunkt der
+            Standortaktualisierung aus der aktiven Cardletics-Präsenzzeile
+            entfernt. Unabhängig davon können technisch notwendige Server- oder
+            Sicherheitsprotokolle nach den Speicherfristen der jeweils
+            eingesetzten Infrastruktur- und Plattformanbieter bestehen bleiben.
           </p>
           <p>
             Nach Widerruf der Einwilligung greift Cardletics nicht mehr auf neue
@@ -558,10 +573,15 @@ export default function PrivacyPage() {
         <Section title="18. Cookies und ähnliche Technologien">
           <p>
             Derzeit setzen wir nach unserer aktuellen Planung keine Analyse-
-            oder Marketing-Tools auf der Website ein. Soweit technisch
-            notwendige Cookies oder vergleichbare Technologien verwendet werden,
-            erfolgt dies zur Bereitstellung, Sicherheit und Funktionalität der
-            Website.
+            oder Marketing-Tools auf der Website ein. Die auf der Website
+            gewählte Sprache kann lokal im Browser über Local Storage gespeichert
+            werden, damit die Auswahl beim nächsten Besuch erhalten bleibt. Diese
+            Speicherung dient nicht der Werbung oder dem Nutzertracking.
+          </p>
+          <p>
+            Soweit darüber hinaus technisch notwendige Cookies oder vergleichbare
+            Technologien verwendet werden, erfolgt dies zur Bereitstellung,
+            Sicherheit und Funktionalität der Website.
           </p>
           <p>
             Sollten künftig zusätzliche Cookies oder vergleichbare Technologien
@@ -606,8 +626,8 @@ export default function PrivacyPage() {
           </ul>
           <p>
             Für die Löschung deines Nutzerkontos kannst du die Seite
-            <Link href="/konto-loeschen"> /konto-loeschen</Link> nutzen oder uns
-            unter <strong>delete@cardletics.com</strong> kontaktieren.
+            <Link href="/delete"> /delete</Link> nutzen oder dich an
+            <strong> support@cardletics.com</strong> wenden.
           </p>
           <p>
             Außerdem hast du das Recht, dich bei einer zuständigen
@@ -646,7 +666,7 @@ export default function PrivacyPage() {
             <br />
             Deutschland
             <br />
-            E-Mail: info@cardletics.com
+            E-Mail: datenschutz@cardletics.com
           </p>
         </Section>
       </div>
@@ -683,7 +703,7 @@ function PageFooter() {
         <Link href="/datenschutz" style={footerLinkStyle}>Datenschutz</Link>
         <Link href="/agb" style={footerLinkStyle}>AGB</Link>
         <Link href="/kontakt" style={footerLinkStyle}>Kontakt</Link>
-        <Link href="/konto-loeschen" style={footerLinkStyle}>Konto löschen</Link>
+        <Link href="/delete" style={footerLinkStyle}>Konto löschen</Link>
       </nav>
     </footer>
   );

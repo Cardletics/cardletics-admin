@@ -645,199 +645,421 @@ const translations: Record<LanguageKey, Translation> = {
 
 type RoadmapItem = {
   period: string;
-  status: string;
   title: string;
   text: string;
-  progress: number;
 };
 
 type RoadmapCopy = {
   eyebrow: string;
   title: string;
   text: string;
-  progressLabel: string;
   items: RoadmapItem[];
 };
 
 const roadmapTranslations: Record<LanguageKey, RoadmapCopy> = {
   de: {
     eyebrow: "Roadmap & Updates",
-    title: "Was als Nächstes kommt",
-    text: "Cardletics steht kurz vor dem ersten öffentlichen Release. Hier siehst du, woran wir gerade arbeiten und was danach geplant ist.",
-    progressLabel: "Fortschritt",
+    title: "Die nächsten Kapitel von Cardletics",
+    text: "Die Roadmap zeigt die nächsten Entwicklungsschritte rund um den Release im September 2026 und die darauf folgenden Ausbaustufen.",
     items: [
-      { period: "September 2026", status: "Aktuell", title: "Release vorbereiten", text: "Homepage, Rechtliches und E-Mail-System sind vorbereitet. Jetzt folgen Store-Screenshots, letzte Angaben und der finale Release-Check.", progress: 85 },
-      { period: "September / Oktober 2026", status: "Als Nächstes", title: "Store-Review & Launch", text: "Finale Android- und iOS-Builds werden eingereicht. Nach der Freigabe geht Cardletics im App Store und bei Google Play live.", progress: 30 },
-      { period: "November – Dezember 2026", status: "Danach", title: "Community & neue Inhalte", text: "Erste Events, neue Karten und Sets, Affiliate-Ausbau und Verbesserungen anhand des Nutzerfeedbacks.", progress: 10 },
-      { period: "Q1 2027", status: "Geplant", title: "Wachstum & neue Features", text: "Mehr Community-Funktionen, neue Spielideen und die nächste Entwicklungsstufe von Cardletics.", progress: 5 },
+      {
+        period: "September 2026",
+        title: "Cardletics Release",
+        text: "Cardletics startet für iOS und Android mit den Kernbereichen Bewegung, tägliche Karten, Sammlungen, Teams, Kämpfe, Awards, Freunde, Umgebung und internem Marktplatz.",
+      },
+      {
+        period: "Q4 2026",
+        title: "Prägungen & Karten-Upgrades",
+        text: "Tagesprägungen machen Karten zu Erinnerungen an echte Aktivitätstage. Geplant sind besondere Siegel, ein Prägekalender, der Prägepass sowie Fusionen und Upgrades, mit denen doppelte Karten sinnvoll weiterentwickelt werden können.",
+      },
+      {
+        period: "Q1 2027",
+        title: "Gruppen, Ligen & Challenges",
+        text: "Cardletics wird sozialer: Gruppen, Gruppen-Challenges, Gruppen-XP und gemeinsame Belohnungen erweitern das Spiel. Parallel entsteht eine Solo-Liga, damit zentrale Fortschritte auch ohne Gruppe erreichbar bleiben.",
+      },
+      {
+        period: "2027 & darüber hinaus",
+        title: "Seasons, Museum & neue Sammlerziele",
+        text: "Weitere Sets und Events, Museum und Vitrine, Siegeljagd, Season Pass und zusätzliche Kartenvarianten erweitern Cardletics langfristig.",
+      },
     ],
   },
   en: {
     eyebrow: "Roadmap & Updates",
-    title: "What comes next",
-    text: "Cardletics is close to its first public release. Here is what we are working on now and what is planned next.",
-    progressLabel: "Progress",
+    title: "The next chapters of Cardletics",
+    text: "This roadmap shows the next development steps around the September 2026 release and the expansions that follow.",
     items: [
-      { period: "September 2026", status: "Current", title: "Prepare the release", text: "The website, legal pages and email system are prepared. Next are store screenshots, final listing details and the last release checks.", progress: 85 },
-      { period: "September / October 2026", status: "Up next", title: "Store review & launch", text: "Final Android and iOS builds will be submitted. After approval, Cardletics will go live on the App Store and Google Play.", progress: 30 },
-      { period: "November – December 2026", status: "After launch", title: "Community & new content", text: "First events, new cards and sets, affiliate expansion and improvements based on user feedback.", progress: 10 },
-      { period: "Q1 2027", status: "Planned", title: "Growth & new features", text: "More community features, new gameplay ideas and the next stage of Cardletics development.", progress: 5 },
+      {
+        period: "September 2026",
+        title: "Cardletics Release",
+        text: "Cardletics launches on iOS and Android with movement, daily cards, collections, teams, battles, awards, friends, nearby features and the internal marketplace.",
+      },
+      {
+        period: "Q4 2026",
+        title: "Imprints & card upgrades",
+        text: "Daily imprints turn cards into memories of real activity days. Planned features include special seals, an imprint calendar, the imprint pass, plus fusions and upgrades that give duplicate cards a meaningful purpose.",
+      },
+      {
+        period: "Q1 2027",
+        title: "Groups, leagues & challenges",
+        text: "Cardletics becomes more social with groups, group challenges, group XP and shared rewards. A solo league will be developed in parallel so core progress remains accessible without joining a group.",
+      },
+      {
+        period: "2027 & beyond",
+        title: "Seasons, museum & new collection goals",
+        text: "More sets and events, the museum and showcase, seal hunting, a Season Pass and additional card variants will expand Cardletics over time.",
+      },
     ],
   },
   es: {
     eyebrow: "Hoja de ruta y novedades",
-    title: "Lo que viene después",
-    text: "Cardletics está cerca de su primer lanzamiento público. Aquí puedes ver en qué trabajamos ahora y qué está previsto después.",
-    progressLabel: "Progreso",
+    title: "Los próximos capítulos de Cardletics",
+    text: "Esta hoja de ruta muestra los próximos pasos de desarrollo en torno al lanzamiento de septiembre de 2026 y las ampliaciones posteriores.",
     items: [
-      { period: "Septiembre de 2026", status: "Actual", title: "Preparar el lanzamiento", text: "La web, los textos legales y el sistema de correo están preparados. Ahora siguen las capturas de las tiendas, los últimos datos y la revisión final.", progress: 85 },
-      { period: "Septiembre / octubre de 2026", status: "A continuación", title: "Revisión de tiendas y lanzamiento", text: "Se enviarán las versiones finales de Android e iOS. Tras la aprobación, Cardletics estará disponible en App Store y Google Play.", progress: 30 },
-      { period: "Noviembre – diciembre de 2026", status: "Después", title: "Comunidad y nuevo contenido", text: "Primeros eventos, nuevas cartas y sets, ampliación del programa de afiliados y mejoras según los comentarios de los usuarios.", progress: 10 },
-      { period: "T1 2027", status: "Planificado", title: "Crecimiento y nuevas funciones", text: "Más funciones de comunidad, nuevas ideas de juego y la siguiente etapa de desarrollo de Cardletics.", progress: 5 },
+      {
+        period: "Septiembre de 2026",
+        title: "Lanzamiento de Cardletics",
+        text: "Cardletics llega a iOS y Android con movimiento, cartas diarias, colecciones, equipos, combates, premios, amigos, funciones cercanas y el mercado interno.",
+      },
+      {
+        period: "T4 2026",
+        title: "Marcas y mejoras de cartas",
+        text: "Las marcas diarias convierten las cartas en recuerdos de días de actividad reales. Están previstos sellos especiales, un calendario de marcas, el pase de marcas, además de fusiones y mejoras para dar un uso útil a las cartas duplicadas.",
+      },
+      {
+        period: "T1 2027",
+        title: "Grupos, ligas y desafíos",
+        text: "Cardletics será más social con grupos, desafíos de grupo, XP de grupo y recompensas compartidas. En paralelo habrá una liga individual para que el progreso principal también sea posible sin grupo.",
+      },
+      {
+        period: "2027 y más adelante",
+        title: "Temporadas, museo y nuevos objetivos",
+        text: "Más sets y eventos, museo y vitrina, caza de sellos, Season Pass y nuevas variantes de cartas ampliarán Cardletics a largo plazo.",
+      },
     ],
   },
   fr: {
     eyebrow: "Feuille de route & nouveautés",
-    title: "La suite de Cardletics",
-    text: "Cardletics approche de sa première sortie publique. Voici ce sur quoi nous travaillons actuellement et ce qui est prévu ensuite.",
-    progressLabel: "Progression",
+    title: "Les prochains chapitres de Cardletics",
+    text: "Cette feuille de route présente les prochaines étapes de développement autour de la sortie de septembre 2026 et des extensions qui suivront.",
     items: [
-      { period: "Septembre 2026", status: "En cours", title: "Préparer la sortie", text: "Le site, les pages juridiques et le système d’e-mail sont prêts. Restent les captures des stores, les dernières informations et les contrôles finaux.", progress: 85 },
-      { period: "Septembre / octobre 2026", status: "Prochaine étape", title: "Validation des stores & lancement", text: "Les versions finales Android et iOS seront soumises. Après validation, Cardletics sera disponible sur l’App Store et Google Play.", progress: 30 },
-      { period: "Novembre – décembre 2026", status: "Ensuite", title: "Communauté & nouveaux contenus", text: "Premiers événements, nouvelles cartes et collections, développement de l’affiliation et améliorations basées sur les retours utilisateurs.", progress: 10 },
-      { period: "T1 2027", status: "Prévu", title: "Croissance & nouvelles fonctions", text: "Davantage de fonctions communautaires, de nouvelles idées de gameplay et la prochaine étape du développement de Cardletics.", progress: 5 },
+      {
+        period: "Septembre 2026",
+        title: "Sortie de Cardletics",
+        text: "Cardletics arrive sur iOS et Android avec le mouvement, les cartes quotidiennes, les collections, les équipes, les combats, les récompenses, les amis, les fonctions de proximité et le marché interne.",
+      },
+      {
+        period: "T4 2026",
+        title: "Empreintes & améliorations de cartes",
+        text: "Les empreintes quotidiennes transforment les cartes en souvenirs de vraies journées d’activité. Sont prévus des sceaux spéciaux, un calendrier d’empreintes, le passe d’empreintes ainsi que des fusions et améliorations pour donner une utilité aux cartes en double.",
+      },
+      {
+        period: "T1 2027",
+        title: "Groupes, ligues & défis",
+        text: "Cardletics devient plus social avec des groupes, défis de groupe, XP de groupe et récompenses communes. Une ligue solo sera développée en parallèle afin que la progression essentielle reste accessible sans groupe.",
+      },
+      {
+        period: "2027 et au-delà",
+        title: "Saisons, musée & nouveaux objectifs",
+        text: "De nouveaux sets et événements, le musée et la vitrine, la chasse aux sceaux, le Season Pass et d’autres variantes de cartes enrichiront Cardletics sur le long terme.",
+      },
     ],
   },
   pt: {
     eyebrow: "Roadmap & novidades",
-    title: "O que vem a seguir",
-    text: "Cardletics está perto do primeiro lançamento público. Aqui você vê no que estamos trabalhando agora e o que está planejado para depois.",
-    progressLabel: "Progresso",
+    title: "Os próximos capítulos do Cardletics",
+    text: "Este roadmap mostra os próximos passos de desenvolvimento em torno do lançamento de setembro de 2026 e das expansões seguintes.",
     items: [
-      { period: "Setembro de 2026", status: "Atual", title: "Preparar o lançamento", text: "Site, páginas legais e sistema de e-mail estão preparados. Agora vêm as capturas das lojas, os últimos dados e a revisão final do lançamento.", progress: 85 },
-      { period: "Setembro / outubro de 2026", status: "A seguir", title: "Revisão das lojas & lançamento", text: "As versões finais para Android e iOS serão enviadas. Após a aprovação, Cardletics ficará disponível na App Store e no Google Play.", progress: 30 },
-      { period: "Novembro – dezembro de 2026", status: "Depois", title: "Comunidade & novos conteúdos", text: "Primeiros eventos, novas cartas e conjuntos, expansão do programa de afiliados e melhorias com base no feedback dos usuários.", progress: 10 },
-      { period: "1º trimestre de 2027", status: "Planejado", title: "Crescimento & novos recursos", text: "Mais recursos de comunidade, novas ideias de gameplay e a próxima fase de desenvolvimento do Cardletics.", progress: 5 },
+      {
+        period: "Setembro de 2026",
+        title: "Lançamento do Cardletics",
+        text: "Cardletics chega ao iOS e Android com movimento, cartas diárias, coleções, equipas, batalhas, prémios, amigos, funções de proximidade e mercado interno.",
+      },
+      {
+        period: "4.º trimestre de 2026",
+        title: "Gravações & melhorias de cartas",
+        text: "As gravações diárias transformam cartas em memórias de dias reais de atividade. Estão previstos selos especiais, calendário de gravações, passe de gravações, fusões e melhorias para dar utilidade às cartas duplicadas.",
+      },
+      {
+        period: "1.º trimestre de 2027",
+        title: "Grupos, ligas & desafios",
+        text: "Cardletics torna-se mais social com grupos, desafios de grupo, XP de grupo e recompensas partilhadas. Em paralelo será criada uma liga solo para manter o progresso principal acessível sem grupo.",
+      },
+      {
+        period: "2027 e além",
+        title: "Temporadas, museu & novos objetivos",
+        text: "Mais conjuntos e eventos, museu e vitrine, caça a selos, Season Pass e novas variantes de cartas irão expandir Cardletics a longo prazo.",
+      },
     ],
   },
   zh: {
     eyebrow: "路线图与更新",
-    title: "接下来会发生什么",
-    text: "Cardletics 即将迎来首次公开发布。这里展示我们目前正在推进的工作以及接下来的计划。",
-    progressLabel: "进度",
+    title: "Cardletics 的下一阶段",
+    text: "这份路线图展示了围绕 2026 年 9 月发布以及后续扩展的主要开发步骤。",
     items: [
-      { period: "2026 年 9 月", status: "当前", title: "准备发布", text: "官网、法律页面和邮件系统已准备完成。接下来将完成商店截图、最后的上架信息和发布前检查。", progress: 85 },
-      { period: "2026 年 9 月 / 10 月", status: "下一步", title: "商店审核与上线", text: "最终 Android 和 iOS 版本将提交审核。通过后，Cardletics 将在 App Store 和 Google Play 正式上线。", progress: 30 },
-      { period: "2026 年 11 月 – 12 月", status: "随后", title: "社区与新内容", text: "推出首批活动、新卡牌与系列，扩展联盟计划，并根据用户反馈持续改进。", progress: 10 },
-      { period: "2027 年第一季度", status: "计划中", title: "增长与新功能", text: "加入更多社区功能、新的玩法创意，并进入 Cardletics 的下一阶段开发。", progress: 5 },
+      {
+        period: "2026 年 9 月",
+        title: "Cardletics 正式发布",
+        text: "Cardletics 将登陆 iOS 和 Android，核心内容包括运动、每日卡牌、收藏、队伍、对战、奖励、好友、附近功能和内部市场。",
+      },
+      {
+        period: "2026 年第四季度",
+        title: "每日印记与卡牌升级",
+        text: "每日印记让卡牌成为真实运动日的纪念。计划加入特殊印章、印记日历、印记通行证，以及融合和升级系统，让重复卡牌拥有长期用途。",
+      },
+      {
+        period: "2027 年第一季度",
+        title: "群组、联赛与挑战",
+        text: "Cardletics 将加入群组、群组挑战、群组 XP 和共享奖励。同时会推出单人联赛，让不加入群组的玩家也能获得核心进度。",
+      },
+      {
+        period: "2027 年及以后",
+        title: "赛季、博物馆与新收藏目标",
+        text: "更多卡组与活动、博物馆与展示柜、印章收集、Season Pass 和更多卡牌变体将持续扩展 Cardletics。",
+      },
     ],
   },
   hi: {
     eyebrow: "रोडमैप और अपडेट",
-    title: "आगे क्या आने वाला है",
-    text: "Cardletics अपने पहले सार्वजनिक रिलीज़ के करीब है। यहाँ आप देख सकते हैं कि अभी किस पर काम हो रहा है और आगे क्या योजना है।",
-    progressLabel: "प्रगति",
+    title: "Cardletics के अगले अध्याय",
+    text: "यह रोडमैप सितंबर 2026 के रिलीज़ और उसके बाद आने वाले विस्तारों के प्रमुख विकास चरण दिखाता है।",
     items: [
-      { period: "सितंबर 2026", status: "अभी", title: "रिलीज़ की तैयारी", text: "वेबसाइट, कानूनी पेज और ई-मेल सिस्टम तैयार हैं। अब स्टोर स्क्रीनशॉट, अंतिम लिस्टिंग विवरण और रिलीज़ से पहले की अंतिम जाँच बाकी है।", progress: 85 },
-      { period: "सितंबर / अक्टूबर 2026", status: "अगला", title: "स्टोर रिव्यू और लॉन्च", text: "Android और iOS के अंतिम बिल्ड सबमिट किए जाएंगे। मंजूरी के बाद Cardletics App Store और Google Play पर लाइव होगा।", progress: 30 },
-      { period: "नवंबर – दिसंबर 2026", status: "उसके बाद", title: "कम्युनिटी और नया कंटेंट", text: "पहले इवेंट, नए कार्ड और सेट, अफ़िलिएट विस्तार और यूज़र फ़ीडबैक के आधार पर सुधार।", progress: 10 },
-      { period: "Q1 2027", status: "योजना", title: "विकास और नई सुविधाएँ", text: "अधिक कम्युनिटी फीचर, नए गेमप्ले विचार और Cardletics के विकास का अगला चरण।", progress: 5 },
+      {
+        period: "सितंबर 2026",
+        title: "Cardletics रिलीज़",
+        text: "Cardletics iOS और Android पर मूवमेंट, दैनिक कार्ड, कलेक्शन, टीम, बैटल, अवॉर्ड, दोस्त, नज़दीकी फीचर और आंतरिक मार्केटप्लेस के साथ लॉन्च होगा।",
+      },
+      {
+        period: "Q4 2026",
+        title: "इम्प्रिंट और कार्ड अपग्रेड",
+        text: "दैनिक इम्प्रिंट कार्डों को वास्तविक सक्रिय दिनों की याद में बदलेंगे। विशेष सील, इम्प्रिंट कैलेंडर, इम्प्रिंट पास और डुप्लिकेट कार्ड के लिए फ्यूज़न व अपग्रेड की योजना है।",
+      },
+      {
+        period: "Q1 2027",
+        title: "ग्रुप, लीग और चैलेंज",
+        text: "ग्रुप, ग्रुप चैलेंज, ग्रुप XP और साझा इनाम Cardletics को अधिक सामाजिक बनाएंगे। साथ ही एक सोलो लीग बनेगी ताकि मुख्य प्रगति बिना ग्रुप के भी संभव रहे।",
+      },
+      {
+        period: "2027 और आगे",
+        title: "सीज़न, म्यूज़ियम और नए कलेक्शन लक्ष्य",
+        text: "अधिक सेट और इवेंट, म्यूज़ियम और शोकेस, सील हंट, Season Pass और अतिरिक्त कार्ड वेरिएंट Cardletics को आगे बढ़ाएंगे।",
+      },
     ],
   },
   ar: {
     eyebrow: "خارطة الطريق والتحديثات",
-    title: "ما الذي سيأتي بعد ذلك",
-    text: "Cardletics يقترب من أول إطلاق عام. هنا يمكنك رؤية ما نعمل عليه الآن وما هو مخطط له بعد ذلك.",
-    progressLabel: "التقدم",
+    title: "الفصول القادمة من Cardletics",
+    text: "تعرض هذه الخارطة خطوات التطوير التالية حول إصدار سبتمبر 2026 والتوسعات التي ستأتي بعده.",
     items: [
-      { period: "سبتمبر 2026", status: "حاليًا", title: "الاستعداد للإطلاق", text: "تم تجهيز الموقع والصفحات القانونية ونظام البريد الإلكتروني. الخطوة التالية هي صور المتاجر والبيانات النهائية وفحوصات الإصدار الأخيرة.", progress: 85 },
-      { period: "سبتمبر / أكتوبر 2026", status: "التالي", title: "مراجعة المتاجر والإطلاق", text: "سيتم إرسال الإصدارات النهائية لنظامي Android وiOS. بعد الموافقة، سيتم إطلاق Cardletics على App Store وGoogle Play.", progress: 30 },
-      { period: "نوفمبر – ديسمبر 2026", status: "بعد ذلك", title: "المجتمع ومحتوى جديد", text: "أولى الفعاليات وبطاقات ومجموعات جديدة وتوسيع برنامج الشراكة وتحسينات بناءً على ملاحظات المستخدمين.", progress: 10 },
-      { period: "الربع الأول 2027", status: "مخطط", title: "النمو وميزات جديدة", text: "مزيد من ميزات المجتمع وأفكار لعب جديدة والمرحلة التالية من تطوير Cardletics.", progress: 5 },
+      {
+        period: "سبتمبر 2026",
+        title: "إطلاق Cardletics",
+        text: "يصل Cardletics إلى iOS وAndroid مع الحركة والبطاقات اليومية والمجموعات والفرق والمعارك والجوائز والأصدقاء وميزات القرب والسوق الداخلي.",
+      },
+      {
+        period: "الربع الرابع 2026",
+        title: "الأختام وترقية البطاقات",
+        text: "تحول الأختام اليومية البطاقات إلى ذكريات لأيام النشاط الحقيقية. تشمل الخطط أختامًا خاصة وتقويم الأختام وبطاقة الأختام وعمليات الدمج والترقية للاستفادة من البطاقات المكررة.",
+      },
+      {
+        period: "الربع الأول 2027",
+        title: "المجموعات والدوريات والتحديات",
+        text: "تصبح Cardletics أكثر اجتماعية من خلال المجموعات وتحديات المجموعات وXP الجماعي والمكافآت المشتركة. وسيتم تطوير دوري فردي بالتوازي حتى يبقى التقدم الأساسي متاحًا بدون مجموعة.",
+      },
+      {
+        period: "2027 وما بعده",
+        title: "المواسم والمتحف وأهداف جمع جديدة",
+        text: "مجموعات وأحداث إضافية ومتحف وواجهة عرض ومطاردة الأختام وSeason Pass ونسخ بطاقات جديدة ستوسع Cardletics على المدى الطويل.",
+      },
     ],
   },
   bn: {
     eyebrow: "রোডম্যাপ ও আপডেট",
-    title: "এরপর কী আসছে",
-    text: "Cardletics প্রথম পাবলিক রিলিজের খুব কাছাকাছি। এখন কী নিয়ে কাজ চলছে এবং এরপর কী পরিকল্পনা আছে তা এখানে দেখা যাবে।",
-    progressLabel: "অগ্রগতি",
+    title: "Cardletics-এর পরবর্তী অধ্যায়",
+    text: "এই রোডম্যাপে সেপ্টেম্বর ২০২৬-এর রিলিজ এবং তার পরের সম্প্রসারণগুলোর প্রধান উন্নয়ন ধাপ দেখানো হয়েছে।",
     items: [
-      { period: "সেপ্টেম্বর 2026", status: "বর্তমান", title: "রিলিজ প্রস্তুতি", text: "ওয়েবসাইট, আইনি পেজ এবং ই-মেইল সিস্টেম প্রস্তুত। এখন স্টোর স্ক্রিনশট, শেষ তথ্য এবং চূড়ান্ত রিলিজ চেক বাকি।", progress: 85 },
-      { period: "সেপ্টেম্বর / অক্টোবর 2026", status: "পরবর্তী", title: "স্টোর রিভিউ ও লঞ্চ", text: "চূড়ান্ত Android ও iOS বিল্ড জমা দেওয়া হবে। অনুমোদনের পর Cardletics App Store ও Google Play-এ লাইভ হবে।", progress: 30 },
-      { period: "নভেম্বর – ডিসেম্বর 2026", status: "তারপর", title: "কমিউনিটি ও নতুন কনটেন্ট", text: "প্রথম ইভেন্ট, নতুন কার্ড ও সেট, অ্যাফিলিয়েট সম্প্রসারণ এবং ব্যবহারকারীর মতামতের ভিত্তিতে উন্নতি।", progress: 10 },
-      { period: "Q1 2027", status: "পরিকল্পিত", title: "বৃদ্ধি ও নতুন ফিচার", text: "আরও কমিউনিটি ফিচার, নতুন গেমপ্লে ধারণা এবং Cardletics উন্নয়নের পরবর্তী ধাপ।", progress: 5 },
+      {
+        period: "সেপ্টেম্বর ২০২৬",
+        title: "Cardletics রিলিজ",
+        text: "Cardletics iOS ও Android-এ মুভমেন্ট, দৈনিক কার্ড, কালেকশন, টিম, ব্যাটল, অ্যাওয়ার্ড, বন্ধু, নিকটবর্তী ফিচার এবং অভ্যন্তরীণ মার্কেটপ্লেস নিয়ে চালু হবে।",
+      },
+      {
+        period: "Q4 2026",
+        title: "ডেইলি ইমপ্রিন্ট ও কার্ড আপগ্রেড",
+        text: "দৈনিক ইমপ্রিন্ট কার্ডকে বাস্তব সক্রিয় দিনের স্মৃতিতে পরিণত করবে। বিশেষ সিল, ইমপ্রিন্ট ক্যালেন্ডার, ইমপ্রিন্ট পাস এবং ডুপ্লিকেট কার্ডের জন্য ফিউশন ও আপগ্রেড পরিকল্পিত।",
+      },
+      {
+        period: "Q1 2027",
+        title: "গ্রুপ, লিগ ও চ্যালেঞ্জ",
+        text: "গ্রুপ, গ্রুপ চ্যালেঞ্জ, গ্রুপ XP এবং যৌথ পুরস্কার Cardletics-কে আরও সামাজিক করবে। একই সঙ্গে একটি সলো লিগ থাকবে, যাতে গ্রুপ ছাড়াও মূল অগ্রগতি সম্ভব হয়।",
+      },
+      {
+        period: "২০২৭ এবং পরবর্তী সময়",
+        title: "সিজন, মিউজিয়াম ও নতুন সংগ্রহ লক্ষ্য",
+        text: "আরও সেট ও ইভেন্ট, মিউজিয়াম ও শোকেস, সিল হান্ট, Season Pass এবং নতুন কার্ড ভ্যারিয়েন্ট Cardletics-কে দীর্ঘমেয়াদে সম্প্রসারিত করবে।",
+      },
     ],
   },
   ru: {
     eyebrow: "Дорожная карта и обновления",
-    title: "Что будет дальше",
-    text: "Cardletics приближается к первому публичному релизу. Здесь показано, над чем мы работаем сейчас и что запланировано дальше.",
-    progressLabel: "Прогресс",
+    title: "Следующие главы Cardletics",
+    text: "Эта дорожная карта показывает основные этапы развития вокруг релиза в сентябре 2026 года и последующих расширений.",
     items: [
-      { period: "Сентябрь 2026", status: "Сейчас", title: "Подготовка релиза", text: "Сайт, юридические страницы и почтовая система готовы. Далее — скриншоты для магазинов, последние данные и финальная проверка релиза.", progress: 85 },
-      { period: "Сентябрь / октябрь 2026", status: "Следующий шаг", title: "Проверка магазинов и запуск", text: "Финальные сборки Android и iOS будут отправлены на проверку. После одобрения Cardletics выйдет в App Store и Google Play.", progress: 30 },
-      { period: "Ноябрь – декабрь 2026", status: "После запуска", title: "Сообщество и новый контент", text: "Первые события, новые карты и наборы, развитие партнёрской программы и улучшения по отзывам пользователей.", progress: 10 },
-      { period: "1 квартал 2027", status: "В планах", title: "Рост и новые функции", text: "Больше функций сообщества, новые игровые идеи и следующий этап развития Cardletics.", progress: 5 },
+      {
+        period: "Сентябрь 2026",
+        title: "Релиз Cardletics",
+        text: "Cardletics выходит на iOS и Android с движением, ежедневными картами, коллекциями, командами, боями, наградами, друзьями, функциями рядом и внутренним маркетплейсом.",
+      },
+      {
+        period: "Q4 2026",
+        title: "Оттиски и улучшения карт",
+        text: "Ежедневные оттиски превращают карты в память о реальных активных днях. Планируются специальные печати, календарь оттисков, пропуск оттисков, а также слияния и улучшения для полезного применения дубликатов.",
+      },
+      {
+        period: "Q1 2027",
+        title: "Группы, лиги и испытания",
+        text: "Cardletics станет более социальным благодаря группам, групповым испытаниям, групповому XP и общим наградам. Параллельно появится соло-лига, чтобы основной прогресс был доступен и без группы.",
+      },
+      {
+        period: "2027 и далее",
+        title: "Сезоны, музей и новые цели коллекции",
+        text: "Новые наборы и события, музей и витрина, охота за печатями, Season Pass и дополнительные варианты карт будут расширять Cardletics.",
+      },
     ],
   },
   ja: {
     eyebrow: "ロードマップ & アップデート",
-    title: "これからの予定",
-    text: "Cardletics は最初の一般公開に近づいています。現在取り組んでいることと、その後の予定をご覧いただけます。",
-    progressLabel: "進捗",
+    title: "Cardletics の次のチャプター",
+    text: "このロードマップでは、2026年9月のリリースと、その後の拡張に向けた主な開発ステップを紹介します。",
     items: [
-      { period: "2026年9月", status: "現在", title: "リリース準備", text: "Webサイト、法的ページ、メールシステムの準備は完了しています。次はストア用スクリーンショット、最終情報、リリース前チェックです。", progress: 85 },
-      { period: "2026年9月 / 10月", status: "次のステップ", title: "ストア審査 & ローンチ", text: "Android と iOS の最終ビルドを提出します。承認後、Cardletics は App Store と Google Play で公開されます。", progress: 30 },
-      { period: "2026年11月 – 12月", status: "その後", title: "コミュニティ & 新コンテンツ", text: "最初のイベント、新しいカードとセット、アフィリエイトの拡張、ユーザーフィードバックに基づく改善を進めます。", progress: 10 },
-      { period: "2027年 Q1", status: "予定", title: "成長 & 新機能", text: "より多くのコミュニティ機能、新しいゲームプレイのアイデア、Cardletics の次の開発段階へ進みます。", progress: 5 },
+      {
+        period: "2026年9月",
+        title: "Cardletics リリース",
+        text: "Cardletics は iOS と Android で、運動、デイリーカード、コレクション、チーム、バトル、アワード、フレンド、周辺機能、内部マーケットを備えてスタートします。",
+      },
+      {
+        period: "2026年 Q4",
+        title: "刻印 & カードアップグレード",
+        text: "デイリー刻印によってカードが実際の活動日の思い出になります。特別なシール、刻印カレンダー、刻印パス、重複カードを活用するフュージョンとアップグレードを予定しています。",
+      },
+      {
+        period: "2027年 Q1",
+        title: "グループ、リーグ & チャレンジ",
+        text: "グループ、グループチャレンジ、グループXP、共同報酬で Cardletics はさらにソーシャルになります。同時に、グループに参加しなくても主要な進行ができるソロリーグも開発します。",
+      },
+      {
+        period: "2027年以降",
+        title: "シーズン、ミュージアム & 新しい収集目標",
+        text: "追加セットやイベント、ミュージアムとショーケース、シール収集、Season Pass、さらなるカードバリエーションで Cardletics を拡張していきます。",
+      },
     ],
   },
   tr: {
     eyebrow: "Yol haritası & güncellemeler",
-    title: "Sırada ne var",
-    text: "Cardletics ilk herkese açık sürümüne çok yakın. Şu anda üzerinde çalıştığımız ve sonrasında planladığımız adımları burada görebilirsin.",
-    progressLabel: "İlerleme",
+    title: "Cardletics’in sonraki bölümleri",
+    text: "Bu yol haritası Eylül 2026 sürümü ve sonrasında gelecek genişlemelerin ana geliştirme adımlarını gösterir.",
     items: [
-      { period: "Eylül 2026", status: "Şu anda", title: "Sürümü hazırlamak", text: "Web sitesi, yasal sayfalar ve e-posta sistemi hazır. Sırada mağaza ekran görüntüleri, son listeleme bilgileri ve final sürüm kontrolleri var.", progress: 85 },
-      { period: "Eylül / Ekim 2026", status: "Sıradaki", title: "Mağaza incelemesi & lansman", text: "Son Android ve iOS sürümleri gönderilecek. Onaydan sonra Cardletics App Store ve Google Play'de yayına girecek.", progress: 30 },
-      { period: "Kasım – Aralık 2026", status: "Sonrasında", title: "Topluluk & yeni içerikler", text: "İlk etkinlikler, yeni kartlar ve setler, affiliate programının genişletilmesi ve kullanıcı geri bildirimlerine dayalı iyileştirmeler.", progress: 10 },
-      { period: "2027 Q1", status: "Planlandı", title: "Büyüme & yeni özellikler", text: "Daha fazla topluluk özelliği, yeni oynanış fikirleri ve Cardletics geliştirmesinin bir sonraki aşaması.", progress: 5 },
+      {
+        period: "Eylül 2026",
+        title: "Cardletics çıkışı",
+        text: "Cardletics iOS ve Android’de hareket, günlük kartlar, koleksiyonlar, takımlar, savaşlar, ödüller, arkadaşlar, yakın çevre özellikleri ve dahili pazar ile yayınlanır.",
+      },
+      {
+        period: "2026 Q4",
+        title: "Damgalar & kart yükseltmeleri",
+        text: "Günlük damgalar kartları gerçek aktif günlerin anısına dönüştürür. Özel mühürler, damga takvimi, damga kartı ve kopya kartları değerlendiren füzyon ile yükseltmeler planlanıyor.",
+      },
+      {
+        period: "2027 Q1",
+        title: "Gruplar, ligler & görevler",
+        text: "Gruplar, grup görevleri, grup XP’si ve ortak ödüller Cardletics’i daha sosyal hale getirir. Temel ilerlemenin grup olmadan da mümkün kalması için paralel olarak solo lig geliştirilecektir.",
+      },
+      {
+        period: "2027 ve sonrası",
+        title: "Sezonlar, müze & yeni koleksiyon hedefleri",
+        text: "Yeni setler ve etkinlikler, müze ve vitrin, mühür avı, Season Pass ve ek kart varyantları Cardletics’i uzun vadede genişletecek.",
+      },
     ],
   },
   vi: {
     eyebrow: "Lộ trình & cập nhật",
-    title: "Điều gì sẽ đến tiếp theo",
-    text: "Cardletics đang tiến gần đến bản phát hành công khai đầu tiên. Đây là những gì chúng tôi đang thực hiện và kế hoạch tiếp theo.",
-    progressLabel: "Tiến độ",
+    title: "Những chương tiếp theo của Cardletics",
+    text: "Lộ trình này cho thấy các bước phát triển chính quanh bản phát hành tháng 9 năm 2026 và những mở rộng tiếp theo.",
     items: [
-      { period: "Tháng 9/2026", status: "Hiện tại", title: "Chuẩn bị phát hành", text: "Website, trang pháp lý và hệ thống e-mail đã sẵn sàng. Tiếp theo là ảnh chụp cửa hàng, thông tin cuối cùng và kiểm tra phát hành.", progress: 85 },
-      { period: "Tháng 9 / 10/2026", status: "Tiếp theo", title: "Duyệt cửa hàng & ra mắt", text: "Các bản Android và iOS cuối cùng sẽ được gửi duyệt. Sau khi được chấp thuận, Cardletics sẽ có mặt trên App Store và Google Play.", progress: 30 },
-      { period: "Tháng 11 – 12/2026", status: "Sau đó", title: "Cộng đồng & nội dung mới", text: "Các sự kiện đầu tiên, thẻ và bộ mới, mở rộng chương trình affiliate và cải tiến dựa trên phản hồi người dùng.", progress: 10 },
-      { period: "Q1 2027", status: "Đã lên kế hoạch", title: "Tăng trưởng & tính năng mới", text: "Thêm tính năng cộng đồng, ý tưởng gameplay mới và giai đoạn phát triển tiếp theo của Cardletics.", progress: 5 },
+      {
+        period: "Tháng 9/2026",
+        title: "Phát hành Cardletics",
+        text: "Cardletics ra mắt trên iOS và Android với vận động, thẻ hằng ngày, bộ sưu tập, đội hình, trận đấu, phần thưởng, bạn bè, tính năng lân cận và chợ nội bộ.",
+      },
+      {
+        period: "Q4 2026",
+        title: "Dấu ấn & nâng cấp thẻ",
+        text: "Dấu ấn hằng ngày biến thẻ thành kỷ niệm của những ngày hoạt động thật. Dự kiến có con dấu đặc biệt, lịch dấu ấn, thẻ dấu ấn, cùng cơ chế hợp nhất và nâng cấp để tận dụng thẻ trùng.",
+      },
+      {
+        period: "Q1 2027",
+        title: "Nhóm, giải đấu & thử thách",
+        text: "Cardletics sẽ mang tính xã hội hơn với nhóm, thử thách nhóm, XP nhóm và phần thưởng chung. Đồng thời sẽ có giải solo để tiến trình cốt lõi vẫn có thể đạt được mà không cần tham gia nhóm.",
+      },
+      {
+        period: "2027 và xa hơn",
+        title: "Mùa giải, bảo tàng & mục tiêu sưu tập mới",
+        text: "Nhiều bộ thẻ và sự kiện hơn, bảo tàng và tủ trưng bày, săn con dấu, Season Pass và các biến thể thẻ mới sẽ tiếp tục mở rộng Cardletics.",
+      },
     ],
   },
   id: {
     eyebrow: "Roadmap & pembaruan",
-    title: "Apa yang akan hadir berikutnya",
-    text: "Cardletics sudah dekat dengan rilis publik pertamanya. Di sini kamu bisa melihat apa yang sedang dikerjakan dan rencana berikutnya.",
-    progressLabel: "Progres",
+    title: "Bab berikutnya dari Cardletics",
+    text: "Roadmap ini menunjukkan langkah pengembangan utama seputar rilis September 2026 dan ekspansi setelahnya.",
     items: [
-      { period: "September 2026", status: "Saat ini", title: "Menyiapkan rilis", text: "Website, halaman legal, dan sistem e-mail sudah siap. Berikutnya adalah screenshot store, detail listing terakhir, dan pemeriksaan final sebelum rilis.", progress: 85 },
-      { period: "September / Oktober 2026", status: "Berikutnya", title: "Review store & peluncuran", text: "Build final Android dan iOS akan dikirim. Setelah disetujui, Cardletics akan tersedia di App Store dan Google Play.", progress: 30 },
-      { period: "November – Desember 2026", status: "Setelah itu", title: "Komunitas & konten baru", text: "Event pertama, kartu dan set baru, perluasan program afiliasi, serta peningkatan berdasarkan masukan pengguna.", progress: 10 },
-      { period: "Q1 2027", status: "Direncanakan", title: "Pertumbuhan & fitur baru", text: "Lebih banyak fitur komunitas, ide gameplay baru, dan tahap pengembangan Cardletics berikutnya.", progress: 5 },
+      {
+        period: "September 2026",
+        title: "Rilis Cardletics",
+        text: "Cardletics hadir di iOS dan Android dengan gerakan, kartu harian, koleksi, tim, pertarungan, award, teman, fitur sekitar, dan marketplace internal.",
+      },
+      {
+        period: "Q4 2026",
+        title: "Jejak harian & upgrade kartu",
+        text: "Jejak harian menjadikan kartu sebagai kenangan dari hari aktivitas nyata. Direncanakan segel khusus, kalender jejak, imprint pass, serta fusion dan upgrade untuk memanfaatkan kartu duplikat.",
+      },
+      {
+        period: "Q1 2027",
+        title: "Grup, liga & tantangan",
+        text: "Cardletics menjadi lebih sosial melalui grup, tantangan grup, XP grup, dan hadiah bersama. Liga solo juga dikembangkan agar progres utama tetap bisa dicapai tanpa bergabung dengan grup.",
+      },
+      {
+        period: "2027 dan seterusnya",
+        title: "Season, museum & target koleksi baru",
+        text: "Lebih banyak set dan event, museum dan showcase, perburuan segel, Season Pass, dan variasi kartu tambahan akan memperluas Cardletics dalam jangka panjang.",
+      },
     ],
   },
   ur: {
-    eyebrow: "روڈ میپ اور اپ ڈیٹس",
-    title: "آگے کیا آنے والا ہے",
-    text: "Cardletics اپنی پہلی عوامی ریلیز کے قریب ہے۔ یہاں آپ دیکھ سکتے ہیں کہ ابھی کس چیز پر کام ہو رہا ہے اور آگے کیا منصوبہ ہے۔",
-    progressLabel: "پیش رفت",
+    eyebrow: "روڈمیپ اور اپڈیٹس",
+    title: "Cardletics کے اگلے مراحل",
+    text: "یہ روڈمیپ ستمبر 2026 کی ریلیز اور اس کے بعد آنے والی توسیعات کے اہم ترقیاتی مراحل دکھاتا ہے۔",
     items: [
-      { period: "ستمبر 2026", status: "موجودہ", title: "ریلیز کی تیاری", text: "ویب سائٹ، قانونی صفحات اور ای میل سسٹم تیار ہیں۔ اب اسٹور اسکرین شاٹس، آخری معلومات اور حتمی ریلیز چیک باقی ہیں۔", progress: 85 },
-      { period: "ستمبر / اکتوبر 2026", status: "اگلا", title: "اسٹور ریویو اور لانچ", text: "Android اور iOS کے حتمی بلڈ جمع کیے جائیں گے۔ منظوری کے بعد Cardletics App Store اور Google Play پر لائیو ہو جائے گا۔", progress: 30 },
-      { period: "نومبر – دسمبر 2026", status: "اس کے بعد", title: "کمیونٹی اور نیا مواد", text: "ابتدائی ایونٹس، نئے کارڈز اور سیٹس، افیلیٹ پروگرام کی توسیع اور صارفین کے فیڈبیک کی بنیاد پر بہتری۔", progress: 10 },
-      { period: "Q1 2027", status: "منصوبہ بند", title: "ترقی اور نئی خصوصیات", text: "مزید کمیونٹی فیچرز، نئے گیم پلے آئیڈیاز اور Cardletics کی ترقی کا اگلا مرحلہ۔", progress: 5 },
+      {
+        period: "ستمبر 2026",
+        title: "Cardletics ریلیز",
+        text: "Cardletics iOS اور Android پر موومنٹ، روزانہ کارڈز، کلیکشن، ٹیمز، بیٹلز، ایوارڈز، دوستوں، قریبی فیچرز اور اندرونی مارکیٹ پلیس کے ساتھ شروع ہوگا۔",
+      },
+      {
+        period: "Q4 2026",
+        title: "روزانہ امپرنٹس اور کارڈ اپ گریڈز",
+        text: "روزانہ امپرنٹس کارڈز کو حقیقی سرگرمی کے دنوں کی یاد بناتے ہیں۔ خصوصی سیلز، امپرنٹ کیلنڈر، امپرنٹ پاس، اور ڈپلیکیٹ کارڈز کے لیے فیوژن و اپ گریڈز منصوبہ بند ہیں۔",
+      },
+      {
+        period: "Q1 2027",
+        title: "گروپس، لیگز اور چیلنجز",
+        text: "گروپس، گروپ چیلنجز، گروپ XP اور مشترکہ انعامات Cardletics کو زیادہ سماجی بنائیں گے۔ ساتھ ہی ایک سولو لیگ بنائی جائے گی تاکہ اہم پیش رفت گروپ کے بغیر بھی ممکن رہے۔",
+      },
+      {
+        period: "2027 اور اس کے بعد",
+        title: "سیزنز، میوزیم اور نئے کلیکشن اہداف",
+        text: "مزید سیٹس اور ایونٹس، میوزیم اور شوکیس، سیل ہنٹ، Season Pass اور اضافی کارڈ ویریئنٹس Cardletics کو طویل مدت میں بڑھائیں گے۔",
+      },
     ],
   },
 };
@@ -964,7 +1186,7 @@ export default function HomePage() {
   return (
     <main style={{ ...pageStyle, direction: dir }}>
       {!isMobile && (
-        <a href="mailto:Info@cardletics.com?subject=Affiliate%20Programm" style={affiliateSideButtonStyle}>
+        <a href="mailto:info@cardletics.com?subject=Affiliate%20Programm" style={affiliateSideButtonStyle}>
           {t.affiliate}
         </a>
       )}
@@ -1040,7 +1262,7 @@ export default function HomePage() {
             <div style={{ ...buttonStyle, width: isMobile ? "100%" : "auto" }}>{t.appStore}</div>
             <div style={{ ...buttonSecondaryStyle, width: isMobile ? "100%" : "auto" }}>{t.googlePlay}</div>
             {isMobile && (
-              <a href="mailto:Info@cardletics.com?subject=Affiliate%20Programm" style={{ ...affiliateInlineButtonStyle, width: "100%" }}>
+              <a href="mailto:info@cardletics.com?subject=Affiliate%20Programm" style={{ ...affiliateInlineButtonStyle, width: "100%" }}>
                 {t.affiliateProgram}
               </a>
             )}
@@ -1116,7 +1338,6 @@ export default function HomePage() {
                 index={index}
                 isLast={index === roadmap.items.length - 1}
                 isMobile={isMobile}
-                progressLabel={roadmap.progressLabel}
               />
             ))}
           </div>
@@ -1133,7 +1354,7 @@ export default function HomePage() {
           </div>
 
           <div style={affiliateActionWrapStyle}>
-            <a href="mailto:Info@cardletics.com?subject=Affiliate%20Programm" style={{ ...buttonStyle, width: isMobile ? "100%" : "auto" }}>{t.affiliateCta}</a>
+            <a href="mailto:info@cardletics.com?subject=Affiliate%20Programm" style={{ ...buttonStyle, width: isMobile ? "100%" : "auto" }}>{t.affiliateCta}</a>
           </div>
         </div>
       </section>
@@ -1286,16 +1507,12 @@ function RoadmapStep({
   index,
   isLast,
   isMobile,
-  progressLabel,
 }: {
   item: RoadmapItem;
   index: number;
   isLast: boolean;
   isMobile: boolean;
-  progressLabel: string;
 }) {
-  const isCurrent = index === 0;
-
   return (
     <div
       style={{
@@ -1304,48 +1521,14 @@ function RoadmapStep({
       }}
     >
       <div style={roadmapRailStyle}>
-        <div
-          style={{
-            ...roadmapMarkerStyle,
-            ...(isCurrent ? roadmapMarkerCurrentStyle : null),
-          }}
-        >
-          {index + 1}
-        </div>
+        <div style={roadmapMarkerStyle}>{index + 1}</div>
         {!isLast && <div style={roadmapConnectorStyle} />}
       </div>
 
       <div style={{ ...roadmapCardStyle, padding: isMobile ? "16px" : "20px" }}>
-        <div style={{ ...roadmapCardTopStyle, alignItems: isMobile ? "flex-start" : "center" }}>
-          <div>
-            <div style={roadmapPeriodStyle}>{item.period}</div>
-            <h3 style={roadmapTitleStyle}>{item.title}</h3>
-          </div>
-          <span
-            style={{
-              ...roadmapStatusStyle,
-              ...(isCurrent ? roadmapStatusCurrentStyle : null),
-            }}
-          >
-            {item.status}
-          </span>
-        </div>
-
+        <div style={roadmapPeriodStyle}>{item.period}</div>
+        <h3 style={roadmapTitleStyle}>{item.title}</h3>
         <p style={roadmapTextStyle}>{item.text}</p>
-
-        <div style={roadmapProgressHeaderStyle}>
-          <span>{progressLabel}</span>
-          <strong>{item.progress}%</strong>
-        </div>
-        <div style={roadmapProgressTrackStyle} aria-hidden="true">
-          <div
-            style={{
-              ...roadmapProgressFillStyle,
-              width: `${item.progress}%`,
-              opacity: isCurrent ? 1 : 0.72,
-            }}
-          />
-        </div>
       </div>
     </div>
   );
