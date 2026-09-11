@@ -25,7 +25,7 @@ type Profile = {
 
 type UsernameFilter = "all" | "withUsername" | "withoutUsername";
 type ActivityFilter = "all" | "online15" | "onlineToday" | "inactiveToday";
-type PlanFilter = "all" | "free" | "basic" | "pro" | "elite" | "master";
+type PlanFilter = "all" | "free" | "club" | "master";
 type SortOrder =
   | "newest"
   | "oldest"
@@ -38,9 +38,7 @@ type SortOrder =
 
 const planOptions: { value: PlanFilter; label: string }[] = [
   { value: "free", label: "Free" },
-  { value: "basic", label: "Basic" },
-  { value: "pro", label: "Pro" },
-  { value: "elite", label: "Elite" },
+  { value: "club", label: "Club" },
   { value: "master", label: "Master" },
 ];
 
@@ -108,6 +106,7 @@ export default function UsersPage() {
     const paidPlans = users.filter((user) => isPaidSubscription(user)).length;
     const giftedPlans = users.filter((user) => isGiftSubscription(user)).length;
     const masterPlans = users.filter((user) => getPlan(user) === "master").length;
+    const adminUsers = users.filter((user) => Boolean(user.is_admin)).length;
 
     return {
       totalUsers: users.length,
@@ -119,6 +118,7 @@ export default function UsersPage() {
       paidPlans,
       giftedPlans,
       masterPlans,
+      adminUsers,
     };
   }, [users]);
 
@@ -279,6 +279,7 @@ export default function UsersPage() {
         <KpiCard title="Bezahlte Abos" value={loading ? "..." : formatNumber(stats.paidPlans)} />
         <KpiCard title="Geschenk-Abos" value={loading ? "..." : formatNumber(stats.giftedPlans)} />
         <KpiCard title="Master gesamt" value={loading ? "..." : formatNumber(stats.masterPlans)} />
+        <KpiCard title="Admins" value={loading ? "..." : formatNumber(stats.adminUsers)} />
         <KpiCard title="Aktiv 15 Min." value={loading ? "..." : formatNumber(stats.active15)} />
         <KpiCard title="Heute online" value={loading ? "..." : formatNumber(stats.onlineToday)} />
         <KpiCard title="Neue 24 Std." value={loading ? "..." : formatNumber(stats.new24h)} />
@@ -417,6 +418,7 @@ export default function UsersPage() {
                   <div style={mobileInfoGridStyle}>
                     <InfoItem label="Last Seen" value={formatDate(user.last_seen_at)} />
                     <InfoItem label="Abo" value={planLabel(getPlan(user), user)} />
+                    <InfoItem label="Rolle" value={user.is_admin ? "Admin" : "User"} />
                     <InfoItem label="Coins" value={formatNumber(user.coins)} />
                     <InfoItem label="Card Points" value={formatNumber(user.card_points)} />
                     <InfoItem label="Registriert" value={formatDate(user.created_at)} />
@@ -440,6 +442,7 @@ export default function UsersPage() {
                     <th style={tableHeaderStyle}>E-Mail</th>
                     <th style={tableHeaderStyle}>Last Seen</th>
                     <th style={tableHeaderStyle}>Abo Plan</th>
+                    <th style={tableHeaderStyle}>Rolle</th>
                     <th style={tableHeaderStyle}>Coins</th>
                     <th style={tableHeaderStyle}>Card Points</th>
                     <th style={tableHeaderStyle}>Registriert am</th>
@@ -480,6 +483,11 @@ export default function UsersPage() {
                             </span>
                           )}
                         </div>
+                      </td>
+                      <td style={tableCellStyle}>
+                        <span style={user.is_admin ? adminRoleBadgeStyle : userRoleBadgeStyle}>
+                          {user.is_admin ? "Admin" : "User"}
+                        </span>
                       </td>
                       <td style={tableCellStyle}>{formatNumber(user.coins)}</td>
                       <td style={tableCellStyle}>{formatNumber(user.card_points)}</td>
@@ -580,24 +588,24 @@ function isGiftSubscription(user: Profile) {
 function getPlan(user: Profile): PlanFilter {
   const plan = (user.subscription_variant || "free").toLowerCase().trim();
 
-  if (plan === "basic") return "basic";
-  if (plan === "pro") return "pro";
-  if (plan === "elite") return "elite";
+  // Aktuelles Modell: Club ist technisch weiterhin `elite`.
+  // Legacy basic/pro werden ebenfalls als Club dargestellt.
+  if (plan === "club" || plan === "basic" || plan === "pro" || plan === "elite") {
+    return "club";
+  }
   if (plan === "master") return "master";
 
   return "free";
 }
 
 function planRank(plan: PlanFilter) {
-  if (plan === "master") return 5;
-  if (plan === "elite") return 4;
-  if (plan === "pro") return 3;
-  if (plan === "basic") return 2;
+  if (plan === "master") return 3;
+  if (plan === "club") return 2;
   return 1;
 }
 
 function planLabel(plan: PlanFilter, user?: Profile) {
-  const label = plan.charAt(0).toUpperCase() + plan.slice(1);
+  const label = plan === "club" ? "Club" : plan.charAt(0).toUpperCase() + plan.slice(1);
 
   if (!user) return label;
 
@@ -617,9 +625,7 @@ function planLabel(plan: PlanFilter, user?: Profile) {
 
 function planBadgeStyle(plan: PlanFilter): CSSProperties {
   if (plan === "master") return masterPlanBadgeStyle;
-  if (plan === "elite") return elitePlanBadgeStyle;
-  if (plan === "pro") return proPlanBadgeStyle;
-  if (plan === "basic") return basicPlanBadgeStyle;
+  if (plan === "club") return clubPlanBadgeStyle;
   return freePlanBadgeStyle;
 }
 
@@ -924,22 +930,26 @@ const freePlanBadgeStyle: CSSProperties = {
   fontWeight: 900,
 };
 
-const basicPlanBadgeStyle: CSSProperties = {
-  ...freePlanBadgeStyle,
-  background: "#10233a",
-  color: "#93c5fd",
-};
-
-const proPlanBadgeStyle: CSSProperties = {
-  ...freePlanBadgeStyle,
-  background: "#163322",
-  color: "#86efac",
-};
-
-const elitePlanBadgeStyle: CSSProperties = {
+const clubPlanBadgeStyle: CSSProperties = {
   ...freePlanBadgeStyle,
   background: "#3b1f4a",
   color: "#e9d5ff",
+};
+
+const userRoleBadgeStyle: CSSProperties = {
+  display: "inline-flex",
+  padding: "6px 10px",
+  borderRadius: "999px",
+  background: "#1f2937",
+  color: "#d1d5db",
+  fontSize: "12px",
+  fontWeight: 900,
+};
+
+const adminRoleBadgeStyle: CSSProperties = {
+  ...userRoleBadgeStyle,
+  background: "#163322",
+  color: "#86efac",
 };
 
 const masterPlanBadgeStyle: CSSProperties = {
