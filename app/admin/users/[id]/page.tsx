@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import type { CSSProperties } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { supabase } from "../../../../lib/supabase";
 
 type JsonMap = Record<string, unknown>;
@@ -20,6 +20,13 @@ type UserDetail = {
   daily_pack_claim_count?: number | string | null;
   pack_rewards_count?: number | string | null;
   pending_pack_rewards?: number | string | null;
+};
+
+type AccountAccessStatus = {
+  user_id: string;
+  email: string | null;
+  banned_until: string | null;
+  is_banned: boolean;
 };
 
 type CoinMode = "set" | "add" | "subtract";
@@ -45,6 +52,7 @@ const statusOptions: { value: SubscriptionStatus; label: string }[] = [
 
 export default function AdminUserDetailPage() {
   const params = useParams();
+  const router = useRouter();
   const userId = String(params?.id || "");
 
   const [activeTab, setActiveTab] = useState<TabKey>("overview");
@@ -105,6 +113,141 @@ export default function AdminUserDetailPage() {
 
   const [deletingCardId, setDeletingCardId] = useState<string | null>(null);
   const [repairingMarketCardId, setRepairingMarketCardId] = useState<string | null>(null);
+
+  const [accountAccess, setAccountAccess] = useState<AccountAccessStatus | null>(null);
+  const [accountAccessLoading, setAccountAccessLoading] = useState(true);
+  const [accountActionLoading, setAccountActionLoading] = useState<"ban" | "unban" | "delete" | null>(null);
+  const [deleteConfirmation, setDeleteConfirmation] = useState("");
+
+  async function loadAccountAccess() {
+    if (!userId) return;
+
+    setAccountAccessLoading(true);
+
+    const { data, error } = await supabase.functions.invoke("admin-user-management", {
+      body: {
+        action: "status",
+        userId,
+      },
+    });
+
+    if (error) {
+      console.error("Account-Status konnte nicht geladen werden:", error);
+      setAccountAccess(null);
+      setAccountAccessLoading(false);
+      return;
+    }
+
+    const result = (data || {}) as Partial<AccountAccessStatus> & { ok?: boolean };
+    setAccountAccess({
+      user_id: String(result.user_id || userId),
+      email: typeof result.email === "string" ? result.email : null,
+      banned_until: typeof result.banned_until === "string" ? result.banned_until : null,
+      is_banned: result.is_banned === true,
+    });
+    setAccountAccessLoading(false);
+  }
+
+  async function handleBanUser() {
+    if (!userId || accountActionLoading) return;
+
+    const username = readString(detail?.profile || {}, "username") || accountAccess?.email || userId;
+    if (!window.confirm(`${username}\n\nAnmeldung dieses Nutzers sperren?`)) return;
+
+    setAccountActionLoading("ban");
+    setMessage(null);
+    setErrorMessage(null);
+
+    const { data, error } = await supabase.functions.invoke("admin-user-management", {
+      body: {
+        action: "ban",
+        userId,
+      },
+    });
+
+    if (error || !(data as JsonMap | null)?.ok) {
+      setErrorMessage(
+        error?.message ||
+          readString((data || {}) as JsonMap, "error") ||
+          "Nutzer konnte nicht gesperrt werden."
+      );
+      setAccountActionLoading(null);
+      return;
+    }
+
+    setMessage("Anmeldung des Nutzers wurde gesperrt.");
+    setAccountActionLoading(null);
+    await loadAccountAccess();
+  }
+
+  async function handleUnbanUser() {
+    if (!userId || accountActionLoading) return;
+
+    setAccountActionLoading("unban");
+    setMessage(null);
+    setErrorMessage(null);
+
+    const { data, error } = await supabase.functions.invoke("admin-user-management", {
+      body: {
+        action: "unban",
+        userId,
+      },
+    });
+
+    if (error || !(data as JsonMap | null)?.ok) {
+      setErrorMessage(
+        error?.message ||
+          readString((data || {}) as JsonMap, "error") ||
+          "Sperre konnte nicht aufgehoben werden."
+      );
+      setAccountActionLoading(null);
+      return;
+    }
+
+    setMessage("Nutzersperre wurde aufgehoben.");
+    setAccountActionLoading(null);
+    await loadAccountAccess();
+  }
+
+  async function handleDeleteUser() {
+    if (!userId || accountActionLoading) return;
+
+    if (deleteConfirmation.trim() !== "DELETE") {
+      setErrorMessage('Bitte zur Bestätigung exakt "DELETE" eingeben.');
+      return;
+    }
+
+    const username = readString(detail?.profile || {}, "username") || accountAccess?.email || userId;
+    const accepted = window.confirm(
+      `${username}\n\nAccount dauerhaft löschen?\n\nDiese Aktion kann nicht rückgängig gemacht werden.`
+    );
+    if (!accepted) return;
+
+    setAccountActionLoading("delete");
+    setMessage(null);
+    setErrorMessage(null);
+
+    const { data, error } = await supabase.functions.invoke("admin-user-management", {
+      body: {
+        action: "delete",
+        userId,
+        confirmation: "DELETE",
+      },
+    });
+
+    if (error || !(data as JsonMap | null)?.ok) {
+      setErrorMessage(
+        error?.message ||
+          readString((data || {}) as JsonMap, "error") ||
+          "Nutzer konnte nicht gelöscht werden."
+      );
+      setAccountActionLoading(null);
+      return;
+    }
+
+    router.push("/admin/users");
+    router.refresh();
+  }
 
   async function loadDetail() {
     if (!userId) return;
@@ -403,7 +546,7 @@ export default function AdminUserDetailPage() {
   }
 
   async function reloadAll() {
-    await Promise.all([loadDetail(), loadInventory(), loadPacks()]);
+    await Promise.all([loadDetail(), loadInventory(), loadPacks(), loadAccountAccess()]);
     if (activeTab === "cards") {
       await loadCatalog();
     }
@@ -624,6 +767,11 @@ export default function AdminUserDetailPage() {
         <KpiCard title="Pack Tokens" value={packLoading ? "..." : String(pendingPackTokenQuantity)} accent="blue" />
         <KpiCard title="Boost Tokens" value={packLoading ? "..." : String(pendingBoostTokenQuantity)} accent="orange" />
         <KpiCard title="Aktiver Boost" value={packLoading ? "..." : activeBoostTokenQuantity > 0 ? "Ja" : "Nein"} accent={activeBoostTokenQuantity > 0 ? "green" : "default"} />
+        <KpiCard
+          title="Account-Zugriff"
+          value={accountAccessLoading ? "..." : accountAccess?.is_banned ? "Gesperrt" : "Aktiv"}
+          accent={accountAccess?.is_banned ? "orange" : "green"}
+        />
       </div>
 
       <div style={tabsStyle}>
@@ -722,6 +870,104 @@ export default function AdminUserDetailPage() {
                 <button type="submit" disabled={savingSubscription} style={primaryButtonStyle}>{savingSubscription ? "Speichere..." : "Abo speichern"}</button>
               </form>
               <p style={hintStyle}>Aktuelle Tarife: Free · Club 4,99 € · Master 9,99 €. Manuell über das Admin-Backend vergebene Abos werden als Geschenk mit 0,00 € Umsatz gespeichert.</p>
+            </section>
+          </div>
+
+          <div style={gridTwoStyle}>
+            <section style={cardStyle}>
+              <div style={sectionHeaderStyle}>
+                <div>
+                  <h2 style={sectionTitleStyle}>Account-Zugriff</h2>
+                  <p style={sectionTextStyle}>
+                    Login des Nutzers sperren oder eine bestehende Sperre wieder aufheben.
+                  </p>
+                </div>
+                <span style={accountAccess?.is_banned ? statusBadgeBlockedStyle : statusBadgeActiveStyle}>
+                  {accountAccessLoading ? "Lade..." : accountAccess?.is_banned ? "Gesperrt" : "Aktiv"}
+                </span>
+              </div>
+
+              <InfoGrid
+                items={[
+                  ["Auth E-Mail", accountAccess?.email || readString(profile, "email") || "—"],
+                  ["Gesperrt bis", accountAccess?.banned_until ? formatDate(accountAccess.banned_until) : "—"],
+                  ["Admin-Ziel", readBoolean(profile, "is_admin") ? "Ja · geschützt" : "Nein"],
+                ]}
+              />
+
+              <div style={accountActionRowStyle}>
+                {accountAccess?.is_banned ? (
+                  <button
+                    type="button"
+                    onClick={handleUnbanUser}
+                    disabled={accountAccessLoading || accountActionLoading !== null || readBoolean(profile, "is_admin")}
+                    style={secondaryButtonStyle}
+                  >
+                    {accountActionLoading === "unban" ? "Entsperre..." : "Nutzer entsperren"}
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleBanUser}
+                    disabled={accountAccessLoading || accountActionLoading !== null || readBoolean(profile, "is_admin")}
+                    style={warningButtonStyle}
+                  >
+                    {accountActionLoading === "ban" ? "Sperre..." : "Anmeldung sperren"}
+                  </button>
+                )}
+              </div>
+
+              <p style={hintStyle}>
+                Die Sperre blockiert neue Logins. Bereits ausgestellte Access-Tokens können technisch
+                noch bis zu ihrem Ablauf gültig sein.
+              </p>
+            </section>
+
+            <section style={dangerCardStyle}>
+              <div style={sectionHeaderStyle}>
+                <div>
+                  <h2 style={dangerTitleStyle}>Gefahrenbereich</h2>
+                  <p style={dangerTextStyle}>
+                    Löscht den Auth-Account und die verknüpften Nutzerdaten endgültig.
+                  </p>
+                </div>
+              </div>
+
+              {readBoolean(profile, "is_admin") ? (
+                <div style={dangerNoticeStyle}>
+                  Admin-Accounts sind vor Sperren und Löschen geschützt.
+                </div>
+              ) : (
+                <>
+                  <label style={dangerLabelStyle}>
+                    Zur Bestätigung <strong>DELETE</strong> eingeben
+                  </label>
+                  <input
+                    type="text"
+                    value={deleteConfirmation}
+                    onChange={(event) => setDeleteConfirmation(event.target.value)}
+                    placeholder="DELETE"
+                    autoComplete="off"
+                    style={dangerInputStyle}
+                  />
+                  <button
+                    type="button"
+                    onClick={handleDeleteUser}
+                    disabled={accountActionLoading !== null || deleteConfirmation.trim() !== "DELETE"}
+                    style={{
+                      ...dangerButtonStyle,
+                      opacity:
+                        accountActionLoading !== null || deleteConfirmation.trim() !== "DELETE" ? 0.55 : 1,
+                    }}
+                  >
+                    {accountActionLoading === "delete" ? "Lösche Account..." : "Nutzer dauerhaft löschen"}
+                  </button>
+                  <p style={dangerHintStyle}>
+                    Diese Aktion kann nicht rückgängig gemacht werden. Vor dem Löschen werden bekannte
+                    nicht per Foreign-Key gebundene Nutzerdaten bereinigt bzw. anonymisiert.
+                  </p>
+                </>
+              )}
             </section>
           </div>
 
@@ -1756,6 +2002,18 @@ const selectedCardBoxStyle: CSSProperties = { minHeight: "48px", display: "flex"
 const selectedCardRowStyle: CSSProperties = { display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" };
 const selectedCardNameStyle: CSSProperties = { color: "#e7f1eb", fontWeight: 800 };
 const secondaryButtonStyle: CSSProperties = { minHeight: "46px", padding: "10px 14px", border: "1px solid #2f5f45", borderRadius: "12px", background: "#12351e", color: "#b9ffbc", fontWeight: 900, cursor: "pointer" };
+const warningButtonStyle: CSSProperties = { minHeight: "46px", padding: "10px 14px", border: "1px solid #a16207", borderRadius: "12px", background: "#3d2b0d", color: "#fde68a", fontWeight: 900, cursor: "pointer" };
+const accountActionRowStyle: CSSProperties = { display: "flex", gap: "10px", flexWrap: "wrap", marginTop: "16px" };
+const statusBadgeActiveStyle: CSSProperties = { display: "inline-flex", alignItems: "center", minHeight: "30px", padding: "5px 10px", borderRadius: "999px", border: "1px solid #166534", background: "#163322", color: "#bbf7d0", fontSize: "12px", fontWeight: 900 };
+const statusBadgeBlockedStyle: CSSProperties = { display: "inline-flex", alignItems: "center", minHeight: "30px", padding: "5px 10px", borderRadius: "999px", border: "1px solid #a16207", background: "#3d2b0d", color: "#fde68a", fontSize: "12px", fontWeight: 900 };
+const dangerCardStyle: CSSProperties = { ...cardStyle, border: "1px solid #7f1d1d", background: "#241313" };
+const dangerTitleStyle: CSSProperties = { margin: 0, color: "#fecaca", fontSize: "20px" };
+const dangerTextStyle: CSSProperties = { margin: "6px 0 0 0", color: "#fca5a5", lineHeight: 1.5 };
+const dangerLabelStyle: CSSProperties = { display: "block", marginBottom: "8px", color: "#fecaca", fontWeight: 800 };
+const dangerInputStyle: CSSProperties = { ...inputStyle, border: "1px solid #7f1d1d", background: "#160d0d", marginBottom: "12px" };
+const dangerButtonStyle: CSSProperties = { width: "100%", minHeight: "46px", borderRadius: "12px", border: "1px solid #dc2626", background: "#7f1d1d", color: "#fee2e2", fontWeight: 900, cursor: "pointer" };
+const dangerHintStyle: CSSProperties = { color: "#fca5a5", lineHeight: 1.5, margin: "12px 0 0 0", fontSize: "12px" };
+const dangerNoticeStyle: CSSProperties = { padding: "12px", borderRadius: "12px", border: "1px solid #7f1d1d", background: "#160d0d", color: "#fecaca", fontWeight: 800, lineHeight: 1.5 };
 const checkRowStyle: CSSProperties = { display: "flex", alignItems: "center", gap: "9px", minHeight: "42px", color: "#cfe0d6", fontWeight: 800, cursor: "pointer" };
 const catalogFilterStyle: CSSProperties = { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))", gap: "12px", alignItems: "end", marginBottom: "16px" };
 const visualCardGridStyle: CSSProperties = { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(205px, 1fr))", gap: "15px" };
