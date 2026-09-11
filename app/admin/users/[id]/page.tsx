@@ -151,9 +151,8 @@ export default function AdminUserDetailPage() {
   async function handleBanUser() {
     if (!userId || accountActionLoading) return;
 
-    const username = readString(detail?.profile || {}, "username") || accountAccess?.email || userId;
-    if (!window.confirm(`${username}\n\nAnmeldung dieses Nutzers sperren?`)) return;
-
+    // Der Button selbst ist die bewusste Admin-Aktion. Direkt Loading anzeigen,
+    // damit der Klick sofort sichtbar reagiert und kein Browser-Confirm blockiert.
     setAccountActionLoading("ban");
     setMessage(null);
     setErrorMessage(null);
@@ -212,41 +211,44 @@ export default function AdminUserDetailPage() {
   async function handleDeleteUser() {
     if (!userId || accountActionLoading) return;
 
-    if (deleteConfirmation.trim() !== "DELETE") {
-      setErrorMessage('Bitte zur Bestätigung exakt "DELETE" eingeben.');
+    if (deleteConfirmation.trim().toUpperCase() !== "DELETE") {
+      setErrorMessage('Bitte zur Bestätigung "DELETE" eingeben.');
       return;
     }
 
-    const username = readString(detail?.profile || {}, "username") || accountAccess?.email || userId;
-    const accepted = window.confirm(
-      `${username}\n\nAccount dauerhaft löschen?\n\nDiese Aktion kann nicht rückgängig gemacht werden.`
-    );
-    if (!accepted) return;
-
+    // Die Texteingabe DELETE ist bereits die bewusste Sicherheitsbestätigung.
+    // Direkt sichtbares Loading vermeidet den Eindruck, der Button reagiere nicht.
     setAccountActionLoading("delete");
     setMessage(null);
     setErrorMessage(null);
 
-    const { data, error } = await supabase.functions.invoke("admin-user-management", {
-      body: {
-        action: "delete",
-        userId,
-        confirmation: "DELETE",
-      },
-    });
+    try {
+      const { data, error } = await supabase.functions.invoke("admin-user-management", {
+        body: {
+          action: "delete",
+          userId,
+          confirmation: "DELETE",
+        },
+      });
 
-    if (error || !(data as JsonMap | null)?.ok) {
-      setErrorMessage(
-        error?.message ||
+      if (error || !(data as JsonMap | null)?.ok) {
+        const errorText =
+          error?.message ||
           readString((data || {}) as JsonMap, "error") ||
-          "Nutzer konnte nicht gelöscht werden."
+          "Nutzer konnte nicht gelöscht werden.";
+        throw new Error(errorText);
+      }
+
+      window.alert("Der Nutzer wurde dauerhaft gelöscht.");
+      router.push("/admin/users");
+      router.refresh();
+    } catch (error) {
+      console.error("Nutzer konnte nicht gelöscht werden:", error);
+      setErrorMessage(
+        error instanceof Error ? error.message : "Nutzer konnte nicht gelöscht werden."
       );
       setAccountActionLoading(null);
-      return;
     }
-
-    router.push("/admin/users");
-    router.refresh();
   }
 
   async function loadDetail() {
@@ -953,11 +955,11 @@ export default function AdminUserDetailPage() {
                   <button
                     type="button"
                     onClick={handleDeleteUser}
-                    disabled={accountActionLoading !== null || deleteConfirmation.trim() !== "DELETE"}
+                    disabled={accountActionLoading !== null || deleteConfirmation.trim().toUpperCase() !== "DELETE"}
                     style={{
                       ...dangerButtonStyle,
                       opacity:
-                        accountActionLoading !== null || deleteConfirmation.trim() !== "DELETE" ? 0.55 : 1,
+                        accountActionLoading !== null || deleteConfirmation.trim().toUpperCase() !== "DELETE" ? 0.55 : 1,
                     }}
                   >
                     {accountActionLoading === "delete" ? "Lösche Account..." : "Nutzer dauerhaft löschen"}
