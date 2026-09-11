@@ -100,6 +100,13 @@ type RevenueEvent = {
   created_at: string | null;
 };
 
+type DashboardSubscriptionUser = {
+  id: string;
+  subscription_variant: string | null;
+  subscription_status: string | null;
+  subscription_price_eur: number | string | null;
+};
+
 const emptyDashboard: DashboardRow = {
   total_users: 0,
   active_15m: 0,
@@ -170,6 +177,7 @@ const periodOptions: { value: NetPeriod; label: string }[] = [
 
 export default function DashboardPage() {
   const [dashboard, setDashboard] = useState<DashboardRow>(emptyDashboard);
+  const [subscriptionUsers, setSubscriptionUsers] = useState<DashboardSubscriptionUser[]>([]);
   const [netOverview, setNetOverview] = useState<NetOverview>(emptyNetOverview);
   const [netPeriod, setNetPeriod] = useState<NetPeriod>("today");
   const [netReloadKey, setNetReloadKey] = useState(0);
@@ -183,15 +191,37 @@ export default function DashboardPage() {
     setLoading(true);
     setLoadError(null);
 
-    const { data, error } = await supabase.rpc("admin_dashboard_overview");
+    const [overviewResult, usersResult] = await Promise.all([
+      supabase.rpc("admin_dashboard_overview"),
+      supabase.rpc("admin_list_users"),
+    ]);
 
-    if (error) {
-      console.error("Fehler beim Laden des Dashboards:", error);
+    if (overviewResult.error) {
+      console.error("Fehler beim Laden des Dashboards:", overviewResult.error);
       setDashboard(emptyDashboard);
-      setLoadError(error.message || "Dashboard konnte nicht geladen werden.");
+      setLoadError(
+        overviewResult.error.message || "Dashboard konnte nicht geladen werden.",
+      );
     } else {
-      const rows = (data as DashboardRow[] | null) || [];
+      const rows = (overviewResult.data as DashboardRow[] | null) || [];
       setDashboard(rows[0] || emptyDashboard);
+    }
+
+    if (usersResult.error) {
+      console.error(
+        "Fehler beim Laden der aktuellen Abo-Verteilung:",
+        usersResult.error,
+      );
+      setSubscriptionUsers([]);
+      setLoadError((current) =>
+        current ||
+        usersResult.error?.message ||
+        "Aktuelle Abo-Verteilung konnte nicht geladen werden.",
+      );
+    } else {
+      setSubscriptionUsers(
+        (usersResult.data as DashboardSubscriptionUser[] | null) || [],
+      );
     }
 
     setLoading(false);
@@ -260,12 +290,52 @@ export default function DashboardPage() {
     ...netChartData.map((item) => Math.abs(toNumber(item.net_profit_eur))),
   );
 
+  // Die Verteilung muss Nutzer zählen, nicht historische Zeilen aus
+  // public.subscriptions. admin_list_users liefert jeden Profil-User genau
+  // einmal und fällt ohne aktives Abo auf "free" zurück.
+  const currentPlanStats = useMemo(() => {
+    let free = 0;
+    let club = 0;
+    let master = 0;
+    let paidActive = 0;
+    let monthlyRevenue = 0;
+
+    for (const user of subscriptionUsers) {
+      const rawPlan = (user.subscription_variant || "free").toLowerCase().trim();
+      const plan =
+        rawPlan === "master"
+          ? "master"
+          : ["club", "elite", "pro", "basic"].includes(rawPlan)
+            ? "club"
+            : "free";
+
+      if (plan === "master") master += 1;
+      else if (plan === "club") club += 1;
+      else free += 1;
+
+      if (plan !== "free") {
+        const price = toNumber(user.subscription_price_eur);
+        if (price > 0) {
+          paidActive += 1;
+          monthlyRevenue += price;
+        }
+      }
+    }
+
+    return {
+      free,
+      club,
+      master,
+      activeSubscriptions: club + master,
+      paidActive,
+      monthlyRevenue,
+    };
+  }, [subscriptionUsers]);
+
   const variantData = [
-    { label: "Free", value: toNumber(dashboard.variant_free) },
-    { label: "Basic", value: toNumber(dashboard.variant_basic) },
-    { label: "Pro", value: toNumber(dashboard.variant_pro) },
-    { label: "Elite", value: toNumber(dashboard.variant_elite) },
-    { label: "Master", value: toNumber(dashboard.variant_master) },
+    { label: "Free", value: currentPlanStats.free },
+    { label: "Club", value: currentPlanStats.club },
+    { label: "Master", value: currentPlanStats.master },
   ];
 
   const maxVariant = Math.max(1, ...variantData.map((item) => item.value));
@@ -499,24 +569,24 @@ export default function DashboardPage() {
       />
       <div style={kpiGridStyle}>
         <KpiCard
-          title="Abos gesamt"
-          value={loading ? "..." : formatNumber(dashboard.total_subscriptions)}
+          title="Free Nutzer"
+          value={loading ? "..." : formatNumber(currentPlanStats.free)}
         />
         <KpiCard
-          title="Aktive Abos"
-          value={loading ? "..." : formatNumber(dashboard.active_subscriptions)}
+          title="Aktive Club / Master"
+          value={
+            loading ? "..." : formatNumber(currentPlanStats.activeSubscriptions)
+          }
           accent="green"
         />
         <KpiCard
-          title="Aktive bezahlt"
-          value={
-            loading ? "..." : formatNumber(dashboard.paid_active_subscriptions)
-          }
+          title="Davon bezahlt"
+          value={loading ? "..." : formatNumber(currentPlanStats.paidActive)}
         />
         <KpiCard
           title="Aktiver Abo-Monatswert"
           value={
-            loading ? "..." : formatMoney(dashboard.subscription_revenue_active)
+            loading ? "..." : formatMoney(currentPlanStats.monthlyRevenue)
           }
         />
       </div>
@@ -525,7 +595,7 @@ export default function DashboardPage() {
         <div style={sectionHeaderStyle}>
           <div>
             <h3 style={sectionTitleStyle}>Abo-Verteilung</h3>
-            <p style={sectionTextStyle}>Free, Basic, Pro, Elite und Master.</p>
+            <p style={sectionTextStyle}>Aktueller Tarif pro Nutzer: Free, Club oder Master.</p>
           </div>
         </div>
 
