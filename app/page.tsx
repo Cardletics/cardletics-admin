@@ -1123,54 +1123,111 @@ function PlayStoreIcon() {
   );
 }
 
-function StoreCard({
-  href,
-  brand,
+function AppStorePreview({
   subtitle,
-  platform,
-  live,
   isMobile,
-  icon,
 }: {
-  href?: string;
-  brand: string;
   subtitle: string;
-  platform: string;
-  live: boolean;
   isMobile: boolean;
-  icon: React.ReactNode;
 }) {
-  const Component = href ? "a" : "div";
-
   return (
-    <Component
-      {...(href
-        ? {
-            href,
-            target: "_blank",
-            rel: "noopener noreferrer",
-            "aria-label": `${brand} – ${subtitle}`,
-          }
-        : {})}
+    <a
+      href={APP_STORE_URL}
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label={`Cardletics – ${subtitle}`}
       style={{
-        ...storeCardStyle,
-        width: isMobile ? "100%" : "minmax(0, 1fr)",
-        cursor: href ? "pointer" : "default",
-        opacity: href ? 1 : 0.94,
+        ...storePreviewCardStyle,
+        gridTemplateColumns: isMobile ? "1fr auto" : "1fr auto",
       }}
     >
-      <div style={storeCardTopStyle}>
-        <div style={storeIconWrapStyle}>{icon}</div>
-        <div style={{ minWidth: 0 }}>
-          <div style={storePlatformStyle}>{platform}</div>
-          <div style={storeBrandStyle}>{brand}</div>
+      <div style={storePreviewMainStyle}>
+        <div style={storePreviewHeaderStyle}>
+          <div style={storeLogoWrapStyle}>
+            <Image
+              src="/bg_app.png"
+              alt="Cardletics App Icon"
+              width={58}
+              height={58}
+              style={storeLogoImageStyle}
+            />
+          </div>
+
+          <div style={{ minWidth: 0 }}>
+            <div style={storePlatformLineStyle}>
+              <span style={storePlatformIconWrapStyle}><AppleStoreIcon /></span>
+              <span>App Store</span>
+              <span style={{ ...storeStatusBadgeStyle, ...storeStatusLiveStyle }}>LIVE</span>
+            </div>
+            <div style={storeAppNameStyle}>Cardletics</div>
+            <div style={storeAppSubtitleStyle}>{subtitle}</div>
+          </div>
         </div>
-        <div style={{ ...storeBadgeStyle, ...(live ? storeBadgeLiveStyle : storeBadgeSoonStyle) }}>
-          {live ? "LIVE" : "SOON"}
+
+        <div style={storeFeatureLineStyle}>
+          iPhone &amp; iPad
+          <span style={storeDotStyle}>•</span>
+          Kostenlos
+          <span style={storeDotStyle}>•</span>
+          In-App-Käufe
         </div>
       </div>
-      <div style={storeSubtitleStyle}>{subtitle}</div>
-    </Component>
+
+      <div style={storeQrWrapStyle}>
+        <Image
+          src="/cardletics-appstore-qr.png"
+          alt="QR-Code zum Cardletics App Store"
+          width={94}
+          height={94}
+          style={storeQrImageStyle}
+        />
+        <span style={storeQrLabelStyle}>QR</span>
+      </div>
+    </a>
+  );
+}
+
+function GooglePlayPreview({
+  subtitle,
+}: {
+  subtitle: string;
+}) {
+  return (
+    <div style={{ ...storePreviewCardStyle, ...storePreviewCardSoonStyle, gridTemplateColumns: "1fr auto" }}>
+      <div style={storePreviewMainStyle}>
+        <div style={storePreviewHeaderStyle}>
+          <div style={storeLogoWrapStyle}>
+            <Image
+              src="/bg_app.png"
+              alt="Cardletics App Icon"
+              width={58}
+              height={58}
+              style={storeLogoImageStyle}
+            />
+          </div>
+
+          <div style={{ minWidth: 0 }}>
+            <div style={storePlatformLineStyle}>
+              <span style={storePlatformIconWrapStyle}><PlayStoreIcon /></span>
+              <span>Google Play</span>
+              <span style={{ ...storeStatusBadgeStyle, ...storeStatusSoonStyle }}>SOON</span>
+            </div>
+            <div style={storeAppNameStyle}>Cardletics</div>
+            <div style={storeAppSubtitleStyle}>{subtitle}</div>
+          </div>
+        </div>
+
+        <div style={storeFeatureLineStyle}>
+          Android
+          <span style={storeDotStyle}>•</span>
+          Veröffentlichung folgt
+        </div>
+      </div>
+
+      <div style={googlePlayMarkStyle}>
+        <PlayStoreIcon />
+      </div>
+    </div>
   );
 }
 
@@ -1331,30 +1388,24 @@ export default function HomePage() {
             {t.subtitle}
           </p>
 
-          <div style={{ ...buttonRowStyle, flexDirection: isMobile ? "column" : "row", alignItems: "stretch", gap: isMobile ? "12px" : "14px" }}>
-            <StoreCard
-              href={APP_STORE_URL}
-              brand="App Store"
-              subtitle={t.appStore}
-              platform="iPhone & iPad"
-              live
-              isMobile={isMobile}
-              icon={<AppleStoreIcon />}
-            />
-            <StoreCard
-              brand="Google Play"
-              subtitle={t.googlePlay}
-              platform="Android"
-              live={false}
-              isMobile={isMobile}
-              icon={<PlayStoreIcon />}
-            />
-            {isMobile && (
-              <a href="mailto:info@cardletics.com?subject=Affiliate%20Programm" style={{ ...affiliateInlineButtonStyle, width: "100%" }}>
-                {t.affiliateProgram}
-              </a>
-            )}
+          <div
+            style={{
+              ...storePreviewGridStyle,
+              gridTemplateColumns: isMobile ? "1fr" : "repeat(2, minmax(0, 1fr))",
+            }}
+          >
+            <AppStorePreview subtitle={t.appStore} isMobile={isMobile} />
+            <GooglePlayPreview subtitle={t.googlePlay} />
           </div>
+
+          {isMobile && (
+            <a
+              href="mailto:info@cardletics.com?subject=Affiliate%20Programm"
+              style={{ ...affiliateInlineButtonStyle, width: "100%", marginTop: "12px" }}
+            >
+              {t.affiliateProgram}
+            </a>
+          )}
 
           <p style={{ ...heroHintStyle, fontSize: isMobile ? "13px" : "14px" }}>{t.heroHint}</p>
         </div>
@@ -2016,89 +2067,181 @@ const buttonSecondaryStyle: React.CSSProperties = {
   textDecoration: "none",
 };
 
-const storeCardStyle: React.CSSProperties = {
-  display: "flex",
-  flexDirection: "column",
-  gap: "10px",
-  minHeight: "108px",
-  padding: "14px 16px",
-  background: "linear-gradient(180deg, rgba(14,25,20,0.98) 0%, rgba(10,18,14,0.98) 100%)",
-  borderRadius: "18px",
-  border: "1px solid rgba(92,255,154,0.16)",
+const storePreviewGridStyle: React.CSSProperties = {
+  width: "100%",
+  display: "grid",
+  gap: "14px",
+  maxWidth: "880px",
+  margin: "0 auto",
+};
+
+const storePreviewCardStyle: React.CSSProperties = {
+  display: "grid",
+  alignItems: "center",
+  gap: "14px",
+  minHeight: "132px",
+  padding: "16px",
+  background: "linear-gradient(145deg, rgba(14,25,20,0.98) 0%, rgba(8,16,12,0.98) 100%)",
+  borderRadius: "22px",
+  border: "1px solid rgba(134,239,172,0.18)",
   color: "#e7f1eb",
   textDecoration: "none",
-  boxShadow: "0 14px 30px rgba(0,0,0,0.22)",
-  flex: 1,
+  boxShadow: "0 18px 38px rgba(0,0,0,0.24)",
+  overflow: "hidden",
 };
 
-const storeCardTopStyle: React.CSSProperties = {
+const storePreviewCardSoonStyle: React.CSSProperties = {
+  border: "1px solid rgba(231,241,235,0.11)",
+  opacity: 0.94,
+};
+
+const storePreviewMainStyle: React.CSSProperties = {
+  minWidth: 0,
+};
+
+const storePreviewHeaderStyle: React.CSSProperties = {
   display: "flex",
   alignItems: "center",
-  gap: "12px",
+  gap: "13px",
 };
 
-const storeIconWrapStyle: React.CSSProperties = {
-  width: "46px",
-  height: "46px",
-  borderRadius: "14px",
+const storeLogoWrapStyle: React.CSSProperties = {
+  width: "62px",
+  height: "62px",
+  borderRadius: "16px",
+  overflow: "hidden",
+  flexShrink: 0,
+  border: "1px solid rgba(255,255,255,0.11)",
+  boxShadow: "0 10px 24px rgba(0,0,0,0.28)",
+  background: "#101814",
+};
+
+const storeLogoImageStyle: React.CSSProperties = {
+  width: "100%",
+  height: "100%",
+  display: "block",
+  objectFit: "cover",
+};
+
+const storePlatformLineStyle: React.CSSProperties = {
   display: "flex",
+  alignItems: "center",
+  gap: "7px",
+  color: "#b9c9c0",
+  fontSize: "11px",
+  fontWeight: 800,
+  letterSpacing: "0.06em",
+  textTransform: "uppercase",
+  marginBottom: "4px",
+  whiteSpace: "nowrap",
+};
+
+const storePlatformIconWrapStyle: React.CSSProperties = {
+  display: "inline-flex",
   alignItems: "center",
   justifyContent: "center",
-  background: "rgba(34,197,94,0.12)",
-  border: "1px solid rgba(134,239,172,0.16)",
-  flexShrink: 0,
+  width: "18px",
+  height: "18px",
 };
 
 const storeIconStyle: React.CSSProperties = {
-  width: "24px",
-  height: "24px",
-  color: "#e7f1eb",
+  width: "18px",
+  height: "18px",
   display: "block",
+  color: "#e7f1eb",
 };
 
-const storePlatformStyle: React.CSSProperties = {
-  color: "#86efac",
-  fontSize: "11px",
-  fontWeight: 800,
-  letterSpacing: "0.08em",
-  textTransform: "uppercase",
-  marginBottom: "4px",
+const storeAppNameStyle: React.CSSProperties = {
+  color: "#f7fbf8",
+  fontSize: "21px",
+  lineHeight: 1.1,
+  fontWeight: 900,
+  letterSpacing: "-0.02em",
 };
 
-const storeBrandStyle: React.CSSProperties = {
-  color: "#f4faf6",
-  fontWeight: 800,
-  fontSize: "18px",
-  lineHeight: 1.2,
+const storeAppSubtitleStyle: React.CSSProperties = {
+  color: "#9fb1a8",
+  fontSize: "13px",
+  lineHeight: 1.4,
+  marginTop: "5px",
 };
 
-const storeBadgeStyle: React.CSSProperties = {
-  marginLeft: "auto",
-  padding: "6px 10px",
+const storeStatusBadgeStyle: React.CSSProperties = {
+  padding: "4px 7px",
   borderRadius: "999px",
-  fontSize: "11px",
-  fontWeight: 800,
+  fontSize: "9px",
+  lineHeight: 1,
+  fontWeight: 900,
   letterSpacing: "0.08em",
-  textTransform: "uppercase",
-  flexShrink: 0,
 };
 
-const storeBadgeLiveStyle: React.CSSProperties = {
-  background: "rgba(34,197,94,0.18)",
+const storeStatusLiveStyle: React.CSSProperties = {
+  background: "rgba(34,197,94,0.16)",
   color: "#86efac",
-  border: "1px solid rgba(134,239,172,0.22)",
+  border: "1px solid rgba(134,239,172,0.2)",
 };
 
-const storeBadgeSoonStyle: React.CSSProperties = {
-  background: "rgba(231,241,235,0.08)",
-  color: "#d5e4db",
-  border: "1px solid rgba(231,241,235,0.14)",
+const storeStatusSoonStyle: React.CSSProperties = {
+  background: "rgba(231,241,235,0.06)",
+  color: "#cbd8d1",
+  border: "1px solid rgba(231,241,235,0.12)",
 };
 
-const storeSubtitleStyle: React.CSSProperties = {
-  color: "#b5c6be",
-  lineHeight: 1.45,
-  fontSize: "14px",
+const storeFeatureLineStyle: React.CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  flexWrap: "wrap",
+  gap: "7px",
+  marginTop: "14px",
+  color: "#75887e",
+  fontSize: "11px",
+  fontWeight: 700,
+};
+
+const storeDotStyle: React.CSSProperties = {
+  opacity: 0.65,
+};
+
+const storeQrWrapStyle: React.CSSProperties = {
+  width: "106px",
+  minWidth: "106px",
+  padding: "6px",
+  background: "#ffffff",
+  borderRadius: "16px",
+  boxShadow: "0 10px 26px rgba(0,0,0,0.25)",
+  position: "relative",
+};
+
+const storeQrImageStyle: React.CSSProperties = {
+  width: "94px",
+  height: "94px",
+  display: "block",
+  objectFit: "contain",
+};
+
+const storeQrLabelStyle: React.CSSProperties = {
+  position: "absolute",
+  right: "7px",
+  bottom: "7px",
+  padding: "3px 5px",
+  borderRadius: "6px",
+  background: "rgba(6,12,9,0.86)",
+  color: "#ffffff",
+  fontSize: "8px",
+  fontWeight: 900,
+  letterSpacing: "0.08em",
+};
+
+const googlePlayMarkStyle: React.CSSProperties = {
+  width: "70px",
+  height: "70px",
+  borderRadius: "18px",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  background: "rgba(231,241,235,0.045)",
+  border: "1px solid rgba(231,241,235,0.08)",
+  opacity: 0.7,
 };
 
 const heroHintStyle: React.CSSProperties = {
