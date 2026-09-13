@@ -1102,6 +1102,78 @@ function FlagIcon({ countryCode, alt }: { countryCode: string; alt: string }) {
   );
 }
 
+function AppleStoreIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" style={storeIconStyle}>
+      <path
+        d="M15.5 2.2c.1 1-.3 2-1 2.8-.8.9-2 1.5-3.1 1.4-.1-1 .3-2 1-2.8.8-.9 2-1.5 3.1-1.4Zm3.2 14.2c-.4 1-1 2-1.8 3-.7.9-1.6 2-2.8 2-1 0-1.7-.6-2.8-.6s-1.8.6-2.9.6c-1.2 0-2-.9-2.8-1.8C4.1 18.1 3 15.7 3 13.4c0-3.6 2.3-5.5 4.6-5.5 1.2 0 2.2.7 3 .7.8 0 2-.8 3.4-.7.6 0 2.4.2 3.6 1.9-2.9 1.6-2.4 5.8.1 6.6Z"
+        fill="currentColor"
+      />
+    </svg>
+  );
+}
+
+function PlayStoreIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" style={storeIconStyle}>
+      <path d="M4.5 3.5c-.4.4-.5 1-.5 1.8v13.4c0 .8.1 1.4.5 1.8l9.1-9-9.1-9Z" fill="currentColor" opacity="0.92" />
+      <path d="M15.8 10.4 7.3 2.2l10.6 6c1.2.7 1.2 1.5 0 2.2l-2.1 1.2Z" fill="currentColor" opacity="0.72" />
+      <path d="m15.8 13.6 2.1 1.2c1.2.7 1.2 1.5 0 2.2l-10.6 6 8.5-8.2Z" fill="currentColor" opacity="0.72" />
+    </svg>
+  );
+}
+
+function StoreCard({
+  href,
+  brand,
+  subtitle,
+  platform,
+  live,
+  isMobile,
+  icon,
+}: {
+  href?: string;
+  brand: string;
+  subtitle: string;
+  platform: string;
+  live: boolean;
+  isMobile: boolean;
+  icon: React.ReactNode;
+}) {
+  const Component = href ? "a" : "div";
+
+  return (
+    <Component
+      {...(href
+        ? {
+            href,
+            target: "_blank",
+            rel: "noopener noreferrer",
+            "aria-label": `${brand} – ${subtitle}`,
+          }
+        : {})}
+      style={{
+        ...storeCardStyle,
+        width: isMobile ? "100%" : "minmax(0, 1fr)",
+        cursor: href ? "pointer" : "default",
+        opacity: href ? 1 : 0.94,
+      }}
+    >
+      <div style={storeCardTopStyle}>
+        <div style={storeIconWrapStyle}>{icon}</div>
+        <div style={{ minWidth: 0 }}>
+          <div style={storePlatformStyle}>{platform}</div>
+          <div style={storeBrandStyle}>{brand}</div>
+        </div>
+        <div style={{ ...storeBadgeStyle, ...(live ? storeBadgeLiveStyle : storeBadgeSoonStyle) }}>
+          {live ? "LIVE" : "SOON"}
+        </div>
+      </div>
+      <div style={storeSubtitleStyle}>{subtitle}</div>
+    </Component>
+  );
+}
+
 export default function HomePage() {
   const [helpOpen, setHelpOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -1259,17 +1331,24 @@ export default function HomePage() {
             {t.subtitle}
           </p>
 
-          <div style={{ ...buttonRowStyle, flexDirection: isMobile ? "column" : "row", alignItems: "center" }}>
-            <a
+          <div style={{ ...buttonRowStyle, flexDirection: isMobile ? "column" : "row", alignItems: "stretch", gap: isMobile ? "12px" : "14px" }}>
+            <StoreCard
               href={APP_STORE_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label={t.appStore}
-              style={{ ...buttonStyle, width: isMobile ? "100%" : "auto" }}
-            >
-              {t.appStore}
-            </a>
-            <div style={{ ...buttonSecondaryStyle, width: isMobile ? "100%" : "auto" }}>{t.googlePlay}</div>
+              brand="App Store"
+              subtitle={t.appStore}
+              platform="iPhone & iPad"
+              live
+              isMobile={isMobile}
+              icon={<AppleStoreIcon />}
+            />
+            <StoreCard
+              brand="Google Play"
+              subtitle={t.googlePlay}
+              platform="Android"
+              live={false}
+              isMobile={isMobile}
+              icon={<PlayStoreIcon />}
+            />
             {isMobile && (
               <a href="mailto:info@cardletics.com?subject=Affiliate%20Programm" style={{ ...affiliateInlineButtonStyle, width: "100%" }}>
                 {t.affiliateProgram}
@@ -1935,6 +2014,91 @@ const buttonSecondaryStyle: React.CSSProperties = {
   border: "1px solid #2d3b35",
   fontWeight: 700,
   textDecoration: "none",
+};
+
+const storeCardStyle: React.CSSProperties = {
+  display: "flex",
+  flexDirection: "column",
+  gap: "10px",
+  minHeight: "108px",
+  padding: "14px 16px",
+  background: "linear-gradient(180deg, rgba(14,25,20,0.98) 0%, rgba(10,18,14,0.98) 100%)",
+  borderRadius: "18px",
+  border: "1px solid rgba(92,255,154,0.16)",
+  color: "#e7f1eb",
+  textDecoration: "none",
+  boxShadow: "0 14px 30px rgba(0,0,0,0.22)",
+  flex: 1,
+};
+
+const storeCardTopStyle: React.CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  gap: "12px",
+};
+
+const storeIconWrapStyle: React.CSSProperties = {
+  width: "46px",
+  height: "46px",
+  borderRadius: "14px",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  background: "rgba(34,197,94,0.12)",
+  border: "1px solid rgba(134,239,172,0.16)",
+  flexShrink: 0,
+};
+
+const storeIconStyle: React.CSSProperties = {
+  width: "24px",
+  height: "24px",
+  color: "#e7f1eb",
+  display: "block",
+};
+
+const storePlatformStyle: React.CSSProperties = {
+  color: "#86efac",
+  fontSize: "11px",
+  fontWeight: 800,
+  letterSpacing: "0.08em",
+  textTransform: "uppercase",
+  marginBottom: "4px",
+};
+
+const storeBrandStyle: React.CSSProperties = {
+  color: "#f4faf6",
+  fontWeight: 800,
+  fontSize: "18px",
+  lineHeight: 1.2,
+};
+
+const storeBadgeStyle: React.CSSProperties = {
+  marginLeft: "auto",
+  padding: "6px 10px",
+  borderRadius: "999px",
+  fontSize: "11px",
+  fontWeight: 800,
+  letterSpacing: "0.08em",
+  textTransform: "uppercase",
+  flexShrink: 0,
+};
+
+const storeBadgeLiveStyle: React.CSSProperties = {
+  background: "rgba(34,197,94,0.18)",
+  color: "#86efac",
+  border: "1px solid rgba(134,239,172,0.22)",
+};
+
+const storeBadgeSoonStyle: React.CSSProperties = {
+  background: "rgba(231,241,235,0.08)",
+  color: "#d5e4db",
+  border: "1px solid rgba(231,241,235,0.14)",
+};
+
+const storeSubtitleStyle: React.CSSProperties = {
+  color: "#b5c6be",
+  lineHeight: 1.45,
+  fontSize: "14px",
 };
 
 const heroHintStyle: React.CSSProperties = {
