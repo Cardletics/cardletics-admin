@@ -93,7 +93,7 @@ const translations: Record<LanguageKey, Translation> = {
     title: "Sportdaten werden\nzu Karten, Teams\nund echtem Fortschritt.",
     subtitle: "Cardletics verbindet echte Bewegung mit digitalem Sammelkarten-Gameplay. Laufe, trainiere und bleibe aktiv, um Karten zu verdienen, Sammlungen zu vervollständigen, Teams aufzubauen, Kämpfe zu bestreiten und über die interne Börse zu handeln.",
     appStore: "Im App Store laden",
-    googlePlay: "Google Play – bald verfügbar",
+    googlePlay: "Bei Google Play laden",
     affiliateProgram: "Affiliate Programm",
     heroHint: "Cardletics ist kostenlos nutzbar und kann optional durch Abos, Coins und weitere Inhalte erweitert werden.",
     stats: [{"label": "Tracking", "value": "Bewegung wird Fortschritt"}, {"label": "Karten", "value": "Selten, sammelbar, handelbar"}, {"label": "Teams", "value": "Strategie & Kämpfe"}, {"label": "Marktplatz", "value": "Interne Börse"}],
@@ -130,7 +130,7 @@ const translations: Record<LanguageKey, Translation> = {
     title: "Sports data becomes\ncards, teams\nand real progress.",
     subtitle: "Cardletics connects real movement with digital trading-card gameplay. Walk, train and stay active to earn cards, complete collections, build teams, battle and trade on the internal marketplace.",
     appStore: "Download on the App Store",
-    googlePlay: "Google Play – coming soon",
+    googlePlay: "Get it on Google Play",
     affiliateProgram: "Affiliate Program",
     heroHint: "Cardletics is free to use and can optionally be expanded with subscriptions, coins and additional content.",
     stats: [{"label": "Tracking", "value": "Movement becomes progress"}, {"label": "Cards", "value": "Rare, collectible, tradable"}, {"label": "Teams", "value": "Strategy & battles"}, {"label": "Marketplace", "value": "Internal exchange"}],
@@ -167,7 +167,7 @@ const translations: Record<LanguageKey, Translation> = {
     title: "Los datos deportivos se convierten\nen cartas, equipos\ny progreso real.",
     subtitle: "Cardletics conecta el movimiento real con un juego digital de cartas coleccionables. Camina, entrena y mantente activo para ganar cartas, completar colecciones, crear equipos, combatir y comerciar en el mercado interno.",
     appStore: "Descargar en App Store",
-    googlePlay: "Google Play – próximamente",
+    googlePlay: "Descargar en Google Play",
     affiliateProgram: "Programa de afiliados",
     heroHint: "Cardletics se puede usar gratis y se puede ampliar de forma opcional con suscripciones, monedas y contenido adicional.",
     stats: [{"label": "Seguimiento", "value": "El movimiento se convierte en progreso"}, {"label": "Cartas", "value": "Raras, coleccionables, comerciables"}, {"label": "Equipos", "value": "Estrategia y combates"}, {"label": "Mercado", "value": "Intercambio interno"}],
@@ -204,7 +204,7 @@ const translations: Record<LanguageKey, Translation> = {
     title: "Les données sportives deviennent\ndes cartes, des équipes\net de vrais progrès.",
     subtitle: "Cardletics relie le mouvement réel à un gameplay numérique de cartes à collectionner. Marchez, entraînez-vous et restez actif pour gagner des cartes, compléter des collections, créer des équipes, combattre et échanger sur le marché interne.",
     appStore: "Télécharger sur l’App Store",
-    googlePlay: "Google Play – bientôt disponible",
+    googlePlay: "Télécharger sur Google Play",
     affiliateProgram: "Programme d’affiliation",
     heroHint: "Cardletics est gratuit et peut être complété en option par des abonnements, des pièces et du contenu supplémentaire.",
     stats: [{"label": "Suivi", "value": "Le mouvement devient du progrès"}, {"label": "Cartes", "value": "Rares, collectionnables, échangeables"}, {"label": "Équipes", "value": "Stratégie et combats"}, {"label": "Marché", "value": "Échange interne"}],
@@ -241,7 +241,7 @@ const translations: Record<LanguageKey, Translation> = {
     title: "Dados esportivos viram\ncartas, equipes\ne progresso real.",
     subtitle: "Cardletics conecta movimento real com gameplay digital de cartas colecionáveis. Caminhe, treine e mantenha-se ativo para ganhar cartas, completar coleções, montar equipes, batalhar e negociar no mercado interno.",
     appStore: "Descarregar na App Store",
-    googlePlay: "Google Play – em breve",
+    googlePlay: "Obter no Google Play",
     affiliateProgram: "Programa de afiliados",
     heroHint: "Cardletics é gratuito e pode ser ampliado opcionalmente com assinaturas, moedas e conteúdo adicional.",
     stats: [{"label": "Rastreamento", "value": "Movimento vira progresso"}, {"label": "Cartas", "value": "Raras, colecionáveis, negociáveis"}, {"label": "Equipes", "value": "Estratégia e batalhas"}, {"label": "Mercado", "value": "Troca interna"}],
@@ -278,7 +278,7 @@ const translations: Record<LanguageKey, Translation> = {
     title: "运动数据变成\n卡牌、队伍\n和真实进度。",
     subtitle: "Cardletics 将真实运动与数字集换式卡牌玩法结合。步行、训练并保持活跃，即可获得卡牌、完成收藏、组建队伍、参与对战并在内部市场交易。",
     appStore: "在 App Store 下载",
-    googlePlay: "Google Play – 即将推出",
+    googlePlay: "在 Google Play 下载",
     affiliateProgram: "联盟计划",
     heroHint: "Cardletics 可免费使用，也可通过订阅、金币和额外内容进行扩展。",
     stats: [{"label": "追踪", "value": "运动变成进度"}, {"label": "卡牌", "value": "稀有、可收集、可交易"}, {"label": "队伍", "value": "策略与对战"}, {"label": "市场", "value": "内部交易"}],
@@ -315,7 +315,7 @@ const translations: Record<LanguageKey, Translation> = {
     title: "खेल डेटा बनता है\nकार्ड, टीमें\nऔर असली प्रगति।",
     subtitle: "Cardletics वास्तविक गतिविधि को डिजिटल ट्रेडिंग-कार्ड गेमप्ले से जोड़ता है। चलें, ट्रेनिंग करें और सक्रिय रहें ताकि कार्ड मिलें, कलेक्शन पूरे हों, टीमें बनें, मुकाबले हों और अंदरूनी मार्केट में ट्रेड हो।",
     appStore: "App Store से डाउनलोड करें",
-    googlePlay: "Google Play – जल्द उपलब्ध",
+    googlePlay: "Google Play से डाउनलोड करें",
     affiliateProgram: "एफ़िलिएट प्रोग्राम",
     heroHint: "Cardletics मुफ्त में उपयोग किया जा सकता है और वैकल्पिक रूप से सब्सक्रिप्शन, कॉइन और अतिरिक्त सामग्री से बढ़ाया जा सकता है।",
     stats: [{"label": "ट्रैकिंग", "value": "गतिविधि प्रगति बनती है"}, {"label": "कार्ड", "value": "दुर्लभ, संग्रह योग्य, ट्रेड योग्य"}, {"label": "टीम", "value": "रणनीति और मुकाबले"}, {"label": "मार्केट", "value": "आंतरिक एक्सचेंज"}],
@@ -352,7 +352,7 @@ const translations: Record<LanguageKey, Translation> = {
     title: "تتحول بيانات الرياضة\nإلى بطاقات وفرق\nوتقدم حقيقي.",
     subtitle: "يربط Cardletics الحركة الحقيقية بأسلوب لعب بطاقات رقمية قابلة للجمع. امشِ وتدرّب وابقَ نشيطًا لتحصل على بطاقات وتكمل المجموعات وتبني فرقًا وتخوض المعارك وتتداول في السوق الداخلي.",
     appStore: "تنزيل من App Store",
-    googlePlay: "Google Play – قريبًا",
+    googlePlay: "تنزيل من Google Play",
     affiliateProgram: "برنامج الشراكة",
     heroHint: "يمكن استخدام Cardletics مجانًا، مع إمكانية إضافة اشتراكات وعملات ومحتوى إضافي اختياريًا.",
     stats: [{"label": "التتبع", "value": "الحركة تصبح تقدماً"}, {"label": "البطاقات", "value": "نادرة، قابلة للجمع والتداول"}, {"label": "الفرق", "value": "استراتيجية ومعارك"}, {"label": "السوق", "value": "تبادل داخلي"}],
@@ -389,7 +389,7 @@ const translations: Record<LanguageKey, Translation> = {
     title: "খেলার ডেটা হয়ে ওঠে\nকার্ড, দল\nও বাস্তব অগ্রগতি।",
     subtitle: "Cardletics বাস্তব চলাফেরাকে ডিজিটাল ট্রেডিং-কার্ড গেমপ্লের সঙ্গে যুক্ত করে। হাঁটুন, অনুশীলন করুন এবং সক্রিয় থাকুন—কার্ড অর্জন, সংগ্রহ সম্পূর্ণ, দল তৈরি, যুদ্ধ ও অভ্যন্তরীণ বাজারে ট্রেড করার জন্য।",
     appStore: "App Store থেকে ডাউনলোড করুন",
-    googlePlay: "Google Play – শীঘ্রই",
+    googlePlay: "Google Play থেকে ডাউনলোড করুন",
     affiliateProgram: "অ্যাফিলিয়েট প্রোগ্রাম",
     heroHint: "Cardletics বিনামূল্যে ব্যবহারযোগ্য এবং চাইলে সাবস্ক্রিপশন, কয়েন ও অতিরিক্ত কনটেন্ট দিয়ে বাড়ানো যায়।",
     stats: [{"label": "ট্র্যাকিং", "value": "চলাফেরা অগ্রগতি হয়"}, {"label": "কার্ড", "value": "দুর্লভ, সংগ্রহযোগ্য, ট্রেডযোগ্য"}, {"label": "দল", "value": "কৌশল ও যুদ্ধ"}, {"label": "বাজার", "value": "অভ্যন্তরীণ এক্সচেঞ্জ"}],
@@ -426,7 +426,7 @@ const translations: Record<LanguageKey, Translation> = {
     title: "Спортивные данные становятся\nкартами, командами\nи реальным прогрессом.",
     subtitle: "Cardletics соединяет реальное движение с цифровым геймплеем коллекционных карточек. Ходите, тренируйтесь и оставайтесь активными, чтобы получать карты, закрывать коллекции, собирать команды, сражаться и торговать на внутреннем рынке.",
     appStore: "Скачать в App Store",
-    googlePlay: "Google Play – скоро",
+    googlePlay: "Скачать в Google Play",
     affiliateProgram: "Партнёрская программа",
     heroHint: "Cardletics можно использовать бесплатно и при желании расширять подписками, монетами и дополнительным контентом.",
     stats: [{"label": "Трекинг", "value": "Движение становится прогрессом"}, {"label": "Карты", "value": "Редкие, коллекционные, торговые"}, {"label": "Команды", "value": "Стратегия и битвы"}, {"label": "Рынок", "value": "Внутренний обмен"}],
@@ -463,7 +463,7 @@ const translations: Record<LanguageKey, Translation> = {
     title: "スポーツデータが\nカード、チーム、\n本当の進歩になる。",
     subtitle: "Cardletics は現実の運動とデジタルトレーディングカードのゲーム性をつなげます。歩き、トレーニングし、アクティブに過ごしてカードを獲得し、コレクションを完成させ、チームを作り、バトルし、内部マーケットで取引できます。",
     appStore: "App Storeでダウンロード",
-    googlePlay: "Google Play – 近日公開",
+    googlePlay: "Google Playでダウンロード",
     affiliateProgram: "アフィリエイトプログラム",
     heroHint: "Cardletics は無料で利用でき、必要に応じてサブスクリプション、コイン、追加コンテンツで拡張できます。",
     stats: [{"label": "記録", "value": "運動が進歩になる"}, {"label": "カード", "value": "レア・収集・取引可能"}, {"label": "チーム", "value": "戦略とバトル"}, {"label": "マーケット", "value": "内部取引"}],
@@ -500,7 +500,7 @@ const translations: Record<LanguageKey, Translation> = {
     title: "Spor verileri\nkartlara, takımlara\nve gerçek ilerlemeye dönüşür.",
     subtitle: "Cardletics gerçek hareketi dijital koleksiyon kartı oynanışıyla birleştirir. Yürü, antrenman yap ve aktif kal; kart kazan, koleksiyonları tamamla, takım kur, savaş ve iç pazarda takas yap.",
     appStore: "App Store’dan indir",
-    googlePlay: "Google Play – yakında",
+    googlePlay: "Google Play’den indir",
     affiliateProgram: "Ortaklık Programı",
     heroHint: "Cardletics ücretsiz kullanılabilir ve isteğe bağlı olarak abonelikler, coinler ve ek içeriklerle genişletilebilir.",
     stats: [{"label": "Takip", "value": "Hareket ilerlemeye dönüşür"}, {"label": "Kartlar", "value": "Nadir, toplanabilir, takas edilebilir"}, {"label": "Takımlar", "value": "Strateji ve savaşlar"}, {"label": "Pazar", "value": "İç takas"}],
@@ -537,7 +537,7 @@ const translations: Record<LanguageKey, Translation> = {
     title: "Dữ liệu thể thao trở thành\nthẻ bài, đội hình\nvà tiến trình thật.",
     subtitle: "Cardletics kết nối vận động thật với lối chơi thẻ bài sưu tầm kỹ thuật số. Đi bộ, luyện tập và duy trì hoạt động để nhận thẻ, hoàn thành bộ sưu tập, xây đội, chiến đấu và giao dịch trong chợ nội bộ.",
     appStore: "Tải trên App Store",
-    googlePlay: "Google Play – sắp có",
+    googlePlay: "Tải trên Google Play",
     affiliateProgram: "Chương trình liên kết",
     heroHint: "Cardletics có thể dùng miễn phí và có thể mở rộng tùy chọn bằng gói đăng ký, xu và nội dung bổ sung.",
     stats: [{"label": "Theo dõi", "value": "Vận động thành tiến trình"}, {"label": "Thẻ", "value": "Hiếm, sưu tầm, giao dịch"}, {"label": "Đội", "value": "Chiến lược và trận đấu"}, {"label": "Chợ", "value": "Giao dịch nội bộ"}],
@@ -574,7 +574,7 @@ const translations: Record<LanguageKey, Translation> = {
     title: "Data olahraga menjadi\nkartu, tim\ndan progres nyata.",
     subtitle: "Cardletics menghubungkan gerakan nyata dengan gameplay kartu koleksi digital. Berjalan, berlatih, dan tetap aktif untuk mendapatkan kartu, melengkapi koleksi, membangun tim, bertarung, dan berdagang di marketplace internal.",
     appStore: "Unduh di App Store",
-    googlePlay: "Google Play – segera hadir",
+    googlePlay: "Unduh di Google Play",
     affiliateProgram: "Program Afiliasi",
     heroHint: "Cardletics gratis digunakan dan dapat diperluas secara opsional dengan langganan, koin, dan konten tambahan.",
     stats: [{"label": "Pelacakan", "value": "Gerakan menjadi progres"}, {"label": "Kartu", "value": "Langka, koleksi, bisa diperdagangkan"}, {"label": "Tim", "value": "Strategi & pertarungan"}, {"label": "Marketplace", "value": "Bursa internal"}],
@@ -611,7 +611,7 @@ const translations: Record<LanguageKey, Translation> = {
     title: "کھیل کا ڈیٹا بنتا ہے\nکارڈز، ٹیمیں\nاور حقیقی پیش رفت۔",
     subtitle: "Cardletics حقیقی حرکت کو ڈیجیٹل ٹریڈنگ کارڈ گیم پلے سے جوڑتا ہے۔ چلیں، ٹریننگ کریں اور فعال رہیں تاکہ کارڈز حاصل کریں، کلیکشن مکمل کریں، ٹیم بنائیں، مقابلے کریں اور اندرونی مارکیٹ میں تجارت کریں۔",
     appStore: "App Store سے ڈاؤن لوڈ کریں",
-    googlePlay: "Google Play – جلد دستیاب",
+    googlePlay: "Google Play سے ڈاؤن لوڈ کریں",
     affiliateProgram: "افیلیٹ پروگرام",
     heroHint: "Cardletics مفت استعمال کیا جا سکتا ہے اور اختیاری طور پر سبسکرپشنز، کوائنز اور اضافی مواد سے بڑھایا جا سکتا ہے۔",
     stats: [{"label": "ٹریکنگ", "value": "حرکت پیش رفت بنتی ہے"}, {"label": "کارڈز", "value": "نایاب، جمع کرنے اور تجارت کے قابل"}, {"label": "ٹیمیں", "value": "حکمت عملی اور مقابلے"}, {"label": "مارکیٹ", "value": "اندرونی ایکسچینج"}],
@@ -1083,6 +1083,7 @@ const languageOptions: { key: LanguageKey; label: string; countryCode: string }[
 ];
 
 const APP_STORE_URL = "https://apps.apple.com/de/app/cardletics/id6787918520";
+const GOOGLE_PLAY_URL = "https://play.google.com/store/apps/details?id=com.cardletics.app";
 const LANGUAGE_STORAGE_KEY = "cardletics_language";
 
 function isLanguageKey(value: string | null): value is LanguageKey {
@@ -1371,10 +1372,11 @@ export default function HomePage() {
               icon={<AppleStoreIcon />}
             />
             <StorePreviewCard
+              href={GOOGLE_PLAY_URL}
               storeName="Google Play"
-              status="soon"
+              status="live"
               subtitle={t.googlePlay}
-              features="Android • Veröffentlichung folgt"
+              features="Android • Kostenlos • In-App-Käufe"
               isMobile={isMobile}
               icon={<PlayStoreIcon />}
             />
