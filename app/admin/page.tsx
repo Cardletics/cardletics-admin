@@ -475,6 +475,11 @@ export default function DashboardPage() {
           text="Nutzer suchen und Details öffnen"
         />
         <QuickLink
+          href="/admin/moderation"
+          title="Moderation"
+          text="Chat-Meldungen prüfen und Nutzer sperren"
+        />
+        <QuickLink
           href="/admin/subscriptions"
           title="Subscriptions"
           text="Abos, Status und Affiliate prüfen"
