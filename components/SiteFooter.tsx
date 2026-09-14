@@ -42,7 +42,7 @@ const footerTranslations: Record<LanguageKey, FooterText> = {
     privacy: "Datenschutz",
     terms: "AGB",
     contact: "Kontakt",
-    since: "seit 2025",
+    since: "seit 2026",
     copyright: "© Cardletics",
   },
   en: {
@@ -52,7 +52,7 @@ const footerTranslations: Record<LanguageKey, FooterText> = {
     privacy: "Privacy",
     terms: "Terms",
     contact: "Contact",
-    since: "since 2025",
+    since: "since 2026",
     copyright: "© Cardletics",
   },
   es: {
@@ -62,7 +62,7 @@ const footerTranslations: Record<LanguageKey, FooterText> = {
     privacy: "Privacidad",
     terms: "Condiciones",
     contact: "Contacto",
-    since: "desde 2025",
+    since: "desde 2026",
     copyright: "© Cardletics",
   },
   fr: {
@@ -72,7 +72,7 @@ const footerTranslations: Record<LanguageKey, FooterText> = {
     privacy: "Confidentialité",
     terms: "CGU",
     contact: "Contact",
-    since: "depuis 2025",
+    since: "depuis 2026",
     copyright: "© Cardletics",
   },
   pt: {
@@ -82,7 +82,7 @@ const footerTranslations: Record<LanguageKey, FooterText> = {
     privacy: "Privacidade",
     terms: "Termos",
     contact: "Contato",
-    since: "desde 2025",
+    since: "desde 2026",
     copyright: "© Cardletics",
   },
   zh: {
@@ -92,7 +92,7 @@ const footerTranslations: Record<LanguageKey, FooterText> = {
     privacy: "隐私政策",
     terms: "条款",
     contact: "联系",
-    since: "始于 2025",
+    since: "始于 2026",
     copyright: "© Cardletics",
   },
   hi: {
@@ -102,7 +102,7 @@ const footerTranslations: Record<LanguageKey, FooterText> = {
     privacy: "गोपनीयता",
     terms: "शर्तें",
     contact: "संपर्क",
-    since: "2025 से",
+    since: "2026 से",
     copyright: "© Cardletics",
   },
   ar: {
@@ -112,7 +112,7 @@ const footerTranslations: Record<LanguageKey, FooterText> = {
     privacy: "الخصوصية",
     terms: "الشروط",
     contact: "اتصال",
-    since: "منذ 2025",
+    since: "منذ 2026",
     copyright: "© Cardletics",
   },
   bn: {
@@ -122,7 +122,7 @@ const footerTranslations: Record<LanguageKey, FooterText> = {
     privacy: "গোপনীয়তা",
     terms: "শর্তাবলি",
     contact: "যোগাযোগ",
-    since: "২০২৫ থেকে",
+    since: "২০২৬ থেকে",
     copyright: "© Cardletics",
   },
   ru: {
@@ -132,7 +132,7 @@ const footerTranslations: Record<LanguageKey, FooterText> = {
     privacy: "Конфиденциальность",
     terms: "Условия",
     contact: "Контакты",
-    since: "с 2025 года",
+    since: "с 2026 года",
     copyright: "© Cardletics",
   },
   ja: {
@@ -142,7 +142,7 @@ const footerTranslations: Record<LanguageKey, FooterText> = {
     privacy: "プライバシー",
     terms: "利用規約",
     contact: "お問い合わせ",
-    since: "2025年から",
+    since: "2026年から",
     copyright: "© Cardletics",
   },
   tr: {
@@ -152,7 +152,7 @@ const footerTranslations: Record<LanguageKey, FooterText> = {
     privacy: "Gizlilik",
     terms: "Şartlar",
     contact: "İletişim",
-    since: "2025'ten beri",
+    since: "2026'ten beri",
     copyright: "© Cardletics",
   },
   vi: {
@@ -162,7 +162,7 @@ const footerTranslations: Record<LanguageKey, FooterText> = {
     privacy: "Quyền riêng tư",
     terms: "Điều khoản",
     contact: "Liên hệ",
-    since: "từ năm 2025",
+    since: "từ năm 2026",
     copyright: "© Cardletics",
   },
   id: {
@@ -172,7 +172,7 @@ const footerTranslations: Record<LanguageKey, FooterText> = {
     privacy: "Privasi",
     terms: "Syarat",
     contact: "Kontak",
-    since: "sejak 2025",
+    since: "sejak 2026",
     copyright: "© Cardletics",
   },
   ur: {
@@ -182,7 +182,7 @@ const footerTranslations: Record<LanguageKey, FooterText> = {
     privacy: "رازداری",
     terms: "شرائط",
     contact: "رابطہ",
-    since: "2025 سے",
+    since: "2026 سے",
     copyright: "© Cardletics",
   },
 };
