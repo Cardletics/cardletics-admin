@@ -113,6 +113,7 @@ export default function AdminUserDetailPage() {
 
   const [deletingCardId, setDeletingCardId] = useState<string | null>(null);
   const [repairingMarketCardId, setRepairingMarketCardId] = useState<string | null>(null);
+  const [stampActionCardId, setStampActionCardId] = useState<string | null>(null);
 
   const [accountAccess, setAccountAccess] = useState<AccountAccessStatus | null>(null);
   const [accountAccessLoading, setAccountAccessLoading] = useState(true);
@@ -547,6 +548,119 @@ export default function AdminUserDetailPage() {
     await Promise.all([loadInventory(), loadDetail()]);
   }
 
+  async function handleSetInventoryStamp(
+    card: JsonMap,
+    stampKey: "activity" | "promo" | "set",
+    activityTier?: "bronze" | "silver" | "gold",
+  ) {
+    const inventoryId = readString(card, "id");
+    if (!inventoryId || stampActionCardId) return;
+
+    const label = cardDisplayName(card);
+    const stampLabel = stampKey === "activity"
+      ? `Aktivität ${activityTier || ""}`.trim()
+      : stampKey === "promo"
+      ? "Promo"
+      : "Set";
+
+    const note = window.prompt(
+      `${label}: ${stampLabel}-Prägung setzen.\n\nOptionaler Grund für das Audit-Log:`,
+      "Admin-Korrektur",
+    );
+    if (note === null) return;
+
+    setStampActionCardId(inventoryId);
+    setMessage(null);
+    setErrorMessage(null);
+
+    const { error } = await supabase.rpc("admin_set_inventory_stamp", {
+      p_inventory_id: inventoryId,
+      p_stamp_key: stampKey,
+      p_activity_tier: activityTier || null,
+      p_note: note.trim() || null,
+    });
+
+    if (error) {
+      setErrorMessage(error.message || "Prägung konnte nicht gesetzt werden.");
+      setStampActionCardId(null);
+      return;
+    }
+
+    setMessage(`${label}: ${stampLabel}-Prägung gespeichert.`);
+    setStampActionCardId(null);
+    await loadInventory();
+  }
+
+  async function handleRemoveInventoryStamp(card: JsonMap, stampKey: string) {
+    const inventoryId = readString(card, "id");
+    if (!inventoryId || stampActionCardId) return;
+
+    const label = cardDisplayName(card);
+    if (!window.confirm(`${label}\n\nPrägung „${stampKey}“ wirklich entfernen?`)) return;
+
+    const note = window.prompt(
+      "Optionaler Grund für das Audit-Log:",
+      "Admin-Korrektur",
+    );
+    if (note === null) return;
+
+    setStampActionCardId(inventoryId);
+    setMessage(null);
+    setErrorMessage(null);
+
+    const { error } = await supabase.rpc("admin_remove_inventory_stamp", {
+      p_inventory_id: inventoryId,
+      p_stamp_key: stampKey,
+      p_note: note.trim() || null,
+    });
+
+    if (error) {
+      setErrorMessage(error.message || "Prägung konnte nicht entfernt werden.");
+      setStampActionCardId(null);
+      return;
+    }
+
+    setMessage(`${label}: Prägung „${stampKey}“ entfernt.`);
+    setStampActionCardId(null);
+    await loadInventory();
+  }
+
+  async function handleRebuildInventoryStamps(card: JsonMap) {
+    const inventoryId = readString(card, "id");
+    if (!inventoryId || stampActionCardId) return;
+
+    const label = cardDisplayName(card);
+    const accepted = window.confirm(
+      `${label}\n\nPrägungen aus Kartenherkunft und Daily-Pack-Daten neu aufbauen?\n\nVorhandene Prägungen dieser Karte werden dabei ersetzt.`,
+    );
+    if (!accepted) return;
+
+    const note = window.prompt(
+      "Optionaler Grund für das Audit-Log:",
+      "Prägungen neu aufgebaut",
+    );
+    if (note === null) return;
+
+    setStampActionCardId(inventoryId);
+    setMessage(null);
+    setErrorMessage(null);
+
+    const { error } = await supabase.rpc("admin_rebuild_inventory_stamps", {
+      p_inventory_id: inventoryId,
+      p_note: note.trim() || null,
+    });
+
+    if (error) {
+      setErrorMessage(error.message || "Prägungen konnten nicht neu aufgebaut werden.");
+      setStampActionCardId(null);
+      return;
+    }
+
+    setMessage(`${label}: Prägungen wurden aus den vorhandenen Daten neu aufgebaut.`);
+    setStampActionCardId(null);
+    await loadInventory();
+  }
+
   async function reloadAll() {
     await Promise.all([loadDetail(), loadInventory(), loadPacks(), loadAccountAccess()]);
     if (activeTab === "cards") {
@@ -798,6 +912,7 @@ export default function AdminUserDetailPage() {
                   ["Admin", readBoolean(profile, "is_admin") ? "Ja" : "Nein"],
                   ["Erstellt", formatDate(readString(profile, "created_at"))],
                   ["Last Seen", formatDate(readString(profile, "last_seen_at"))],
+                  ["Land", profileCountryLabel(readString(profile, "country_code"))],
                   ["Background", readString(profile, "selected_background_id") || "—"],
                 ]}
               />
@@ -1358,8 +1473,12 @@ export default function AdminUserDetailPage() {
                 items={filteredInventory}
                 deletingCardId={deletingCardId}
                 repairingMarketCardId={repairingMarketCardId}
+                stampActionCardId={stampActionCardId}
                 onDelete={handleDeleteInventoryCard}
                 onRepairMarket={handleRepairMarketCard}
+                onSetStamp={handleSetInventoryStamp}
+                onRemoveStamp={handleRemoveInventoryStamp}
+                onRebuildStamps={handleRebuildInventoryStamps}
               />
             )}
           </section>
@@ -1435,14 +1554,22 @@ function InventoryVisualGrid({
   items,
   deletingCardId,
   repairingMarketCardId,
+  stampActionCardId,
   onDelete,
   onRepairMarket,
+  onSetStamp,
+  onRemoveStamp,
+  onRebuildStamps,
 }: {
   items: JsonMap[];
   deletingCardId: string | null;
   repairingMarketCardId: string | null;
+  stampActionCardId: string | null;
   onDelete: (card: JsonMap) => void;
   onRepairMarket: (card: JsonMap) => void;
+  onSetStamp: (card: JsonMap, stampKey: "activity" | "promo" | "set", activityTier?: "bronze" | "silver" | "gold") => void;
+  onRemoveStamp: (card: JsonMap, stampKey: string) => void;
+  onRebuildStamps: (card: JsonMap) => void;
 }) {
   if (items.length === 0) {
     return <p style={emptyTextStyle}>Keine Karten gefunden.</p>;
@@ -1466,6 +1593,13 @@ function InventoryVisualGrid({
             }}
           >
             <CardVisual card={card} />
+            <StampAdminPanel
+              card={card}
+              busy={stampActionCardId === inventoryId}
+              onSetStamp={(stampKey, activityTier) => onSetStamp(card, stampKey, activityTier)}
+              onRemoveStamp={(stampKey) => onRemoveStamp(card, stampKey)}
+              onRebuild={() => onRebuildStamps(card)}
+            />
             <MarketStatusPanel card={card} />
 
             <div style={inventoryActionRowStyle}>
@@ -1497,6 +1631,77 @@ function InventoryVisualGrid({
         );
       })}
     </div>
+  );
+}
+
+function StampAdminPanel({
+  card,
+  busy,
+  onSetStamp,
+  onRemoveStamp,
+  onRebuild,
+}: {
+  card: JsonMap;
+  busy: boolean;
+  onSetStamp: (stampKey: "activity" | "promo" | "set", activityTier?: "bronze" | "silver" | "gold") => void;
+  onRemoveStamp: (stampKey: string) => void;
+  onRebuild: () => void;
+}) {
+  const stamps = getCardStamps(card);
+  const catalogSpecialType = readString(card, "catalog_special_type").toLowerCase();
+  const canRepairPromo = catalogSpecialType === "subscription_promo";
+  const canRepairSet = catalogSpecialType === "set_completion";
+
+  return (
+    <details style={stampAdminDetailsStyle}>
+      <summary style={stampAdminSummaryStyle}>
+        Prägungen verwalten · {stamps.length || 0}
+      </summary>
+
+      <div style={stampAdminBodyStyle}>
+        {stamps.length === 0 ? (
+          <span style={stampEmptyStyle}>Keine Prägung gespeichert.</span>
+        ) : (
+          <div style={stampDetailListStyle}>
+            {stamps.map((stamp, index) => (
+              <div key={readString(stamp, "id") || `${index}`} style={stampDetailBoxStyle}>
+                <div style={stampDetailTopStyle}>
+                  <strong>{stampLongLabel(stamp)}</strong>
+                  <button
+                    type="button"
+                    disabled={busy}
+                    onClick={() => onRemoveStamp(readString(stamp, "stamp_key"))}
+                    style={stampRemoveButtonStyle}
+                  >
+                    Entfernen
+                  </button>
+                </div>
+                <span>Quelle: {readString(stamp, "source") || "—"}</span>
+                <span>Vergeben: {formatDate(readString(stamp, "awarded_at"))}</span>
+                {stampMetadataSummary(stamp).map(([label, value]) => (
+                  <span key={label}>{label}: {value}</span>
+                ))}
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div style={stampAdminButtonGridStyle}>
+          <button type="button" disabled={busy} onClick={() => onSetStamp("activity", "bronze")} style={stampBronzeButtonStyle}>Bronze</button>
+          <button type="button" disabled={busy} onClick={() => onSetStamp("activity", "silver")} style={stampSilverButtonStyle}>Silber</button>
+          <button type="button" disabled={busy} onClick={() => onSetStamp("activity", "gold")} style={stampGoldButtonStyle}>Gold</button>
+          {canRepairPromo && (
+            <button type="button" disabled={busy} onClick={() => onSetStamp("promo")} style={stampPromoButtonStyle}>Promo reparieren</button>
+          )}
+          {canRepairSet && (
+            <button type="button" disabled={busy} onClick={() => onSetStamp("set")} style={stampSetButtonStyle}>Set reparieren</button>
+          )}
+          <button type="button" disabled={busy} onClick={onRebuild} style={stampRebuildButtonStyle}>
+            {busy ? "Bitte warten..." : "Aus Daten neu aufbauen"}
+          </button>
+        </div>
+      </div>
+    </details>
   );
 }
 
@@ -1571,6 +1776,8 @@ function CardVisual({ card, compact = false }: { card: JsonMap; compact?: boolea
   const name = cardDisplayName(card);
   const sport = readString(card, "sport") || "—";
   const series = readString(card, "series") || "—";
+  const stamps = getCardStamps(card);
+  const primaryStamp = stamps[0] || null;
 
   return (
     <>
@@ -1585,11 +1792,33 @@ function CardVisual({ card, compact = false }: { card: JsonMap; compact?: boolea
           <div style={cardImagePlaceholderStyle}>CARDLE TICS</div>
         )}
         <span style={rarityBadgeStyleFor(rarity)}>{rarity.toUpperCase()}</span>
+        {primaryStamp && stampImageSrc(primaryStamp) && (
+          <img
+            src={stampImageSrc(primaryStamp) || ""}
+            alt={stampLongLabel(primaryStamp)}
+            title={stampLongLabel(primaryStamp)}
+            style={stampImageVisualStyle}
+          />
+        )}
+        {primaryStamp && !stampImageSrc(primaryStamp) && (
+          <span style={stampFallbackVisualStyle(primaryStamp)} title={stampLongLabel(primaryStamp)}>
+            {stampShortLabel(primaryStamp)}
+          </span>
+        )}
       </div>
 
       <div style={cardBodyStyle}>
         <strong style={cardNameVisualStyle}>{name}</strong>
         <span style={cardMetaStyle}>{sport} · {series}</span>
+        {stamps.length > 0 && (
+          <div style={stampChipRowStyle}>
+            {stamps.map((stamp, index) => (
+              <span key={`${readString(stamp, "id") || index}`} style={stampChipStyle(stamp)}>
+                {stampLongLabel(stamp)}
+              </span>
+            ))}
+          </div>
+        )}
 
         {!compact && (
           <>
@@ -1614,6 +1843,171 @@ function CardVisual({ card, compact = false }: { card: JsonMap; compact?: boolea
       </div>
     </>
   );
+}
+
+function getCardStamps(card: JsonMap): JsonMap[] {
+  const raw = card.stamps;
+  if (!Array.isArray(raw)) return [];
+
+  return raw
+    .filter((item): item is JsonMap => Boolean(item) && typeof item === "object" && !Array.isArray(item))
+    .sort((a, b) => readNumber(b, "priority") - readNumber(a, "priority"));
+}
+
+function activityTierFromStamp(stamp: JsonMap) {
+  const metadata = stamp.metadata;
+  if (metadata && typeof metadata === "object" && !Array.isArray(metadata)) {
+    const tier = readString(metadata as JsonMap, "activity_stamp_tier").toLowerCase();
+    if (["bronze", "silver", "gold"].includes(tier)) return tier;
+  }
+
+  const variant = readString(stamp, "visual_variant").toLowerCase();
+  if (variant.includes("bronze")) return "bronze";
+  if (variant.includes("silver") || variant.includes("silber")) return "silver";
+  if (variant.includes("gold")) return "gold";
+  return "";
+}
+
+function stampImageSrc(stamp: JsonMap) {
+  const key = readString(stamp, "stamp_key").toLowerCase();
+  if (key === "activity") {
+    const tier = activityTierFromStamp(stamp);
+    if (tier === "bronze") return "/stamps/stamp_default_bronze.png";
+    if (tier === "silver") return "/stamps/stamp_default_silber.png";
+    if (tier === "gold") return "/stamps/stamp_default_gold.png";
+  }
+  if (key === "promo") return "/stamps/set_promo_gold.png";
+  if (key === "set") return "/stamps/stamp_set_gold.png";
+  return null;
+}
+
+function stampShortLabel(stamp: JsonMap) {
+  const key = readString(stamp, "stamp_key").toLowerCase();
+  if (key === "activity") {
+    const tier = activityTierFromStamp(stamp);
+    if (tier === "bronze") return "B";
+    if (tier === "silver") return "S";
+    if (tier === "gold") return "G";
+    return "A";
+  }
+  if (key === "promo") return "P";
+  if (key === "set") return "SET";
+  if (key === "special") return "SP";
+  return key.slice(0, 3).toUpperCase() || "?";
+}
+
+function stampLongLabel(stamp: JsonMap) {
+  const key = readString(stamp, "stamp_key").toLowerCase();
+  if (key === "activity") {
+    const tier = activityTierFromStamp(stamp);
+    if (tier === "bronze") return "Aktivität · Bronze";
+    if (tier === "silver") return "Aktivität · Silber";
+    if (tier === "gold") return "Aktivität · Gold";
+    return "Aktivitätsprägung";
+  }
+  if (key === "promo") return "Promo-Prägung";
+  if (key === "set") return "Set-Prägung";
+  if (key === "special") return "Special-Prägung";
+  if (key === "origin") return "Herkunftsprägung";
+  return key || "Prägung";
+}
+
+function stampPalette(stamp: JsonMap) {
+  const key = readString(stamp, "stamp_key").toLowerCase();
+  const tier = activityTierFromStamp(stamp);
+
+  if (key === "activity" && tier === "bronze") return { bg: "#4b2d1c", border: "#d08a54", color: "#ffd4ad" };
+  if (key === "activity" && tier === "silver") return { bg: "#27313a", border: "#cbd5e1", color: "#f1f5f9" };
+  if (key === "activity" && tier === "gold") return { bg: "#47330b", border: "#facc15", color: "#fef08a" };
+  if (key === "promo") return { bg: "#4a250c", border: "#fb923c", color: "#fed7aa" };
+  if (key === "set") return { bg: "#21341b", border: "#86efac", color: "#dcfce7" };
+  return { bg: "#172554", border: "#60a5fa", color: "#dbeafe" };
+}
+
+const stampImageVisualStyle: CSSProperties = {
+  position: "absolute",
+  right: "8px",
+  bottom: "6px",
+  width: "70px",
+  height: "70px",
+  objectFit: "contain",
+  filter: "drop-shadow(0 4px 7px rgba(0,0,0,0.48))",
+  zIndex: 4,
+  pointerEvents: "none",
+};
+
+function stampFallbackVisualStyle(stamp: JsonMap): CSSProperties {
+  const palette = stampPalette(stamp);
+  return {
+    position: "absolute",
+    right: "12px",
+    bottom: "12px",
+    minWidth: "38px",
+    height: "38px",
+    padding: "0 8px",
+    borderRadius: "999px",
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    background: palette.bg,
+    border: `2px solid ${palette.border}`,
+    color: palette.color,
+    fontWeight: 900,
+    fontSize: "11px",
+    boxShadow: "0 4px 8px rgba(0,0,0,0.42)",
+    zIndex: 4,
+    pointerEvents: "none",
+  };
+}
+
+function stampChipStyle(stamp: JsonMap): CSSProperties {
+  const palette = stampPalette(stamp);
+  return {
+    display: "inline-flex",
+    padding: "4px 7px",
+    borderRadius: "999px",
+    border: `1px solid ${palette.border}`,
+    background: palette.bg,
+    color: palette.color,
+    fontSize: "9px",
+    fontWeight: 900,
+  };
+}
+
+function stampMetadataSummary(stamp: JsonMap): [string, string][] {
+  const raw = stamp.metadata;
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return [];
+  const metadata = raw as JsonMap;
+  const result: [string, string][] = [];
+
+  const movementDate = readString(metadata, "movement_date");
+  const city = readString(metadata, "city");
+  const steps = readNumber(metadata, "steps");
+  const cyclingMeters = readNumber(metadata, "cycling_meters");
+  const rowingMeters = readNumber(metadata, "rowing_meters");
+  const swimmingMeters = readNumber(metadata, "swimming_meters");
+  const workoutMinutes = readNumber(metadata, "activity_workout_minutes") || readNumber(metadata, "workout_minutes");
+
+  if (movementDate) result.push(["Aktivitätstag", movementDate]);
+  if (city) result.push(["Ort", city]);
+  if (steps > 0) result.push(["Schritte", formatNumber(steps)]);
+  if (cyclingMeters > 0) result.push(["Radfahren", `${(cyclingMeters / 1000).toLocaleString("de-DE", { maximumFractionDigits: 1 })} km`]);
+  if (rowingMeters > 0) result.push(["Rudern", `${(rowingMeters / 1000).toLocaleString("de-DE", { maximumFractionDigits: 1 })} km`]);
+  if (swimmingMeters > 0) result.push(["Schwimmen", `${formatNumber(swimmingMeters)} m`]);
+  if (workoutMinutes > 0) result.push(["Workout", `${formatNumber(workoutMinutes)} Min.`]);
+
+  return result;
+}
+
+function profileCountryLabel(raw: string) {
+  const code = raw.trim().toUpperCase();
+  if (!/^[A-Z]{2}$/.test(code)) return "Unbekannt";
+  try {
+    const names = new Intl.DisplayNames(["de"], { type: "region" });
+    return `${names.of(code) || code} (${code})`;
+  } catch {
+    return code;
+  }
 }
 
 function getCardRarity(card: JsonMap) {
@@ -2032,6 +2426,23 @@ const conditionTrackStyle: CSSProperties = { width: "100%", height: "7px", borde
 const conditionFillStyle: CSSProperties = { height: "100%", borderRadius: "99px" };
 const cardDateStyle: CSSProperties = { color: "#708078", fontSize: "10px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" };
 const specialBadgeStyle: CSSProperties = { position: "absolute", top: "10px", left: "10px", padding: "6px 8px", borderRadius: "999px", background: "#402015", border: "1px solid #fb923c", color: "#fed7aa", fontSize: "10px", fontWeight: 900, zIndex: 2 };
+const stampChipRowStyle: CSSProperties = { display: "flex", gap: "5px", flexWrap: "wrap", marginTop: "1px" };
+const stampAdminDetailsStyle: CSSProperties = { margin: "0 12px 12px", border: "1px solid #33443b", borderRadius: "11px", background: "#0d1511", overflow: "hidden" };
+const stampAdminSummaryStyle: CSSProperties = { padding: "10px", color: "#cfe0d6", fontSize: "12px", fontWeight: 900, cursor: "pointer", userSelect: "none" };
+const stampAdminBodyStyle: CSSProperties = { display: "grid", gap: "10px", padding: "0 10px 10px" };
+const stampEmptyStyle: CSSProperties = { color: "#708078", fontSize: "11px" };
+const stampDetailListStyle: CSSProperties = { display: "grid", gap: "7px" };
+const stampDetailBoxStyle: CSSProperties = { display: "grid", gap: "3px", padding: "8px", borderRadius: "9px", background: "#121c17", color: "#aebdb4", fontSize: "10px", lineHeight: 1.35 };
+const stampDetailTopStyle: CSSProperties = { display: "flex", justifyContent: "space-between", alignItems: "center", gap: "8px", color: "#e7f1eb" };
+const stampRemoveButtonStyle: CSSProperties = { minHeight: "28px", padding: "4px 8px", borderRadius: "8px", border: "1px solid #7f1d1d", background: "#311313", color: "#fecaca", fontSize: "9px", fontWeight: 900, cursor: "pointer" };
+const stampAdminButtonGridStyle: CSSProperties = { display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: "6px" };
+const stampButtonBaseStyle: CSSProperties = { minHeight: "34px", padding: "6px", borderRadius: "8px", fontSize: "9px", fontWeight: 950, cursor: "pointer" };
+const stampBronzeButtonStyle: CSSProperties = { ...stampButtonBaseStyle, border: "1px solid #d08a54", background: "#4b2d1c", color: "#ffd4ad" };
+const stampSilverButtonStyle: CSSProperties = { ...stampButtonBaseStyle, border: "1px solid #cbd5e1", background: "#27313a", color: "#f1f5f9" };
+const stampGoldButtonStyle: CSSProperties = { ...stampButtonBaseStyle, border: "1px solid #facc15", background: "#47330b", color: "#fef08a" };
+const stampPromoButtonStyle: CSSProperties = { ...stampButtonBaseStyle, border: "1px solid #fb923c", background: "#4a250c", color: "#fed7aa" };
+const stampSetButtonStyle: CSSProperties = { ...stampButtonBaseStyle, border: "1px solid #86efac", background: "#21341b", color: "#dcfce7" };
+const stampRebuildButtonStyle: CSSProperties = { ...stampButtonBaseStyle, border: "1px solid #60a5fa", background: "#172554", color: "#dbeafe", gridColumn: "span 1" };
 const inventoryActionRowStyle: CSSProperties = { display: "grid", padding: "0 12px 12px" };
 const deleteCardButtonStyle: CSSProperties = { minHeight: "42px", borderRadius: "11px", border: "1px solid #991b1b", background: "#3a1515", color: "#fecaca", fontWeight: 900, cursor: "pointer" };
 const marketRepairButtonStyle: CSSProperties = { minHeight: "42px", borderRadius: "11px", border: "1px solid #a16207", background: "#3d2b0d", color: "#fde68a", fontWeight: 900, cursor: "pointer" };

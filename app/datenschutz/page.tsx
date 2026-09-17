@@ -9,7 +9,7 @@ export default function PrivacyPage() {
           <span style={eyebrowStyle}>Datenschutz</span>
           <h1 style={titleStyle}>Datenschutzerklärung</h1>
           <p style={subtitleStyle}>Für die Website und die App Cardletics.</p>
-          <p style={metaStyle}>Stand: 08.09.2026</p>
+          <p style={metaStyle}>Stand: 17.09.2026</p>
           <div style={heroActionsStyle}>
             <Link href="/" style={backButtonStyle}>
               Zurück zur Startseite
@@ -67,13 +67,27 @@ export default function PrivacyPage() {
               ausgewählter Hintergrund, Nutzername, Cardletics-interne
               Fortschrittswerte, Card Points, Coins, Ausstellungskarte,
               Marketplace-bezogene Statusdaten, Freundes-/Sichtbarkeits-
-              Einstellungen und sonstige nutzerbezogene In-App-Einstellungen.
+              Einstellungen sowie ein grober zweistelliger Ländercode aus der
+              Regionseinstellung des Geräts (z. B. DE). Dieser Ländercode wird
+              nicht aus GPS- oder IP-Standortdaten abgeleitet.
             </li>
             <li>
               <strong>Spiel- und Inventardaten:</strong> Karten, Kartenzustand,
               Kartenserien, Raritäten, Pack- und Boost-Pack-Daten,
-              Hintergründe, Inventarstatus, Handelsstatus, interne
-              Preisangaben, Transaktions- und Fortschrittsdaten.
+              Aktivitäts-, Promo- und Set-Prägungen einschließlich der für eine
+              Prägung gespeicherten spielrelevanten Metadaten, Hintergründe,
+              Inventarstatus, Handelsstatus, interne Preisangaben, Transaktions-
+              und Fortschrittsdaten.
+            </li>
+            <li>
+              <strong>Administrative Korrektur- und Supportdaten:</strong> Wenn
+              berechtigte Administratoren zur Fehlerbehebung oder auf eine
+              Supportanfrage hin Kartenprägungen prüfen, neu aufbauen, setzen
+              oder entfernen, können hierfür ein Änderungsprotokoll mit
+              betroffener Karte bzw. Inventar-ID, Art der Korrektur, vorherigem
+              und neuem Prägungsstatus, Zeitpunkt, interner Admin-ID und einer
+              optionalen Notiz gespeichert werden. Dieses Protokoll dient der
+              Nachvollziehbarkeit, Sicherheit und Fehlerbehebung.
             </li>
             <li>
               <strong>Social-, Freunde- und Kommunikationsdaten:</strong>
@@ -94,15 +108,16 @@ export default function PrivacyPage() {
             <li>
               <strong>Gesundheits- und Bewegungsdaten:</strong> Wenn du ausdrücklich
               einwilligst und die erforderlichen Systemberechtigungen erteilst,
-              kann Cardletics Bewegungsdaten verarbeiten. Unter Android werden
-              derzeit insbesondere Schrittzahlen verwendet. Unter iOS können
-              insbesondere Schrittzahlen, Schwimmdistanzen und Workout-Daten
-              verarbeitet werden. Aus Workout-Daten können je nach in Apple
-              Health vorhandener Aktivitätsart auch bewegungsbezogene
-              Informationen, beispielsweise zu Fahrradaktivitäten, abgeleitet
-              werden. Die Daten werden ausschließlich für bewegungsbezogene
-              Spiel-, Fortschritts- und Belohnungsfunktionen von Cardletics
-              verwendet.
+              kann Cardletics aus Apple Health/HealthKit bzw. Android Health
+              Connect insbesondere Schrittzahlen sowie unterstützte Workout-
+              und Distanzdaten lesen. Abhängig von den im jeweiligen System
+              vorhandenen Daten können daraus unter anderem Outdoor-Radfahren,
+              Schwimmen, Rudern und sonstige Workouts für die Spiellogik
+              berücksichtigt werden. Walking, Running und vergleichbare
+              Aktivitäten können für einzelne Spielmechaniken bewusst nicht
+              zusätzlich als gesonderte Workout-Kategorie gezählt werden. Die
+              Daten werden ausschließlich für bewegungsbezogene Spiel-,
+              Fortschritts- und Belohnungsfunktionen von Cardletics verwendet.
             </li>
             <li>
               <strong>Daten aus Fitness- und Gesundheitsplattformen:</strong>
@@ -161,7 +176,7 @@ export default function PrivacyPage() {
             <li>Erstellung und Verwaltung von Nutzerkonten</li>
             <li>Bereitstellung von Spielfunktionen und In-App-Features</li>
             <li>Verwaltung von Inventar, Karten, Hintergründen, Packs und Ausstellung</li>
-            <li>Berechnung von Bewegungsfortschritt, Zielen, Streaks und Belohnungen</li>
+            <li>Berechnung von Bewegungsfortschritt, Zielen, Daily-Packs, Aktivitätsprägungen und Belohnungen</li>
             <li>Bereitstellung der Umgebung-/Radar-Funktion und Anzeige naher Spieler</li>
             <li>Bereitstellung von Freundesfunktionen, Chats, Gruppen und Freundschaftskämpfen</li>
             <li>Abwicklung von Coin-Käufen, In-App-Käufen und Abonnements</li>
@@ -170,6 +185,7 @@ export default function PrivacyPage() {
             <li>Anzeige von spielbezogenen Hinweisen und Erinnerungen durch lokale Benachrichtigungen</li>
             <li>Bearbeitung von Support- und Kontaktanfragen</li>
             <li>Fehleranalyse, Systemsicherheit und Missbrauchsprävention</li>
+            <li>Nachvollziehbare administrative Korrekturen von Karten- und Prägungsdaten im Supportfall</li>
             <li>Erfüllung gesetzlicher Aufbewahrungs- und Nachweispflichten</li>
           </ul>
         </Section>
@@ -222,17 +238,42 @@ export default function PrivacyPage() {
             Berechtigungen auf deinem Gerät erteilt hast.
           </p>
           <p>
-            Unter Android verwendet Cardletics derzeit insbesondere
-            Schrittzahlen. Unter iOS können insbesondere Schrittzahlen,
-            Schwimmdistanzen und Workout-Daten aus Apple Health verarbeitet
-            werden. Je nach in Apple Health vorhandenem Workout können daraus
-            auch Informationen über bestimmte Aktivitätsarten, beispielsweise
-            Fahrradaktivitäten, hervorgehen.
+            Auf iOS liest Cardletics – soweit von dir freigegeben und im System
+            vorhanden – insbesondere Schritte, Schwimmdistanzen und Workout-
+            Daten aus Apple Health/HealthKit. Auf Android liest Cardletics über
+            Health Connect insbesondere Schritte sowie unterstützte Workout- und
+            Distanzdaten. Bei aufgezeichneten Trainings können dadurch unter
+            anderem Outdoor-Radfahren, Schwimmen, Rudern und sonstige Workouts
+            erkannt werden. Cardletics verbindet sich nicht direkt mit der
+            jeweiligen Sportuhr; entscheidend ist, dass die Daten in Apple
+            Health bzw. Health Connect verfügbar und für Cardletics freigegeben
+            sind. Unter Android kann die aktuell eingesetzte Health-Connect-
+            Bibliothek beim Abruf von Workouts technisch zusätzlich
+            Gesamtkalorienwerte mitlesen. Cardletics verwendet diese Werte derzeit
+            nicht für Spielberechnungen und speichert sie nicht als eigenen
+            Cardletics-Spielwert in der Datenbank.
           </p>
           <p>
-            Die Daten werden insbesondere verwendet für bewegungsbezogene
-            Spielfunktionen, Fortschrittsanzeigen, Ziele sowie
-            bewegungsabhängige Karten, Drops und Belohnungen.
+            Die Daten werden insbesondere verwendet für Fortschrittsanzeigen,
+            tägliche Herausforderungen, die Freischaltung von Daily-Packs und
+            Aktivitätsprägungen auf neu erzeugten Daily-Pack-Karten. Eine
+            Aktivitätsprägung kann Bronze, Silber oder Gold sein und hängt von
+            der Anzahl unterschiedlicher qualifizierter Aktivitätskategorien des
+            zugrunde liegenden Tages ab. Eine solche Prägung kann außerdem einen
+            spielinternen Battle-Bonus der jeweiligen Karte bewirken: Bronze
+            erhöht die aus Seltenheit und Kartenzustand berechnete Kampfstärke um
+            3 %, Silber um 6 % und Gold um 10 %.
+          </p>
+          <p>
+            Für eine Aktivitätsprägung können spielrelevante Tageswerte wie
+            Schritte, Radfahr-, Ruder- oder Schwimmdistanz, Workout-Minuten, der
+            Aktivitätstag und – wenn die Standort-/Radar-Funktion ohnehin
+            freigegeben und für diesen Tag ein Ortsname vorhanden war – ein
+            grober Ortsname wie „Mainz“ gespeichert werden. Diese Tageswerte und
+            daraus abgeleitete Cardletics-Werte können dafür an das
+            Cardletics-Backend übertragen und dem Nutzerkonto zugeordnet
+            gespeichert werden. Exakte Koordinaten, Straße oder Hausnummer werden
+            nicht in den Prägungsdaten der Karte gespeichert.
           </p>
           <p>
             <strong>
@@ -247,9 +288,11 @@ export default function PrivacyPage() {
           </p>
           <p>
             Ohne deine Einwilligung greift Cardletics nicht auf die für
-            Cardletics vorgesehenen Gesundheits- und Bewegungsdaten zu. Eine
-            zunächst abgelehnte Freigabe kann später freiwillig in der App
-            aktiviert werden.
+            Cardletics vorgesehenen Gesundheits- und Bewegungsdaten zu. Die
+            Nutzung der Fitnessdaten kann später in Cardletics wieder aktiviert
+            werden. Einzelne zuvor nicht freigegebene oder später geänderte
+            Health-Berechtigungen können zusätzlich in Apple Health bzw. in den
+            Health-Connect- oder Systemeinstellungen des Geräts angepasst werden.
           </p>
           <p>
             Du kannst eine erteilte Einwilligung jederzeit mit Wirkung für die
@@ -275,12 +318,14 @@ export default function PrivacyPage() {
 
         <Section title="7. Umgebung, Radar und Standortdaten">
           <p>
-            Die App kann eine optionale Umgebung-/Radar-Funktion enthalten. Wenn
-            du diese Funktion aktivierst und Standortzugriff erlaubst,
-            verarbeitet Cardletics deinen Standort, um dir Spieler in deiner
-            Nähe anzuzeigen und anderen Nutzern – abhängig von deinen
-            Einstellungen – deine Nähe bzw. Präsenz in der Umgebung anzeigen zu
-            können.
+            Die App enthält eine optionale Umgebung-/Radar-Funktion. Sie ist
+            standardmäßig deaktiviert. Wenn du diese Funktion aktivierst und
+            Standortzugriff erlaubst, verarbeitet Cardletics deinen Standort, um
+            dir Spieler in deiner Nähe anzuzeigen und anderen Nutzern – abhängig
+            von deinen Einstellungen – deine Nähe bzw. Präsenz in der Umgebung
+            anzeigen zu können. Solange der Radar-Screen geöffnet und die
+            Funktion aktiv ist, kann der Standort ungefähr alle 45 Sekunden
+            erneut ermittelt und an das Cardletics-Backend übertragen werden.
           </p>
           <p>Je nach Einstellung können anderen Nutzern angezeigt werden:</p>
           <ul style={listStyle}>
@@ -301,6 +346,15 @@ export default function PrivacyPage() {
             jeweiligen technischen Speicherfristen bestehen bleiben. Cardletics
             veröffentlicht keine genaue Adresse als öffentliches Nutzerprofil.
           </p>
+          <p>
+            Wenn du die Radar-/Standortfunktion ohnehin freigegeben hast, kann
+            Cardletics zusätzlich einen groben Ortsnamen wie „Mainz“ aus der
+            bestehenden Standortverarbeitung ableiten. Ein solcher grober
+            Ortsname kann für eine am selben Aktivitätstag erzeugte
+            Aktivitätsprägung gespeichert werden. Die exakten Koordinaten der
+            Radar-Funktion werden dafür nicht in die Karten- oder
+            Prägungsmetadaten übernommen.
+          </p>
         </Section>
 
         <Section title="8. Freunde, Chat, Gruppen und Profil-Sichtbarkeit">
@@ -314,9 +368,9 @@ export default function PrivacyPage() {
           </p>
           <p>
             Du kannst innerhalb der App festlegen, welche Profilinformationen
-            für Freunde sichtbar sein sollen, z. B. Coins, Abo-Status, Awards
-            oder Registrierungszeitpunkt, soweit diese Optionen angeboten
-            werden. Nachrichten und Gruppeninhalte sind nicht öffentlich,
+            für Freunde sichtbar sein sollen, z. B. Coins, Abo-Status, Awards,
+            Registrierungszeitpunkt oder Kartenprägungen, soweit diese Optionen
+            angeboten werden. Nachrichten und Gruppeninhalte sind nicht öffentlich,
             sondern nur für die jeweils beteiligten Nutzer bzw. Gruppenmitglieder
             bestimmt. Zur Administration, Sicherheit, Missbrauchsprävention oder
             zur Bearbeitung von Supportfällen können intern berechtigte Personen
@@ -481,7 +535,9 @@ export default function PrivacyPage() {
             Ein interner Admin-Bereich existiert. Zugriff erhalten nur intern
             berechtigte Personen, soweit dies zur Administration,
             Fehlerbehebung, Missbrauchsprävention, Abrechnung oder Support
-            erforderlich ist.
+            erforderlich ist. Administrative Korrekturen an Kartenprägungen
+            werden aus Gründen der Nachvollziehbarkeit und Sicherheit
+            protokolliert.
           </p>
         </Section>
 
@@ -534,14 +590,25 @@ export default function PrivacyPage() {
           <p>
             Nach Widerruf der Einwilligung greift Cardletics nicht mehr auf neue
             Gesundheits- und Bewegungsdaten zu. Bereits daraus erzeugte oder
-            gespeicherte Spiel- und Fortschrittsdaten können bis zu ihrer
-            Löschung oder der Löschung des Nutzerkontos gespeichert bleiben,
-            soweit eine weitere Speicherung zulässig ist.
+            gespeicherte Spiel- und Fortschrittsdaten – einschließlich bereits
+            vergebener Aktivitätsprägungen und der dazu gespeicherten
+            spielrelevanten Tagesmetadaten – können bis zu ihrer Löschung oder
+            der Löschung des Nutzerkontos gespeichert bleiben, soweit eine
+            weitere Speicherung zulässig ist.
           </p>
           <p>
             Kauf-, Zahlungs- und Abrechnungsdaten werden solange gespeichert, wie
             dies zur Vertragsabwicklung und aufgrund steuer-, handels- oder
             sonstiger gesetzlicher Aufbewahrungspflichten erforderlich ist.
+          </p>
+          <p>
+            Administrative Korrekturprotokolle zu Karten und Prägungen werden
+            nur solange gespeichert, wie dies für Nachvollziehbarkeit, Support,
+            Systemsicherheit oder die Verteidigung gegen Missbrauch erforderlich
+            ist. Wird die betroffene Karte oder das zugehörige Nutzerkonto
+            gelöscht, werden zugehörige Korrekturprotokolle nach Maßgabe der
+            technischen Datenbankbeziehungen ebenfalls entfernt, soweit keine
+            gesetzlichen Gründe entgegenstehen.
           </p>
           <p>
             Technische Server-, Sicherheits- und Fehlerdaten werden nur solange
@@ -600,10 +667,11 @@ export default function PrivacyPage() {
             App übereinstimmen.
           </p>
           <p>
-            Wenn neue Funktionen eingeführt werden, insbesondere Standort,
-            Health-/Fitness-Integrationen, Chat, Gruppen, Marketplace,
-            Zahlungen, Analyse oder Werbung, müssen auch die jeweiligen
-            App-Store-Datenschutzangaben entsprechend aktualisiert werden.
+            Insbesondere Angaben zu Health-/Fitness-Daten, Workout- und
+            Distanzdaten, Standort/Radar, grobem Ortsnamen, Social-Funktionen,
+            Marketplace und Käufen müssen dem jeweils tatsächlich veröffentlichten
+            App-Stand entsprechen. Bei späteren Änderungen werden auch die
+            jeweiligen App-Store-Datenschutzangaben entsprechend aktualisiert.
           </p>
         </Section>
 

@@ -10,9 +10,10 @@ type Profile = {
   email: string | null;
   username: string | null;
   coins: number | null;
-  card_points: number | null;
+  inventory_count: number | null;
   is_admin: boolean | null;
   selected_background_id: string | null;
+  country_code: string | null;
   created_at: string;
   last_seen_at: string | null;
 
@@ -31,9 +32,10 @@ type SortOrder =
   | "oldest"
   | "coinsHigh"
   | "coinsLow"
-  | "pointsHigh"
-  | "pointsLow"
+  | "cardsHigh"
+  | "cardsLow"
   | "lastSeen"
+  | "country"
   | "plan";
 
 const planOptions: { value: PlanFilter; label: string }[] = [
@@ -51,6 +53,7 @@ export default function UsersPage() {
   const [usernameFilter, setUsernameFilter] = useState<UsernameFilter>("all");
   const [activityFilter, setActivityFilter] = useState<ActivityFilter>("all");
   const [planFilter, setPlanFilter] = useState<PlanFilter>("all");
+  const [countryFilter, setCountryFilter] = useState("all");
   const [sortOrder, setSortOrder] = useState<SortOrder>("newest");
 
   useEffect(() => {
@@ -60,16 +63,39 @@ export default function UsersPage() {
       setLoading(true);
       setLoadError(null);
 
-      const { data, error } = await supabase.rpc("admin_list_users");
+      const [usersResult, countsResult] = await Promise.all([
+        supabase.rpc("admin_list_users_v2"),
+        supabase.rpc("admin_inventory_counts_by_user"),
+      ]);
 
       if (cancelled) return;
 
-      if (error) {
-        console.error("Fehler beim Laden der User:", error);
+      if (usersResult.error) {
+        console.error("Fehler beim Laden der User:", usersResult.error);
         setUsers([]);
-        setLoadError(error.message || "User konnten nicht geladen werden.");
+        setLoadError(
+          usersResult.error.message || "User konnten nicht geladen werden.",
+        );
+      } else if (countsResult.error) {
+        console.error("Fehler beim Laden der Kartenanzahl:", countsResult.error);
+        setUsers([]);
+        setLoadError(
+          countsResult.error.message ||
+            "Die Kartenanzahl der Nutzer konnte nicht geladen werden.",
+        );
       } else {
-        setUsers((data as Profile[]) || []);
+        const counts = new Map<string, number>(
+          ((countsResult.data as { user_id: string; inventory_count: number | string | null }[] | null) || [])
+            .map((row) => [row.user_id, safeNumber(row.inventory_count)] as const),
+        );
+
+        const mergedUsers = ((usersResult.data as Omit<Profile, "inventory_count">[] | null) || [])
+          .map((user) => ({
+            ...user,
+            inventory_count: counts.get(user.id) ?? 0,
+          }));
+
+        setUsers(mergedUsers);
       }
 
       setLoading(false);
@@ -102,7 +128,10 @@ export default function UsersPage() {
     }).length;
 
     const totalCoins = users.reduce((sum, user) => sum + safeNumber(user.coins), 0);
-    const totalCardPoints = users.reduce((sum, user) => sum + safeNumber(user.card_points), 0);
+    const totalCards = users.reduce(
+      (sum, user) => sum + safeNumber(user.inventory_count),
+      0,
+    );
     const paidPlans = users.filter((user) => isPaidSubscription(user)).length;
     const giftedPlans = users.filter((user) => isGiftSubscription(user)).length;
     const masterPlans = users.filter((user) => getPlan(user) === "master").length;
@@ -114,12 +143,24 @@ export default function UsersPage() {
       onlineToday,
       new24h,
       totalCoins,
-      totalCardPoints,
+      totalCards,
       paidPlans,
       giftedPlans,
       masterPlans,
       adminUsers,
     };
+  }, [users]);
+
+  const countryOptions = useMemo(() => {
+    const codes = Array.from(
+      new Set(
+        users
+          .map((user) => normalizeCountryCode(user.country_code))
+          .filter((code): code is string => Boolean(code)),
+      ),
+    );
+
+    return codes.sort((a, b) => countryLabel(a).localeCompare(countryLabel(b), "de"));
   }, [users]);
 
   const filteredUsers = useMemo(() => {
@@ -135,6 +176,8 @@ export default function UsersPage() {
         const background = user.selected_background_id?.toLowerCase() || "";
         const plan = getPlan(user);
         const rawPlan = (user.subscription_raw_variant || "").toLowerCase();
+        const country = countryLabel(user.country_code).toLowerCase();
+        const countryCode = (user.country_code || "").toLowerCase();
 
         return (
           username.includes(searchLower) ||
@@ -142,7 +185,9 @@ export default function UsersPage() {
           id.includes(searchLower) ||
           background.includes(searchLower) ||
           plan.includes(searchLower) ||
-          rawPlan.includes(searchLower)
+          rawPlan.includes(searchLower) ||
+          country.includes(searchLower) ||
+          countryCode.includes(searchLower)
         );
       });
     }
@@ -157,6 +202,13 @@ export default function UsersPage() {
 
     if (planFilter !== "all") {
       result = result.filter((user) => getPlan(user) === planFilter);
+    }
+
+    if (countryFilter !== "all") {
+      result = result.filter((user) => {
+        const code = normalizeCountryCode(user.country_code);
+        return countryFilter === "unknown" ? !code : code === countryFilter;
+      });
     }
 
     if (activityFilter !== "all") {
@@ -196,16 +248,20 @@ export default function UsersPage() {
         return safeNumber(a.coins) - safeNumber(b.coins);
       }
 
-      if (sortOrder === "pointsHigh") {
-        return safeNumber(b.card_points) - safeNumber(a.card_points);
+      if (sortOrder === "cardsHigh") {
+        return safeNumber(b.inventory_count) - safeNumber(a.inventory_count);
       }
 
-      if (sortOrder === "pointsLow") {
-        return safeNumber(a.card_points) - safeNumber(b.card_points);
+      if (sortOrder === "cardsLow") {
+        return safeNumber(a.inventory_count) - safeNumber(b.inventory_count);
       }
 
       if (sortOrder === "lastSeen") {
         return dateValue(b.last_seen_at) - dateValue(a.last_seen_at);
+      }
+
+      if (sortOrder === "country") {
+        return countryLabel(a.country_code).localeCompare(countryLabel(b.country_code), "de");
       }
 
       if (sortOrder === "plan") {
@@ -216,7 +272,7 @@ export default function UsersPage() {
     });
 
     return result;
-  }, [users, search, usernameFilter, activityFilter, planFilter, sortOrder]);
+  }, [users, search, usernameFilter, activityFilter, planFilter, countryFilter, sortOrder]);
 
   function formatDate(dateString: string | null) {
     if (!dateString) return "—";
@@ -270,7 +326,7 @@ export default function UsersPage() {
       <div style={pageHeaderStyle}>
         <h1 style={pageTitleStyle}>Users</h1>
         <p style={pageSubtitleStyle}>
-          Übersicht über Nutzer, Abo-Plan, Coins, Card Points und Aktivität.
+          Übersicht über Nutzer, Abo-Plan, Coins, Kartenbestand und Aktivität.
         </p>
       </div>
 
@@ -284,7 +340,7 @@ export default function UsersPage() {
         <KpiCard title="Heute online" value={loading ? "..." : formatNumber(stats.onlineToday)} />
         <KpiCard title="Neue 24 Std." value={loading ? "..." : formatNumber(stats.new24h)} />
         <KpiCard title="Coins gesamt" value={loading ? "..." : formatNumber(stats.totalCoins)} />
-        <KpiCard title="Card Points gesamt" value={loading ? "..." : formatNumber(stats.totalCardPoints)} />
+        <KpiCard title="Karten gesamt" value={loading ? "..." : formatNumber(stats.totalCards)} />
       </div>
 
       {loadError && (
@@ -292,7 +348,7 @@ export default function UsersPage() {
           <strong>Fehler beim Laden der User</strong>
           <p style={errorTextStyle}>{loadError}</p>
           <p style={errorHintStyle}>
-            Prüfe, ob du als Admin eingeloggt bist und ob die RPC <strong>admin_list_users</strong> aktualisiert wurde.
+            Prüfe, ob du als Admin eingeloggt bist und ob die RPCs <strong>admin_list_users_v2</strong> und <strong>admin_inventory_counts_by_user</strong> verfügbar sind.
           </p>
         </div>
       )}
@@ -310,7 +366,7 @@ export default function UsersPage() {
             <label style={labelStyle}>Suche</label>
             <input
               type="text"
-              placeholder="Suche nach E-Mail, Username, Abo, ID oder Background"
+              placeholder="Suche nach E-Mail, Username, Land, Abo, ID oder Background"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               style={inputStyle}
@@ -330,6 +386,25 @@ export default function UsersPage() {
                   {plan.label}
                 </option>
               ))}
+            </select>
+          </div>
+
+          <div>
+            <label style={labelStyle}>Land</label>
+            <select
+              value={countryFilter}
+              onChange={(e) => setCountryFilter(e.target.value)}
+              style={inputStyle}
+            >
+              <option value="all">Alle Länder</option>
+              {countryOptions.map((code) => (
+                <option key={code} value={code}>
+                  {countryLabel(code)} ({code})
+                </option>
+              ))}
+              {users.some((user) => !normalizeCountryCode(user.country_code)) && (
+                <option value="unknown">Unbekannt</option>
+              )}
             </select>
           </div>
 
@@ -370,10 +445,11 @@ export default function UsersPage() {
               <option value="newest">Neueste zuerst</option>
               <option value="oldest">Älteste zuerst</option>
               <option value="plan">Abo Plan</option>
+              <option value="country">Land A–Z</option>
               <option value="coinsHigh">Coins hoch zu niedrig</option>
               <option value="coinsLow">Coins niedrig zu hoch</option>
-              <option value="pointsHigh">Card Points hoch zu niedrig</option>
-              <option value="pointsLow">Card Points niedrig zu hoch</option>
+              <option value="cardsHigh">Karten hoch zu niedrig</option>
+              <option value="cardsLow">Karten niedrig zu hoch</option>
               <option value="lastSeen">Zuletzt aktiv</option>
             </select>
           </div>
@@ -417,10 +493,11 @@ export default function UsersPage() {
 
                   <div style={mobileInfoGridStyle}>
                     <InfoItem label="Last Seen" value={formatDate(user.last_seen_at)} />
+                    <InfoItem label="Land" value={countryLabel(user.country_code)} />
                     <InfoItem label="Abo" value={planLabel(getPlan(user), user)} />
                     <InfoItem label="Rolle" value={user.is_admin ? "Admin" : "User"} />
                     <InfoItem label="Coins" value={formatNumber(user.coins)} />
-                    <InfoItem label="Card Points" value={formatNumber(user.card_points)} />
+                    <InfoItem label="Karten" value={formatNumber(user.inventory_count)} />
                     <InfoItem label="Registriert" value={formatDate(user.created_at)} />
                     <InfoItem label="Background" value={user.selected_background_id || "—"} />
                   </div>
@@ -433,7 +510,7 @@ export default function UsersPage() {
                 style={{
                   width: "100%",
                   borderCollapse: "collapse",
-                  minWidth: "1120px",
+                  minWidth: "1210px",
                 }}
               >
                 <thead>
@@ -441,10 +518,11 @@ export default function UsersPage() {
                     <th style={tableHeaderStyle}>Username</th>
                     <th style={tableHeaderStyle}>E-Mail</th>
                     <th style={tableHeaderStyle}>Last Seen</th>
+                    <th style={tableHeaderStyle}>Land</th>
                     <th style={tableHeaderStyle}>Abo Plan</th>
                     <th style={tableHeaderStyle}>Rolle</th>
                     <th style={tableHeaderStyle}>Coins</th>
-                    <th style={tableHeaderStyle}>Card Points</th>
+                    <th style={tableHeaderStyle}>Karten</th>
                     <th style={tableHeaderStyle}>Registriert am</th>
                     <th style={tableHeaderStyle}>Aktion</th>
                   </tr>
@@ -466,6 +544,12 @@ export default function UsersPage() {
                             {formatDate(user.last_seen_at)}
                           </span>
                         </div>
+                      </td>
+                      <td style={tableCellStyle}>
+                        {countryLabel(user.country_code)}
+                        {normalizeCountryCode(user.country_code) && (
+                          <div style={countryCodeSublineStyle}>{normalizeCountryCode(user.country_code)}</div>
+                        )}
                       </td>
                       <td style={tableCellStyle}>
                         <div style={planCellStyle}>
@@ -490,7 +574,7 @@ export default function UsersPage() {
                         </span>
                       </td>
                       <td style={tableCellStyle}>{formatNumber(user.coins)}</td>
-                      <td style={tableCellStyle}>{formatNumber(user.card_points)}</td>
+                      <td style={tableCellStyle}>{formatNumber(user.inventory_count)}</td>
                       <td style={tableCellStyle}>{formatDate(user.created_at)}</td>
                       <td style={tableCellStyle}>
                         <Link href={`/admin/users/${user.id}`} style={tableButtonStyle}>
@@ -525,6 +609,23 @@ function InfoItem({ label, value }: { label: string; value: string }) {
       <div style={infoValueStyle}>{value}</div>
     </div>
   );
+}
+
+function normalizeCountryCode(value: string | null | undefined) {
+  const code = (value || "").trim().toUpperCase();
+  return /^[A-Z]{2}$/.test(code) ? code : "";
+}
+
+function countryLabel(value: string | null | undefined) {
+  const code = normalizeCountryCode(value);
+  if (!code) return "Unbekannt";
+
+  try {
+    const names = new Intl.DisplayNames(["de"], { type: "region" });
+    return names.of(code) || code;
+  } catch {
+    return code;
+  }
 }
 
 function safeNumber(value: unknown) {
@@ -628,6 +729,8 @@ function planBadgeStyle(plan: PlanFilter): CSSProperties {
   if (plan === "club") return clubPlanBadgeStyle;
   return freePlanBadgeStyle;
 }
+
+const countryCodeSublineStyle: CSSProperties = { marginTop: "4px", color: "#708078", fontSize: "11px", fontWeight: 800 };
 
 const pageStyle: CSSProperties = { width: "100%" };
 
