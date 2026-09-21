@@ -18,23 +18,28 @@ export default function DeleteAccountPage() {
               Zurück zur Startseite
             </Link>
             <a
-              href="mailto:info@cardletics.com?subject=Kontol%C3%B6schung%20Cardletics"
+              href="mailto:support@cardletics.com?subject=Kontol%C3%B6schung%20Cardletics"
               style={mailButtonStyle}
             >
               Löschung per E-Mail beantragen
             </a>
+            <Link href="/delete/en" style={mailButtonStyle}>
+              English
+            </Link>
           </div>
         </div>
 
-        <Section title="1. So beantragst du die Löschung">
+        <Section title="1. So kannst du dein Konto löschen">
           <p>
-            Wenn du dein Cardletics-Konto löschen möchtest, sende bitte eine
-            E-Mail an <strong>info@cardletics.com</strong>.
+            Am schnellsten löschst du dein Cardletics-Konto direkt in der App
+            unter <strong>Einstellungen → Konto löschen</strong>. Die technische
+            Kontolöschung wird dort unmittelbar angestoßen.
           </p>
           <p>
-            Verwende nach Möglichkeit die E-Mail-Adresse, mit der du bei
-            Cardletics registriert bist. So können wir dein Konto eindeutig
-            zuordnen.
+            Alternativ kannst du eine Löschanfrage per E-Mail an
+            <strong> support@cardletics.com</strong> senden. Verwende nach
+            Möglichkeit die E-Mail-Adresse, mit der du bei Cardletics registriert
+            bist, damit wir dein Konto eindeutig zuordnen können.
           </p>
           <p style={infoBoxStyle}>
             Betreff-Vorschlag: <strong>Kontolöschung Cardletics</strong>
@@ -70,17 +75,18 @@ export default function DeleteAccountPage() {
 
         <Section title="4. Bearbeitungsdauer">
           <p>
-            Wir bearbeiten Löschanfragen so schnell wie möglich. In der Regel
-            erfolgt die Bearbeitung innerhalb von 30 Tagen nach erfolgreicher
-            Zuordnung des Kontos.
+            Bei der Löschung direkt in der App wird die technische Kontolöschung
+            unmittelbar angestoßen. Manuelle Löschanfragen per E-Mail bearbeiten
+            wir so schnell wie möglich und in der Regel innerhalb von 30 Tagen
+            nach erfolgreicher Zuordnung des Kontos.
           </p>
         </Section>
 
         <Section title="5. Kontakt">
           <p>
             E-Mail:{" "}
-            <a href="mailto:info@cardletics.com" style={linkStyle}>
-              info@cardletics.com
+            <a href="mailto:support@cardletics.com" style={linkStyle}>
+              support@cardletics.com
             </a>
           </p>
           <p>

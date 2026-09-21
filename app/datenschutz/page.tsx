@@ -9,13 +9,16 @@ export default function PrivacyPage() {
           <span style={eyebrowStyle}>Datenschutz</span>
           <h1 style={titleStyle}>Datenschutzerklärung</h1>
           <p style={subtitleStyle}>Für die Website und die App Cardletics.</p>
-          <p style={metaStyle}>Stand: 17.09.2026</p>
+          <p style={metaStyle}>Stand: 21.09.2026</p>
           <div style={heroActionsStyle}>
             <Link href="/" style={backButtonStyle}>
               Zurück zur Startseite
             </Link>
             <Link href="/delete" style={secondaryButtonStyle}>
               Konto löschen
+            </Link>
+            <Link href="/datenschutz/en" style={secondaryButtonStyle}>
+              English
             </Link>
           </div>
         </div>
@@ -93,8 +96,9 @@ export default function PrivacyPage() {
               <strong>Social-, Freunde- und Kommunikationsdaten:</strong>
               Freundschaftsanfragen, Freundeslisten, Chatnachrichten,
               Gruppen, Gruppenzugehörigkeiten, Freundschaftskämpfe,
-              Online-/Offline-Status, Zeitpunkte von Nachrichten und
-              Interaktionen sowie Sichtbarkeitseinstellungen.
+              allgemeines Matchmaking, Bestenlisten, Online-/Offline-Status,
+              Zeitpunkte von Nachrichten und Interaktionen sowie
+              Sichtbarkeitseinstellungen.
             </li>
             <li>
               <strong>Umgebungs- und Standortdaten:</strong> sofern du die
@@ -178,7 +182,7 @@ export default function PrivacyPage() {
             <li>Verwaltung von Inventar, Karten, Hintergründen, Packs und Ausstellung</li>
             <li>Berechnung von Bewegungsfortschritt, Zielen, Daily-Packs, Aktivitätsprägungen und Belohnungen</li>
             <li>Bereitstellung der Umgebung-/Radar-Funktion und Anzeige naher Spieler</li>
-            <li>Bereitstellung von Freundesfunktionen, Chats, Gruppen und Freundschaftskämpfen</li>
+            <li>Bereitstellung von Freundesfunktionen, Chats, Gruppen, Freundschaftskämpfen, allgemeinem Matchmaking und Bestenlisten</li>
             <li>Abwicklung von Coin-Käufen, In-App-Käufen und Abonnements</li>
             <li>Bereitstellung und Absicherung des internen Marketplaces</li>
             <li>Interne Zuordnung von Referral- und Affiliate-Vorgängen</li>
@@ -337,14 +341,16 @@ export default function PrivacyPage() {
           <p>
             Die Umgebung-/Radar-Funktion ist optional. Du kannst die Sichtbarkeit
             sowie den Standortzugriff jederzeit deaktivieren. Beim Deaktivieren
-            des Radars werden die Radar-Sichtbarkeit beendet und die in der
-            aktiven Cardletics-Präsenzzeile gespeicherten präzisen Koordinaten
-            sowie der Zeitpunkt der Standortaktualisierung entfernt. Cardletics
-            verwendet den Standort dann nicht mehr für die aktive
-            Umgebungssichtbarkeit. Technische Sicherheits- oder Serverprotokolle
-            der eingesetzten Infrastruktur können unabhängig davon nach den
-            jeweiligen technischen Speicherfristen bestehen bleiben. Cardletics
-            veröffentlicht keine genaue Adresse als öffentliches Nutzerprofil.
+            des Radars wird die Radar-Sichtbarkeit beendet und Cardletics verwendet
+            den Standort dann nicht mehr für die aktive Umgebungssichtbarkeit.
+            Zuletzt gespeicherte präzise Koordinaten und der Zeitpunkt der
+            Standortaktualisierung können in der Cardletics-Präsenzzeile technisch
+            gespeichert bleiben, bis sie durch eine spätere Standortaktualisierung
+            überschrieben oder bei Löschung des Nutzerkontos entfernt werden.
+            Technische Sicherheits- oder Serverprotokolle der eingesetzten
+            Infrastruktur können unabhängig davon nach den jeweiligen technischen
+            Speicherfristen bestehen bleiben. Cardletics veröffentlicht keine
+            genaue Adresse als öffentliches Nutzerprofil.
           </p>
           <p>
             Wenn du die Radar-/Standortfunktion ohnehin freigegeben hast, kann
@@ -360,11 +366,11 @@ export default function PrivacyPage() {
         <Section title="8. Freunde, Chat, Gruppen und Profil-Sichtbarkeit">
           <p>
             Cardletics enthält Social-Funktionen wie Freundschaftsanfragen,
-            Freundeslisten, Chats, Gruppen und Freundschaftskämpfe. Zur
-            Bereitstellung dieser Funktionen verarbeiten wir die hierfür
-            notwendigen Daten, insbesondere Nutzer-IDs, Nutzernamen,
-            Profilbilder, Nachrichteninhalte, Zeitpunkte, Gruppenmitgliedschaften
-            und Interaktionsstatus.
+            Freundeslisten, Chats, Gruppen, Freundschaftskämpfe, allgemeines
+            Matchmaking und Bestenlisten. Zur Bereitstellung dieser Funktionen
+            verarbeiten wir die hierfür notwendigen Daten, insbesondere Nutzer-IDs,
+            Nutzernamen, Profilbilder, Nachrichteninhalte, Zeitpunkte,
+            Gruppenmitgliedschaften und Interaktionsstatus.
           </p>
           <p>
             Du kannst innerhalb der App festlegen, welche Profilinformationen
@@ -453,8 +459,10 @@ export default function PrivacyPage() {
             <strong> support@cardletics.com</strong>.
           </p>
           <p>
-            Für Anfragen zur Löschung deines Nutzerkontos kannst du die Seite
-            <Link href="/delete"> /delete</Link> nutzen oder dich an
+            Du kannst dein Nutzerkonto direkt in der Cardletics-App unter
+            <strong> Einstellungen → Konto löschen</strong> löschen. Die technische
+            Kontolöschung wird dort unmittelbar angestoßen. Alternativ kannst du
+            die Seite <Link href="/delete"> /delete</Link> nutzen oder dich an
             <strong> support@cardletics.com</strong> wenden.
           </p>
         </Section>
@@ -581,11 +589,14 @@ export default function PrivacyPage() {
           <p>
             Standortdaten der Umgebung-/Radar-Funktion werden verarbeitet, soweit
             dies für die Funktion erforderlich ist. Beim Deaktivieren des Radars
-            werden die präzisen Koordinaten und der Zeitpunkt der
-            Standortaktualisierung aus der aktiven Cardletics-Präsenzzeile
-            entfernt. Unabhängig davon können technisch notwendige Server- oder
-            Sicherheitsprotokolle nach den Speicherfristen der jeweils
-            eingesetzten Infrastruktur- und Plattformanbieter bestehen bleiben.
+            wird die aktive Radar-Sichtbarkeit beendet. Zuletzt gespeicherte
+            präzise Koordinaten und der Zeitpunkt der Standortaktualisierung können
+            in der Cardletics-Präsenzzeile technisch gespeichert bleiben, bis sie
+            durch eine spätere Standortaktualisierung überschrieben oder bei
+            Löschung des Nutzerkontos entfernt werden. Unabhängig davon können
+            technisch notwendige Server- oder Sicherheitsprotokolle nach den
+            Speicherfristen der jeweils eingesetzten Infrastruktur- und
+            Plattformanbieter bestehen bleiben.
           </p>
           <p>
             Nach Widerruf der Einwilligung greift Cardletics nicht mehr auf neue
@@ -693,9 +704,10 @@ export default function PrivacyPage() {
             </li>
           </ul>
           <p>
-            Für die Löschung deines Nutzerkontos kannst du die Seite
-            <Link href="/delete"> /delete</Link> nutzen oder dich an
-            <strong> support@cardletics.com</strong> wenden.
+            Du kannst dein Nutzerkonto direkt in der Cardletics-App unter
+            <strong> Einstellungen → Konto löschen</strong> löschen. Alternativ
+            kannst du die Seite <Link href="/delete"> /delete</Link> nutzen oder
+            dich an <strong> support@cardletics.com</strong> wenden.
           </p>
           <p>
             Außerdem hast du das Recht, dich bei einer zuständigen
@@ -769,6 +781,7 @@ function PageFooter() {
       <nav style={footerLinksStyle}>
         <Link href="/impressum" style={footerLinkStyle}>Impressum</Link>
         <Link href="/datenschutz" style={footerLinkStyle}>Datenschutz</Link>
+        <Link href="/datenschutz/en" style={footerLinkStyle}>Privacy (EN)</Link>
         <Link href="/agb" style={footerLinkStyle}>AGB</Link>
         <Link href="/kontakt" style={footerLinkStyle}>Kontakt</Link>
         <Link href="/delete" style={footerLinkStyle}>Konto löschen</Link>
