@@ -228,6 +228,8 @@ export default function SiteFooter() {
 
   const t = footerTranslations[language];
   const dir = language === "ar" || language === "ur" ? "rtl" : "ltr";
+  const privacyHref =
+    language === "de" ? "/datenschutz" : "/datenschutz/en";
 
   return (
     <footer style={{ ...footerWrapStyle, direction: dir }}>
@@ -245,7 +247,7 @@ export default function SiteFooter() {
             <Link href="/impressum" style={linkStyle}>
               {t.impressum}
             </Link>
-            <Link href="/datenschutz" style={linkStyle}>
+            <Link href={privacyHref} style={linkStyle}>
               {t.privacy}
             </Link>
             <Link href="/agb" style={linkStyle}>
