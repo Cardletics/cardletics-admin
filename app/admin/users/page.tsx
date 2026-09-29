@@ -14,6 +14,7 @@ type Profile = {
   is_admin: boolean | null;
   selected_background_id: string | null;
   country_code: string | null;
+  app_platform: string | null;
   created_at: string;
   last_seen_at: string | null;
 
@@ -63,9 +64,10 @@ export default function UsersPage() {
       setLoading(true);
       setLoadError(null);
 
-      const [usersResult, countsResult] = await Promise.all([
+      const [usersResult, countsResult, platformsResult] = await Promise.all([
         supabase.rpc("admin_list_users_v2"),
         supabase.rpc("admin_inventory_counts_by_user"),
+        supabase.rpc("admin_user_platforms"),
       ]);
 
       if (cancelled) return;
@@ -89,10 +91,23 @@ export default function UsersPage() {
             .map((row) => [row.user_id, safeNumber(row.inventory_count)] as const),
         );
 
-        const mergedUsers = ((usersResult.data as Omit<Profile, "inventory_count">[] | null) || [])
+        if (platformsResult.error) {
+          // Die Userliste soll nicht ausfallen, falls die Plattform-RPC während
+          // eines Deployments noch nicht vorhanden ist. Dann zeigen wir
+          // vorübergehend "Unbekannt".
+          console.warn("Plattformen konnten nicht geladen werden:", platformsResult.error);
+        }
+
+        const platforms = new Map<string, string | null>(
+          (((platformsResult.error ? [] : platformsResult.data) as { user_id: string; app_platform: string | null }[] | null) || [])
+            .map((row) => [row.user_id, row.app_platform] as const),
+        );
+
+        const mergedUsers = ((usersResult.data as Omit<Profile, "inventory_count" | "app_platform">[] | null) || [])
           .map((user) => ({
             ...user,
             inventory_count: counts.get(user.id) ?? 0,
+            app_platform: platforms.get(user.id) ?? null,
           }));
 
         setUsers(mergedUsers);
@@ -178,6 +193,7 @@ export default function UsersPage() {
         const rawPlan = (user.subscription_raw_variant || "").toLowerCase();
         const country = countryLabel(user.country_code).toLowerCase();
         const countryCode = (user.country_code || "").toLowerCase();
+        const platform = platformLabel(user).toLowerCase();
 
         return (
           username.includes(searchLower) ||
@@ -187,7 +203,8 @@ export default function UsersPage() {
           plan.includes(searchLower) ||
           rawPlan.includes(searchLower) ||
           country.includes(searchLower) ||
-          countryCode.includes(searchLower)
+          countryCode.includes(searchLower) ||
+          platform.includes(searchLower)
         );
       });
     }
@@ -348,7 +365,7 @@ export default function UsersPage() {
           <strong>Fehler beim Laden der User</strong>
           <p style={errorTextStyle}>{loadError}</p>
           <p style={errorHintStyle}>
-            Prüfe, ob du als Admin eingeloggt bist und ob die RPCs <strong>admin_list_users_v2</strong> und <strong>admin_inventory_counts_by_user</strong> verfügbar sind.
+            Prüfe, ob du als Admin eingeloggt bist und ob die RPCs <strong>admin_list_users_v2</strong>, <strong>admin_inventory_counts_by_user</strong> und <strong>admin_user_platforms</strong> verfügbar sind.
           </p>
         </div>
       )}
@@ -366,7 +383,7 @@ export default function UsersPage() {
             <label style={labelStyle}>Suche</label>
             <input
               type="text"
-              placeholder="Suche nach E-Mail, Username, Land, Abo, ID oder Background"
+              placeholder="Suche nach E-Mail, Username, Land, Plattform, Abo, ID oder Background"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               style={inputStyle}
@@ -495,7 +512,7 @@ export default function UsersPage() {
                     <InfoItem label="Last Seen" value={formatDate(user.last_seen_at)} />
                     <InfoItem label="Land" value={countryLabel(user.country_code)} />
                     <InfoItem label="Abo" value={planLabel(getPlan(user), user)} />
-                    <InfoItem label="Rolle" value={user.is_admin ? "Admin" : "User"} />
+                    <InfoItem label="Plattform" value={platformLabel(user)} />
                     <InfoItem label="Coins" value={formatNumber(user.coins)} />
                     <InfoItem label="Karten" value={formatNumber(user.inventory_count)} />
                     <InfoItem label="Registriert" value={formatDate(user.created_at)} />
@@ -520,7 +537,7 @@ export default function UsersPage() {
                     <th style={tableHeaderStyle}>Last Seen</th>
                     <th style={tableHeaderStyle}>Land</th>
                     <th style={tableHeaderStyle}>Abo Plan</th>
-                    <th style={tableHeaderStyle}>Rolle</th>
+                    <th style={tableHeaderStyle}>Plattform</th>
                     <th style={tableHeaderStyle}>Coins</th>
                     <th style={tableHeaderStyle}>Karten</th>
                     <th style={tableHeaderStyle}>Registriert am</th>
@@ -569,8 +586,8 @@ export default function UsersPage() {
                         </div>
                       </td>
                       <td style={tableCellStyle}>
-                        <span style={user.is_admin ? adminRoleBadgeStyle : userRoleBadgeStyle}>
-                          {user.is_admin ? "Admin" : "User"}
+                        <span style={platformBadgeStyle(user)}>
+                          {platformLabel(user)}
                         </span>
                       </td>
                       <td style={tableCellStyle}>{formatNumber(user.coins)}</td>
@@ -626,6 +643,46 @@ function countryLabel(value: string | null | undefined) {
   } catch {
     return code;
   }
+}
+
+function normalizeAppPlatform(value: string | null | undefined) {
+  const platform = (value || "").trim().toLowerCase();
+
+  if (platform === "ios" || platform === "apple" || platform === "app_store") {
+    return "ios";
+  }
+
+  if (
+    platform === "android" ||
+    platform === "google" ||
+    platform === "google_play"
+  ) {
+    return "android";
+  }
+
+  return "";
+}
+
+function platformLabel(user: Profile) {
+  if (user.is_admin) return "Admin";
+
+  const platform = normalizeAppPlatform(user.app_platform);
+
+  if (platform === "ios") return "Apple";
+  if (platform === "android") return "Android";
+
+  return "Unbekannt";
+}
+
+function platformBadgeStyle(user: Profile): CSSProperties {
+  if (user.is_admin) return adminRoleBadgeStyle;
+
+  const platform = normalizeAppPlatform(user.app_platform);
+
+  if (platform === "ios") return applePlatformBadgeStyle;
+  if (platform === "android") return androidPlatformBadgeStyle;
+
+  return userRoleBadgeStyle;
 }
 
 function safeNumber(value: unknown) {
@@ -1050,6 +1107,18 @@ const userRoleBadgeStyle: CSSProperties = {
 };
 
 const adminRoleBadgeStyle: CSSProperties = {
+  ...userRoleBadgeStyle,
+  background: "#163322",
+  color: "#86efac",
+};
+
+const applePlatformBadgeStyle: CSSProperties = {
+  ...userRoleBadgeStyle,
+  background: "#f3f4f6",
+  color: "#111827",
+};
+
+const androidPlatformBadgeStyle: CSSProperties = {
   ...userRoleBadgeStyle,
   background: "#163322",
   color: "#86efac",

@@ -907,6 +907,7 @@ export default function AdminUserDetailPage() {
                   ["User ID", userId],
                   ["Username", readString(profile, "username") || "—"],
                   ["E-Mail", readString(profile, "email") || "—"],
+                  ["Plattform", profilePlatformLabel(readString(profile, "app_platform"))],
                   ["Coins", formatNumber(readNumber(profile, "coins"))],
                   ["Card Points", formatNumber(readNumber(profile, "card_points"))],
                   ["Admin", readBoolean(profile, "is_admin") ? "Ja" : "Nein"],
@@ -1592,7 +1593,14 @@ function InventoryVisualGrid({
               ...rarityCardStyle(getCardRarity(card)),
             }}
           >
-            <CardVisual card={card} />
+            <CardVisual card={card} compact />
+            <div style={inventoryMiniMetaStyle}>
+              <span>{getCardCondition(card)} %</span>
+              <span>{getCardStamps(card).length} Präg.</span>
+            </div>
+            <details style={inventoryManageDetailsStyle}>
+              <summary style={inventoryManageSummaryStyle}>Bearbeiten</summary>
+              <div style={inventoryManageBodyStyle}>
             <StampAdminPanel
               card={card}
               busy={stampActionCardId === inventoryId}
@@ -1627,6 +1635,8 @@ function InventoryVisualGrid({
                 </button>
               )}
             </div>
+              </div>
+            </details>
           </div>
         );
       })}
@@ -1653,7 +1663,7 @@ function StampAdminPanel({
   const canRepairSet = catalogSpecialType === "set_completion";
 
   return (
-    <details style={stampAdminDetailsStyle}>
+    <details open style={stampAdminDetailsStyle}>
       <summary style={stampAdminSummaryStyle}>
         Prägungen verwalten · {stamps.length || 0}
       </summary>
@@ -1928,8 +1938,8 @@ const stampImageVisualStyle: CSSProperties = {
   position: "absolute",
   right: "8px",
   bottom: "6px",
-  width: "70px",
-  height: "70px",
+  width: "46px",
+  height: "46px",
   objectFit: "contain",
   filter: "drop-shadow(0 4px 7px rgba(0,0,0,0.48))",
   zIndex: 4,
@@ -1940,10 +1950,10 @@ function stampFallbackVisualStyle(stamp: JsonMap): CSSProperties {
   const palette = stampPalette(stamp);
   return {
     position: "absolute",
-    right: "12px",
-    bottom: "12px",
-    minWidth: "38px",
-    height: "38px",
+    right: "7px",
+    bottom: "7px",
+    minWidth: "30px",
+    height: "30px",
     padding: "0 8px",
     borderRadius: "999px",
     display: "inline-flex",
@@ -1953,7 +1963,7 @@ function stampFallbackVisualStyle(stamp: JsonMap): CSSProperties {
     border: `2px solid ${palette.border}`,
     color: palette.color,
     fontWeight: 900,
-    fontSize: "11px",
+    fontSize: "9px",
     boxShadow: "0 4px 8px rgba(0,0,0,0.42)",
     zIndex: 4,
     pointerEvents: "none",
@@ -1964,12 +1974,12 @@ function stampChipStyle(stamp: JsonMap): CSSProperties {
   const palette = stampPalette(stamp);
   return {
     display: "inline-flex",
-    padding: "4px 7px",
+    padding: "3px 5px",
     borderRadius: "999px",
     border: `1px solid ${palette.border}`,
     background: palette.bg,
     color: palette.color,
-    fontSize: "9px",
+    fontSize: "8px",
     fontWeight: 900,
   };
 }
@@ -2339,6 +2349,24 @@ function readBoolean(source: JsonMap | null | undefined, key: string) {
 function formatNumber(value: unknown) { return Math.round(readNumber(value)).toLocaleString("de-DE"); }
 function formatMoney(value: unknown) { return readNumber(value).toLocaleString("de-DE", { style: "currency", currency: "EUR" }); }
 function formatDate(dateString?: string | null) { if (!dateString) return "—"; const date = new Date(dateString); if (Number.isNaN(date.getTime())) return "—"; return date.toLocaleString("de-DE"); }
+function profilePlatformLabel(value: string) {
+  const platform = value.trim().toLowerCase();
+
+  if (platform === "ios" || platform === "apple" || platform === "app_store") {
+    return "Apple";
+  }
+
+  if (
+    platform === "android" ||
+    platform === "google" ||
+    platform === "google_play"
+  ) {
+    return "Android";
+  }
+
+  return "Unbekannt";
+}
+
 function normalizeVariant(value: string): SubscriptionVariant {
   const variant = value.toLowerCase().trim();
   if (variant === "basic" || variant === "pro" || variant === "club" || variant === "elite") return "elite";
@@ -2412,43 +2440,77 @@ const dangerHintStyle: CSSProperties = { color: "#fca5a5", lineHeight: 1.5, marg
 const dangerNoticeStyle: CSSProperties = { padding: "12px", borderRadius: "12px", border: "1px solid #7f1d1d", background: "#160d0d", color: "#fecaca", fontWeight: 800, lineHeight: 1.5 };
 const checkRowStyle: CSSProperties = { display: "flex", alignItems: "center", gap: "9px", minHeight: "42px", color: "#cfe0d6", fontWeight: 800, cursor: "pointer" };
 const catalogFilterStyle: CSSProperties = { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))", gap: "12px", alignItems: "end", marginBottom: "16px" };
-const visualCardGridStyle: CSSProperties = { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(205px, 1fr))", gap: "15px" };
-const visualCardStyle: CSSProperties = { background: "linear-gradient(180deg, #17211c 0%, #0d1410 100%)", borderRadius: "17px", overflow: "hidden", minWidth: 0 };
+const visualCardGridStyle: CSSProperties = { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(125px, 145px))", gap: "10px", alignItems: "start", justifyContent: "start" };
+const visualCardStyle: CSSProperties = { background: "linear-gradient(180deg, #17211c 0%, #0d1410 100%)", borderRadius: "13px", overflow: "hidden", minWidth: 0 };
 const catalogCardButtonStyle: CSSProperties = { ...visualCardStyle, padding: 0, textAlign: "left", cursor: "pointer", transition: "transform 140ms ease, box-shadow 140ms ease", position: "relative" };
-const cardImageWrapStyle: CSSProperties = { position: "relative", height: "230px", background: "#0b0f0d", overflow: "hidden" };
+const cardImageWrapStyle: CSSProperties = { position: "relative", aspectRatio: "2 / 3", background: "#0b0f0d", overflow: "hidden" };
 const cardImageStyle: CSSProperties = { width: "100%", height: "100%", objectFit: "cover", display: "block" };
 const cardImagePlaceholderStyle: CSSProperties = { width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "#7b8a81", fontWeight: 900, letterSpacing: "0.1em", background: "radial-gradient(circle at 50% 25%, #1c2c23, #0b0f0d 65%)" };
-const cardBodyStyle: CSSProperties = { display: "grid", gap: "7px", padding: "12px" };
-const cardNameVisualStyle: CSSProperties = { color: "#f4faf6", fontSize: "15px", lineHeight: 1.2, wordBreak: "break-word" };
-const cardMetaStyle: CSSProperties = { color: "#a7b8ad", fontSize: "12px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" };
+const cardBodyStyle: CSSProperties = { display: "grid", gap: "4px", padding: "8px" };
+const cardNameVisualStyle: CSSProperties = { color: "#f4faf6", fontSize: "12px", lineHeight: 1.2, wordBreak: "break-word" };
+const cardMetaStyle: CSSProperties = { color: "#a7b8ad", fontSize: "9px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" };
 const conditionHeaderStyle: CSSProperties = { display: "flex", justifyContent: "space-between", alignItems: "center", color: "#cfe0d6", fontSize: "12px", marginTop: "2px" };
 const conditionTrackStyle: CSSProperties = { width: "100%", height: "7px", borderRadius: "99px", background: "#27312d", overflow: "hidden" };
 const conditionFillStyle: CSSProperties = { height: "100%", borderRadius: "99px" };
 const cardDateStyle: CSSProperties = { color: "#708078", fontSize: "10px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" };
 const specialBadgeStyle: CSSProperties = { position: "absolute", top: "10px", left: "10px", padding: "6px 8px", borderRadius: "999px", background: "#402015", border: "1px solid #fb923c", color: "#fed7aa", fontSize: "10px", fontWeight: 900, zIndex: 2 };
-const stampChipRowStyle: CSSProperties = { display: "flex", gap: "5px", flexWrap: "wrap", marginTop: "1px" };
-const stampAdminDetailsStyle: CSSProperties = { margin: "0 12px 12px", border: "1px solid #33443b", borderRadius: "11px", background: "#0d1511", overflow: "hidden" };
-const stampAdminSummaryStyle: CSSProperties = { padding: "10px", color: "#cfe0d6", fontSize: "12px", fontWeight: 900, cursor: "pointer", userSelect: "none" };
-const stampAdminBodyStyle: CSSProperties = { display: "grid", gap: "10px", padding: "0 10px 10px" };
+const stampChipRowStyle: CSSProperties = { display: "flex", gap: "3px", flexWrap: "wrap", marginTop: "1px" };
+const inventoryMiniMetaStyle: CSSProperties = {
+  display: "flex",
+  justifyContent: "space-between",
+  gap: "6px",
+  padding: "0 8px 7px",
+  color: "#94a39b",
+  fontSize: "9px",
+  fontWeight: 800,
+};
+
+const inventoryManageDetailsStyle: CSSProperties = {
+  margin: "0 7px 7px",
+  border: "1px solid #2d3a33",
+  borderRadius: "9px",
+  background: "#0c120f",
+  overflow: "hidden",
+};
+
+const inventoryManageSummaryStyle: CSSProperties = {
+  padding: "7px 8px",
+  color: "#cfe0d6",
+  fontSize: "10px",
+  fontWeight: 900,
+  cursor: "pointer",
+  userSelect: "none",
+  textAlign: "center",
+};
+
+const inventoryManageBodyStyle: CSSProperties = {
+  display: "grid",
+  gap: "8px",
+  padding: "0 7px 7px",
+};
+
+const stampAdminDetailsStyle: CSSProperties = { margin: "0", border: "1px solid #33443b", borderRadius: "9px", background: "#0d1511", overflow: "hidden" };
+const stampAdminSummaryStyle: CSSProperties = { padding: "8px", color: "#cfe0d6", fontSize: "10px", fontWeight: 900, cursor: "pointer", userSelect: "none" };
+const stampAdminBodyStyle: CSSProperties = { display: "grid", gap: "8px", padding: "0 8px 8px" };
 const stampEmptyStyle: CSSProperties = { color: "#708078", fontSize: "11px" };
 const stampDetailListStyle: CSSProperties = { display: "grid", gap: "7px" };
 const stampDetailBoxStyle: CSSProperties = { display: "grid", gap: "3px", padding: "8px", borderRadius: "9px", background: "#121c17", color: "#aebdb4", fontSize: "10px", lineHeight: 1.35 };
 const stampDetailTopStyle: CSSProperties = { display: "flex", justifyContent: "space-between", alignItems: "center", gap: "8px", color: "#e7f1eb" };
 const stampRemoveButtonStyle: CSSProperties = { minHeight: "28px", padding: "4px 8px", borderRadius: "8px", border: "1px solid #7f1d1d", background: "#311313", color: "#fecaca", fontSize: "9px", fontWeight: 900, cursor: "pointer" };
-const stampAdminButtonGridStyle: CSSProperties = { display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: "6px" };
-const stampButtonBaseStyle: CSSProperties = { minHeight: "34px", padding: "6px", borderRadius: "8px", fontSize: "9px", fontWeight: 950, cursor: "pointer" };
+const stampAdminButtonGridStyle: CSSProperties = { display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: "5px" };
+const stampButtonBaseStyle: CSSProperties = { minHeight: "30px", padding: "5px", borderRadius: "7px", fontSize: "8px", fontWeight: 950, cursor: "pointer" };
 const stampBronzeButtonStyle: CSSProperties = { ...stampButtonBaseStyle, border: "1px solid #d08a54", background: "#4b2d1c", color: "#ffd4ad" };
 const stampSilverButtonStyle: CSSProperties = { ...stampButtonBaseStyle, border: "1px solid #cbd5e1", background: "#27313a", color: "#f1f5f9" };
 const stampGoldButtonStyle: CSSProperties = { ...stampButtonBaseStyle, border: "1px solid #facc15", background: "#47330b", color: "#fef08a" };
 const stampPromoButtonStyle: CSSProperties = { ...stampButtonBaseStyle, border: "1px solid #fb923c", background: "#4a250c", color: "#fed7aa" };
 const stampSetButtonStyle: CSSProperties = { ...stampButtonBaseStyle, border: "1px solid #86efac", background: "#21341b", color: "#dcfce7" };
 const stampRebuildButtonStyle: CSSProperties = { ...stampButtonBaseStyle, border: "1px solid #60a5fa", background: "#172554", color: "#dbeafe", gridColumn: "span 1" };
-const inventoryActionRowStyle: CSSProperties = { display: "grid", padding: "0 12px 12px" };
+const inventoryActionRowStyle: CSSProperties = { display: "grid", padding: "0" };
 const deleteCardButtonStyle: CSSProperties = { minHeight: "42px", borderRadius: "11px", border: "1px solid #991b1b", background: "#3a1515", color: "#fecaca", fontWeight: 900, cursor: "pointer" };
 const marketRepairButtonStyle: CSSProperties = { minHeight: "42px", borderRadius: "11px", border: "1px solid #a16207", background: "#3d2b0d", color: "#fde68a", fontWeight: 900, cursor: "pointer" };
-const marketNeutralBoxStyle: CSSProperties = { margin: "0 12px 12px", padding: "9px 10px", borderRadius: "10px", background: "#101714", color: "#94a39b", fontSize: "12px", fontWeight: 700 };
-const marketActiveBoxStyle: CSSProperties = { display: "grid", gap: "4px", margin: "0 12px 12px", padding: "10px", borderRadius: "10px", border: "1px solid #a16207", background: "#33230b", color: "#fde68a" };
-const marketErrorBoxStyle: CSSProperties = { display: "grid", gap: "4px", margin: "0 12px 12px", padding: "10px", borderRadius: "10px", border: "1px solid #991b1b", background: "#381515", color: "#fecaca" };
+const marketNeutralBoxStyle: CSSProperties = { margin: "0", padding: "8px", borderRadius: "9px", background: "#101714", color: "#94a39b", fontSize: "10px", fontWeight: 700 };
+const marketActiveBoxStyle: CSSProperties = { display: "grid", gap: "4px", margin: "0", padding: "8px", borderRadius: "9px", border: "1px solid #a16207", background: "#33230b", color: "#fde68a" };
+const marketErrorBoxStyle: CSSProperties = { display: "grid", gap: "4px", margin: "0", padding: "8px", borderRadius: "9px", border: "1px solid #991b1b", background: "#381515", color: "#fecaca" };
 const marketTitleStyle: CSSProperties = { fontSize: "12px", fontWeight: 900 };
 const marketTextStyle: CSSProperties = { fontSize: "11px", lineHeight: 1.35 };
 const rawBoxStyle: CSSProperties = { background: "#0b0f0d", border: "1px solid #27312d", borderRadius: "14px", padding: "14px", color: "#cfe0d6", whiteSpace: "pre-wrap", overflowX: "auto" };
