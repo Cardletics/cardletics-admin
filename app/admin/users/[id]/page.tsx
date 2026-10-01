@@ -98,7 +98,7 @@ export default function AdminUserDetailPage() {
   const [catalogRarity, setCatalogRarity] = useState<CatalogRarity>("all");
   const [includeSetCompletion, setIncludeSetCompletion] = useState(true);
   const [selectedCatalogCard, setSelectedCatalogCard] = useState<CatalogCard | null>(null);
-  const [catalogCollapsed, setCatalogCollapsed] = useState(false);
+  const [catalogCollapsed, setCatalogCollapsed] = useState(true);
 
   const [conditionMode, setConditionMode] = useState<ConditionMode>("random");
   const [customCondition, setCustomCondition] = useState("100");
@@ -117,6 +117,7 @@ export default function AdminUserDetailPage() {
   const [deletingCardId, setDeletingCardId] = useState<string | null>(null);
   const [repairingMarketCardId, setRepairingMarketCardId] = useState<string | null>(null);
   const [stampActionCardId, setStampActionCardId] = useState<string | null>(null);
+  const [editingCard, setEditingCard] = useState<JsonMap | null>(null);
 
   const [accountAccess, setAccountAccess] = useState<AccountAccessStatus | null>(null);
   const [accountAccessLoading, setAccountAccessLoading] = useState(true);
@@ -533,6 +534,7 @@ export default function AdminUserDetailPage() {
         : `${label}: Börsenstatus repariert, Karte ist wieder sichtbar.`
     );
     setRepairingMarketCardId(null);
+    setEditingCard(null);
     await Promise.all([loadInventory(), loadDetail()]);
   }
 
@@ -578,6 +580,7 @@ export default function AdminUserDetailPage() {
 
     setMessage(`${readString(data as JsonMap, "deleted_name") || label} wurde dauerhaft gelöscht.`);
     setDeletingCardId(null);
+    setEditingCard(null);
     await Promise.all([loadInventory(), loadDetail()]);
   }
 
@@ -621,6 +624,80 @@ export default function AdminUserDetailPage() {
 
     setMessage(`${label}: ${stampLabel}-Prägung gespeichert.`);
     setStampActionCardId(null);
+    setEditingCard(null);
+    await loadInventory();
+  }
+
+  async function handleSaveActivityStamp(
+    card: JsonMap,
+    values: ActivityStampEditorValues,
+  ) {
+    const inventoryId = readString(card, "id");
+    if (!inventoryId || stampActionCardId) return;
+
+    const parseOptionalInteger = (raw: string, label: string) => {
+      const trimmed = raw.trim();
+      if (!trimmed) return null;
+      const value = Number(trimmed.replace(",", "."));
+      if (!Number.isFinite(value) || value < 0 || !Number.isInteger(value)) {
+        throw new Error(`${label} muss eine ganze Zahl ab 0 sein.`);
+      }
+      return value;
+    };
+
+    const parseOptionalDistanceKm = (raw: string, label: string) => {
+      const trimmed = raw.trim();
+      if (!trimmed) return null;
+      const value = Number(trimmed.replace(",", "."));
+      if (!Number.isFinite(value) || value < 0) {
+        throw new Error(`${label} muss eine Zahl ab 0 sein.`);
+      }
+      return Math.round(value * 1000);
+    };
+
+    let steps: number | null;
+    let cyclingMeters: number | null;
+    let rowingMeters: number | null;
+    let swimmingMeters: number | null;
+    let workoutMinutes: number | null;
+
+    try {
+      steps = parseOptionalInteger(values.steps, "Schritte");
+      cyclingMeters = parseOptionalDistanceKm(values.cyclingKm, "Radfahren");
+      rowingMeters = parseOptionalDistanceKm(values.rowingKm, "Rudern");
+      swimmingMeters = parseOptionalInteger(values.swimmingMeters, "Schwimmen");
+      workoutMinutes = parseOptionalInteger(values.workoutMinutes, "Workout");
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "Ungültige Aktivitätswerte.");
+      return;
+    }
+
+    setStampActionCardId(inventoryId);
+    setMessage(null);
+    setErrorMessage(null);
+
+    const { error } = await supabase.rpc("admin_save_activity_stamp", {
+      p_inventory_id: inventoryId,
+      p_activity_tier: values.tier,
+      p_movement_date: values.movementDate.trim() || null,
+      p_city: values.city.trim() || null,
+      p_steps: steps,
+      p_cycling_meters: cyclingMeters,
+      p_rowing_meters: rowingMeters,
+      p_swimming_meters: swimmingMeters,
+      p_workout_minutes: workoutMinutes,
+      p_note: values.note.trim() || null,
+    });
+
+    if (error) {
+      setErrorMessage(error.message || "Aktivitätsprägung konnte nicht gespeichert werden.");
+      setStampActionCardId(null);
+      return;
+    }
+
+    setMessage(`${cardDisplayName(card)}: Aktivitätsprägung und Aktivitätsdaten gespeichert.`);
+    setStampActionCardId(null);
+    setEditingCard(null);
     await loadInventory();
   }
 
@@ -655,6 +732,7 @@ export default function AdminUserDetailPage() {
 
     setMessage(`${label}: Prägung „${stampKey}“ entfernt.`);
     setStampActionCardId(null);
+    setEditingCard(null);
     await loadInventory();
   }
 
@@ -691,6 +769,7 @@ export default function AdminUserDetailPage() {
 
     setMessage(`${label}: Prägungen wurden aus den vorhandenen Daten neu aufgebaut.`);
     setStampActionCardId(null);
+    setEditingCard(null);
     await loadInventory();
   }
 
@@ -704,6 +783,12 @@ export default function AdminUserDetailPage() {
   useEffect(() => {
     reloadAll();
   }, [userId]);
+
+  useEffect(() => {
+    if (activeTab === "cards") {
+      setCatalogCollapsed(true);
+    }
+  }, [activeTab]);
 
   useEffect(() => {
     if (activeTab === "cards" && catalogCards.length === 0 && !catalogLoading) {
@@ -1585,18 +1670,27 @@ export default function AdminUserDetailPage() {
             ) : (
               <InventoryVisualGrid
                 items={filteredInventory}
-                deletingCardId={deletingCardId}
-                repairingMarketCardId={repairingMarketCardId}
-                stampActionCardId={stampActionCardId}
-                onDelete={handleDeleteInventoryCard}
-                onRepairMarket={handleRepairMarketCard}
-                onSetStamp={handleSetInventoryStamp}
-                onRemoveStamp={handleRemoveInventoryStamp}
-                onRebuildStamps={handleRebuildInventoryStamps}
+                onEdit={setEditingCard}
               />
             )}
           </section>
         </>
+      )}
+
+      {editingCard && (
+        <InventoryCardEditorModal
+          card={editingCard}
+          busy={stampActionCardId === readString(editingCard, "id")}
+          deleting={deletingCardId === readString(editingCard, "id")}
+          repairing={repairingMarketCardId === readString(editingCard, "id")}
+          onClose={() => setEditingCard(null)}
+          onSaveActivityStamp={handleSaveActivityStamp}
+          onSetStamp={(stampKey, activityTier) => handleSetInventoryStamp(editingCard, stampKey, activityTier)}
+          onRemoveStamp={(stampKey) => handleRemoveInventoryStamp(editingCard, stampKey)}
+          onRebuildStamps={() => handleRebuildInventoryStamps(editingCard)}
+          onDelete={() => handleDeleteInventoryCard(editingCard)}
+          onRepairMarket={() => handleRepairMarketCard(editingCard)}
+        />
       )}
 
       {activeTab === "raw" && (
@@ -1666,24 +1760,10 @@ function CatalogCardGrid({
 
 function InventoryVisualGrid({
   items,
-  deletingCardId,
-  repairingMarketCardId,
-  stampActionCardId,
-  onDelete,
-  onRepairMarket,
-  onSetStamp,
-  onRemoveStamp,
-  onRebuildStamps,
+  onEdit,
 }: {
   items: JsonMap[];
-  deletingCardId: string | null;
-  repairingMarketCardId: string | null;
-  stampActionCardId: string | null;
-  onDelete: (card: JsonMap) => void;
-  onRepairMarket: (card: JsonMap) => void;
-  onSetStamp: (card: JsonMap, stampKey: "activity" | "promo" | "set", activityTier?: "bronze" | "silver" | "gold") => void;
-  onRemoveStamp: (card: JsonMap, stampKey: string) => void;
-  onRebuildStamps: (card: JsonMap) => void;
+  onEdit: (card: JsonMap) => void;
 }) {
   if (items.length === 0) {
     return <p style={emptyTextStyle}>Keine Karten gefunden.</p>;
@@ -1693,10 +1773,6 @@ function InventoryVisualGrid({
     <div style={visualCardGridStyle}>
       {items.map((card, index) => {
         const inventoryId = readString(card, "id");
-        const marketState = getMarketState(card);
-        const blockedByMarket = marketState === "active" || isMarketProblem(card);
-        const isDeleting = deletingCardId === inventoryId;
-        const isRepairing = repairingMarketCardId === inventoryId;
 
         return (
           <div
@@ -1711,48 +1787,233 @@ function InventoryVisualGrid({
               <span>{getCardCondition(card)} %</span>
               <span>{getCardStamps(card).length} Präg.</span>
             </div>
-            <details style={inventoryManageDetailsStyle}>
-              <summary style={inventoryManageSummaryStyle}>Bearbeiten</summary>
-              <div style={inventoryManageBodyStyle}>
-            <StampAdminPanel
-              card={card}
-              busy={stampActionCardId === inventoryId}
-              onSetStamp={(stampKey, activityTier) => onSetStamp(card, stampKey, activityTier)}
-              onRemoveStamp={(stampKey) => onRemoveStamp(card, stampKey)}
-              onRebuild={() => onRebuildStamps(card)}
-            />
-            <MarketStatusPanel card={card} />
-
-            <div style={inventoryActionRowStyle}>
-              {blockedByMarket ? (
-                <button
-                  type="button"
-                  onClick={() => onRepairMarket(card)}
-                  disabled={isRepairing}
-                  style={marketRepairButtonStyle}
-                >
-                  {isRepairing
-                    ? "Börse wird repariert..."
-                    : marketState === "active"
-                    ? "Angebot abbrechen"
-                    : "Börsenstatus reparieren"}
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => onDelete(card)}
-                  disabled={isDeleting}
-                  style={deleteCardButtonStyle}
-                >
-                  {isDeleting ? "Lösche..." : "Karte löschen"}
-                </button>
-              )}
-            </div>
-              </div>
-            </details>
+            <button
+              type="button"
+              onClick={() => onEdit(card)}
+              style={inventoryEditButtonStyle}
+            >
+              Karte bearbeiten
+            </button>
           </div>
         );
       })}
+    </div>
+  );
+}
+
+type ActivityStampEditorValues = {
+  tier: "bronze" | "silver" | "gold";
+  movementDate: string;
+  city: string;
+  steps: string;
+  cyclingKm: string;
+  rowingKm: string;
+  swimmingMeters: string;
+  workoutMinutes: string;
+  note: string;
+};
+
+function InventoryCardEditorModal({
+  card,
+  busy,
+  deleting,
+  repairing,
+  onClose,
+  onSaveActivityStamp,
+  onSetStamp,
+  onRemoveStamp,
+  onRebuildStamps,
+  onDelete,
+  onRepairMarket,
+}: {
+  card: JsonMap;
+  busy: boolean;
+  deleting: boolean;
+  repairing: boolean;
+  onClose: () => void;
+  onSaveActivityStamp: (card: JsonMap, values: ActivityStampEditorValues) => void;
+  onSetStamp: (stampKey: "activity" | "promo" | "set", activityTier?: "bronze" | "silver" | "gold") => void;
+  onRemoveStamp: (stampKey: string) => void;
+  onRebuildStamps: () => void;
+  onDelete: () => void;
+  onRepairMarket: () => void;
+}) {
+  const stamps = getCardStamps(card);
+  const activityStamp = stamps.find((stamp) => readString(stamp, "stamp_key").toLowerCase() === "activity") || null;
+  const rawMetadata = activityStamp?.metadata;
+  const metadata = rawMetadata && typeof rawMetadata === "object" && !Array.isArray(rawMetadata)
+    ? rawMetadata as JsonMap
+    : {};
+
+  const currentTierRaw = (activityStamp ? activityTierFromStamp(activityStamp) : "") || readString(card, "activity_stamp_tier").toLowerCase();
+  const currentTier: "bronze" | "silver" | "gold" =
+    currentTierRaw === "silver" || currentTierRaw === "gold" ? currentTierRaw : "bronze";
+
+  const optionalNumberText = (key: string, divisor = 1) => {
+    const raw = metadata[key];
+    if (raw === null || raw === undefined || raw === "") return "";
+    const value = Number(raw);
+    if (!Number.isFinite(value)) return "";
+    return String(value / divisor);
+  };
+
+  const [tier, setTier] = useState<"bronze" | "silver" | "gold">(currentTier);
+  const [movementDate, setMovementDate] = useState(readString(metadata, "movement_date"));
+  const [city, setCity] = useState(readString(metadata, "city"));
+  const [steps, setSteps] = useState(optionalNumberText("steps"));
+  const [cyclingKm, setCyclingKm] = useState(optionalNumberText("cycling_meters", 1000));
+  const [rowingKm, setRowingKm] = useState(optionalNumberText("rowing_meters", 1000));
+  const [swimmingMeters, setSwimmingMeters] = useState(optionalNumberText("swimming_meters"));
+  const [workoutMinutes, setWorkoutMinutes] = useState(
+    optionalNumberText("activity_workout_minutes") || optionalNumberText("workout_minutes"),
+  );
+  const [note, setNote] = useState("Admin-Korrektur");
+
+  const marketState = getMarketState(card);
+  const blockedByMarket = marketState === "active" || isMarketProblem(card);
+
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    onSaveActivityStamp(card, {
+      tier,
+      movementDate,
+      city,
+      steps,
+      cyclingKm,
+      rowingKm,
+      swimmingMeters,
+      workoutMinutes,
+      note,
+    });
+  }
+
+  return (
+    <div style={cardEditorOverlayStyle} onMouseDown={onClose}>
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label={`${cardDisplayName(card)} bearbeiten`}
+        style={cardEditorModalStyle}
+        onMouseDown={(event) => event.stopPropagation()}
+      >
+        <div style={cardEditorHeaderStyle}>
+          <div>
+            <div style={cardEditorEyebrowStyle}>Inventarkarte bearbeiten</div>
+            <h2 style={cardEditorTitleStyle}>{cardDisplayName(card)}</h2>
+            <p style={sectionTextStyle}>
+              Prägung, Ort und Aktivitätswerte komfortabel bearbeiten. Die Werte hier ändern nur die Kartenprägung – nicht den gespeicherten Bewegungstag des Nutzers.
+            </p>
+          </div>
+          <button type="button" onClick={onClose} style={cardEditorCloseButtonStyle}>✕</button>
+        </div>
+
+        <div style={cardEditorLayoutStyle}>
+          <div style={cardEditorPreviewColumnStyle}>
+            <div style={{ ...cardEditorPreviewCardStyle, ...rarityCardStyle(getCardRarity(card)) }}>
+              <CardVisual card={card} />
+            </div>
+            <div style={selectedCardBoxStyle}>
+              <strong>{getCardCondition(card)} % Zustand</strong>
+              <span style={sectionTextStyle}>{getCardRarity(card).toUpperCase()} · {getCardStamps(card).length} Prägung(en)</span>
+            </div>
+            <MarketStatusPanel card={card} />
+          </div>
+
+          <div style={cardEditorContentStyle}>
+            <form onSubmit={handleSubmit} style={activityEditorCardStyle}>
+              <div style={sectionHeaderStyle}>
+                <div>
+                  <h3 style={cardEditorSectionTitleStyle}>Aktivitäts-Prägung</h3>
+                  <p style={sectionTextStyle}>Bronze, Silber oder Gold sowie die sichtbaren Aktivitätsdaten der Karte.</p>
+                </div>
+                <span style={activityStamp ? statusBadgeActiveStyle : statusBadgeNeutralStyle}>
+                  {activityStamp ? "Vorhanden" : "Neu"}
+                </span>
+              </div>
+
+              <div style={activityEditorGridStyle}>
+                <div>
+                  <label style={labelStyle}>Prägung</label>
+                  <select value={tier} onChange={(event) => setTier(event.target.value as "bronze" | "silver" | "gold")} style={inputStyle}>
+                    <option value="bronze">Bronze</option>
+                    <option value="silver">Silber</option>
+                    <option value="gold">Gold</option>
+                  </select>
+                </div>
+                <div>
+                  <label style={labelStyle}>Aktivitätstag</label>
+                  <input type="date" value={movementDate} onChange={(event) => setMovementDate(event.target.value)} style={inputStyle} />
+                </div>
+                <div style={activityEditorWideFieldStyle}>
+                  <label style={labelStyle}>Ort</label>
+                  <input type="text" maxLength={120} placeholder="z. B. Mainz" value={city} onChange={(event) => setCity(event.target.value)} style={inputStyle} />
+                </div>
+                <div>
+                  <label style={labelStyle}>Schritte</label>
+                  <input type="number" min="0" step="1" placeholder="10513" value={steps} onChange={(event) => setSteps(event.target.value)} style={inputStyle} />
+                </div>
+                <div>
+                  <label style={labelStyle}>Fahrrad · km</label>
+                  <input type="number" min="0" step="0.1" placeholder="12,5" value={cyclingKm} onChange={(event) => setCyclingKm(event.target.value)} style={inputStyle} />
+                </div>
+                <div>
+                  <label style={labelStyle}>Rudern · km</label>
+                  <input type="number" min="0" step="0.1" placeholder="3,2" value={rowingKm} onChange={(event) => setRowingKm(event.target.value)} style={inputStyle} />
+                </div>
+                <div>
+                  <label style={labelStyle}>Schwimmen · Meter</label>
+                  <input type="number" min="0" step="1" placeholder="1000" value={swimmingMeters} onChange={(event) => setSwimmingMeters(event.target.value)} style={inputStyle} />
+                </div>
+                <div>
+                  <label style={labelStyle}>Workout · Minuten</label>
+                  <input type="number" min="0" step="1" placeholder="45" value={workoutMinutes} onChange={(event) => setWorkoutMinutes(event.target.value)} style={inputStyle} />
+                </div>
+                <div style={activityEditorWideFieldStyle}>
+                  <label style={labelStyle}>Admin-Notiz</label>
+                  <input type="text" maxLength={240} value={note} onChange={(event) => setNote(event.target.value)} style={inputStyle} />
+                </div>
+              </div>
+
+              <div style={cardEditorActionRowStyle}>
+                <button type="submit" disabled={busy} style={primaryButtonStyle}>
+                  {busy ? "Speichere..." : "Aktivitätsdaten speichern"}
+                </button>
+                {activityStamp && (
+                  <button type="button" disabled={busy} onClick={() => onRemoveStamp("activity")} style={dangerSecondaryButtonStyle}>
+                    Aktivitätsprägung entfernen
+                  </button>
+                )}
+              </div>
+            </form>
+
+            <StampAdminPanel
+              card={card}
+              busy={busy}
+              onSetStamp={onSetStamp}
+              onRemoveStamp={onRemoveStamp}
+              onRebuild={onRebuildStamps}
+            />
+
+            <div style={cardEditorDangerZoneStyle}>
+              <div>
+                <strong style={cardEditorSectionTitleStyle}>Karten-Aktionen</strong>
+                <p style={sectionTextStyle}>Börsenstatus reparieren oder die konkrete Inventarkarte dauerhaft löschen.</p>
+              </div>
+              <div style={cardEditorActionRowStyle}>
+                {blockedByMarket ? (
+                  <button type="button" onClick={onRepairMarket} disabled={repairing} style={marketRepairButtonStyle}>
+                    {repairing ? "Börse wird repariert..." : marketState === "active" ? "Angebot abbrechen" : "Börsenstatus reparieren"}
+                  </button>
+                ) : (
+                  <button type="button" onClick={onDelete} disabled={deleting} style={deleteCardButtonStyle}>
+                    {deleting ? "Lösche..." : "Karte löschen"}
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -1776,7 +2037,7 @@ function StampAdminPanel({
   const canRepairSet = catalogSpecialType === "set_completion";
 
   return (
-    <details open style={stampAdminDetailsStyle}>
+    <details style={stampAdminDetailsStyle}>
       <summary style={stampAdminSummaryStyle}>
         Prägungen verwalten · {stamps.length || 0}
       </summary>
@@ -1810,9 +2071,6 @@ function StampAdminPanel({
         )}
 
         <div style={stampAdminButtonGridStyle}>
-          <button type="button" disabled={busy} onClick={() => onSetStamp("activity", "bronze")} style={stampBronzeButtonStyle}>Bronze</button>
-          <button type="button" disabled={busy} onClick={() => onSetStamp("activity", "silver")} style={stampSilverButtonStyle}>Silber</button>
-          <button type="button" disabled={busy} onClick={() => onSetStamp("activity", "gold")} style={stampGoldButtonStyle}>Gold</button>
           {canRepairPromo && (
             <button type="button" disabled={busy} onClick={() => onSetStamp("promo")} style={stampPromoButtonStyle}>Promo reparieren</button>
           )}
@@ -3024,4 +3282,169 @@ const affiliateSuccessStyle: CSSProperties = {
   borderRadius: "14px",
   padding: "12px 14px",
   marginBottom: "14px",
+};
+
+
+const inventoryEditButtonStyle: CSSProperties = {
+  width: "100%",
+  minHeight: "38px",
+  marginTop: "8px",
+  borderRadius: "10px",
+  border: "1px solid #3d5c4b",
+  background: "#101a15",
+  color: "#e7f1eb",
+  fontWeight: 900,
+  cursor: "pointer",
+};
+
+const cardEditorOverlayStyle: CSSProperties = {
+  position: "fixed",
+  inset: 0,
+  zIndex: 1000,
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  padding: "16px",
+  background: "rgba(2, 7, 5, 0.82)",
+  backdropFilter: "blur(8px)",
+};
+
+const cardEditorModalStyle: CSSProperties = {
+  width: "min(1080px, calc(100vw - 32px))",
+  maxHeight: "92vh",
+  overflowY: "auto",
+  borderRadius: "22px",
+  border: "1px solid #31463a",
+  background: "#0b120e",
+  boxShadow: "0 30px 90px rgba(0,0,0,0.62)",
+  padding: "20px",
+};
+
+const cardEditorHeaderStyle: CSSProperties = {
+  display: "flex",
+  alignItems: "flex-start",
+  justifyContent: "space-between",
+  gap: "18px",
+  paddingBottom: "16px",
+  borderBottom: "1px solid #26372e",
+};
+
+const cardEditorEyebrowStyle: CSSProperties = {
+  color: "#86efac",
+  fontSize: "11px",
+  fontWeight: 950,
+  letterSpacing: "0.08em",
+  textTransform: "uppercase",
+};
+
+const cardEditorTitleStyle: CSSProperties = {
+  margin: "4px 0 4px",
+  color: "#f5fbf7",
+  fontSize: "26px",
+  lineHeight: 1.1,
+};
+
+const cardEditorCloseButtonStyle: CSSProperties = {
+  width: "42px",
+  height: "42px",
+  flex: "0 0 auto",
+  borderRadius: "12px",
+  border: "1px solid #3a4d42",
+  background: "#111b16",
+  color: "#dce8e1",
+  fontSize: "18px",
+  cursor: "pointer",
+};
+
+const cardEditorLayoutStyle: CSSProperties = {
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+  gap: "20px",
+  paddingTop: "18px",
+  alignItems: "start",
+};
+
+const cardEditorPreviewColumnStyle: CSSProperties = {
+  display: "grid",
+  gap: "12px",
+  alignContent: "start",
+};
+
+const cardEditorPreviewCardStyle: CSSProperties = {
+  overflow: "hidden",
+  borderRadius: "16px",
+  background: "#101813",
+  border: "2px solid #3d5c4b",
+};
+
+const cardEditorContentStyle: CSSProperties = {
+  display: "grid",
+  gap: "14px",
+  minWidth: 0,
+};
+
+const activityEditorCardStyle: CSSProperties = {
+  display: "grid",
+  gap: "14px",
+  padding: "16px",
+  borderRadius: "16px",
+  border: "1px solid #2f493a",
+  background: "#0f1813",
+};
+
+const activityEditorGridStyle: CSSProperties = {
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))",
+  gap: "12px",
+};
+
+const activityEditorWideFieldStyle: CSSProperties = {
+  gridColumn: "1 / -1",
+};
+
+const cardEditorSectionTitleStyle: CSSProperties = {
+  margin: 0,
+  color: "#eff8f2",
+  fontSize: "15px",
+  fontWeight: 950,
+};
+
+const cardEditorActionRowStyle: CSSProperties = {
+  display: "flex",
+  flexWrap: "wrap",
+  gap: "10px",
+  alignItems: "center",
+};
+
+const dangerSecondaryButtonStyle: CSSProperties = {
+  minHeight: "40px",
+  padding: "9px 13px",
+  borderRadius: "10px",
+  border: "1px solid #9f3434",
+  background: "#2a1111",
+  color: "#fecaca",
+  fontWeight: 900,
+  cursor: "pointer",
+};
+
+const cardEditorDangerZoneStyle: CSSProperties = {
+  display: "grid",
+  gap: "12px",
+  padding: "16px",
+  borderRadius: "16px",
+  border: "1px solid #4b2a2a",
+  background: "#171010",
+};
+
+const statusBadgeNeutralStyle: CSSProperties = {
+  display: "inline-flex",
+  alignItems: "center",
+  minHeight: "30px",
+  padding: "5px 10px",
+  borderRadius: "999px",
+  border: "1px solid #475569",
+  background: "#18212a",
+  color: "#cbd5e1",
+  fontSize: "12px",
+  fontWeight: 900,
 };
