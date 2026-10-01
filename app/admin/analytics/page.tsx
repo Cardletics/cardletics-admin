@@ -6,6 +6,51 @@ import { supabase } from "../../../lib/supabase";
 
 type AnalyticsRow = Record<string, number | string | null>;
 
+
+type AppFunnel = {
+  days: number | string | null;
+  new_users: number | string | null;
+  session_started: number | string | null;
+  fitness_setup_viewed: number | string | null;
+  fitness_setup_finished: number | string | null;
+  home_viewed: number | string | null;
+  packs_viewed: number | string | null;
+  starter_pack_seen: number | string | null;
+  starter_pack_clicked: number | string | null;
+  starter_pack_opened: number | string | null;
+};
+
+type RecentAppSession = {
+  session_id: string;
+  user_id: string;
+  username: string | null;
+  email: string | null;
+  platform: string | null;
+  started_at: string | null;
+  last_seen_at: string | null;
+  ended_at: string | null;
+  duration_seconds: number | string | null;
+  last_event_name: string | null;
+  last_screen: string | null;
+  home_reached: boolean | null;
+  packs_reached: boolean | null;
+  starter_pack_seen: boolean | null;
+  starter_pack_opened: boolean | null;
+};
+
+const emptyFunnel: AppFunnel = {
+  days: 7,
+  new_users: 0,
+  session_started: 0,
+  fitness_setup_viewed: 0,
+  fitness_setup_finished: 0,
+  home_viewed: 0,
+  packs_viewed: 0,
+  starter_pack_seen: 0,
+  starter_pack_clicked: 0,
+  starter_pack_opened: 0,
+};
+
 type OnlinePresence = {
   presence_ref?: string;
   user_id?: string;
@@ -59,6 +104,8 @@ export default function AnalyticsPage() {
 
   const [onlineSessions, setOnlineSessions] = useState<OnlinePresence[]>([]);
   const [isConnected, setIsConnected] = useState(false);
+  const [funnel, setFunnel] = useState<AppFunnel>(emptyFunnel);
+  const [recentSessions, setRecentSessions] = useState<RecentAppSession[]>([]);
 
   useEffect(() => {
     let cancelled = false;
@@ -67,17 +114,36 @@ export default function AnalyticsPage() {
       setLoading(true);
       setLoadError(null);
 
-      const { data, error } = await supabase.rpc("admin_analytics_overview");
+      const [overviewResult, funnelResult, sessionsResult] = await Promise.all([
+        supabase.rpc("admin_analytics_overview"),
+        supabase.rpc("admin_app_funnel", { p_days: 7 }),
+        supabase.rpc("admin_recent_app_sessions", { p_limit: 30 }),
+      ]);
 
       if (cancelled) return;
 
-      if (error) {
-        console.error("Fehler beim Laden der Analytics:", error);
+      if (overviewResult.error) {
+        console.error("Fehler beim Laden der Analytics:", overviewResult.error);
         setAnalytics(emptyAnalytics);
-        setLoadError(error.message || "Analytics konnten nicht geladen werden.");
+        setLoadError(overviewResult.error.message || "Analytics konnten nicht geladen werden.");
       } else {
-        const rows = (data as AnalyticsRow[] | null) || [];
+        const rows = (overviewResult.data as AnalyticsRow[] | null) || [];
         setAnalytics(rows[0] || emptyAnalytics);
+      }
+
+      if (funnelResult.error) {
+        console.warn("App-Funnel konnte nicht geladen werden:", funnelResult.error);
+        setFunnel(emptyFunnel);
+      } else {
+        const rows = (funnelResult.data as AppFunnel[] | null) || [];
+        setFunnel(rows[0] || emptyFunnel);
+      }
+
+      if (sessionsResult.error) {
+        console.warn("Letzte App-Sessions konnten nicht geladen werden:", sessionsResult.error);
+        setRecentSessions([]);
+      } else {
+        setRecentSessions((sessionsResult.data as RecentAppSession[] | null) || []);
       }
 
       setLoading(false);
@@ -262,6 +328,67 @@ export default function AnalyticsPage() {
         <KpiCard title="Boost-Käufe 30 Tage" value={loading ? "..." : formatNumber(analytics.boost_purchase_count_30d)} />
       </div>
 
+      <SectionTitle title="Onboarding & Starter-Pack" subtitle="Funnel für Nutzer, die in den letzten 7 Tagen registriert wurden." />
+      <div style={kpiGridStyle}>
+        <KpiCard title="Neu registriert" value={loading ? "..." : formatNumber(funnel.new_users)} />
+        <KpiCard title="Session gestartet" value={loading ? "..." : formatNumber(funnel.session_started)} />
+        <KpiCard title="Fitness-Setup gesehen" value={loading ? "..." : formatNumber(funnel.fitness_setup_viewed)} />
+        <KpiCard title="Setup beendet" value={loading ? "..." : formatNumber(funnel.fitness_setup_finished)} />
+        <KpiCard title="Home erreicht" value={loading ? "..." : formatNumber(funnel.home_viewed)} accent="green" />
+        <KpiCard title="Packs besucht" value={loading ? "..." : formatNumber(funnel.packs_viewed)} />
+        <KpiCard title="Starter-Pack gesehen" value={loading ? "..." : formatNumber(funnel.starter_pack_seen)} />
+        <KpiCard title="Starter-Pack geklickt" value={loading ? "..." : formatNumber(funnel.starter_pack_clicked)} />
+        <KpiCard title="Starter-Pack geöffnet" value={loading ? "..." : formatNumber(funnel.starter_pack_opened)} accent="green" />
+      </div>
+
+      <div style={cardStyle}>
+        <div style={sectionHeaderStyle}>
+          <div>
+            <h3 style={sectionTitleStyle}>Letzte App-Sessions</h3>
+            <p style={sectionTextStyle}>Echte Sessiondauer plus letzter bekannter Bereich.</p>
+          </div>
+          <span style={sectionCountStyle}>{recentSessions.length} Sessions</span>
+        </div>
+
+        {recentSessions.length === 0 ? (
+          <p style={emptyTextStyle}>Noch keine Sessiondaten vorhanden.</p>
+        ) : (
+          <div style={desktopTableWrapperStyle}>
+            <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "1050px" }}>
+              <thead>
+                <tr style={{ background: "#111814", textAlign: "left" }}>
+                  <th style={tableHeaderStyle}>Nutzer</th>
+                  <th style={tableHeaderStyle}>Start</th>
+                  <th style={tableHeaderStyle}>Dauer</th>
+                  <th style={tableHeaderStyle}>Plattform</th>
+                  <th style={tableHeaderStyle}>Letzter Bereich</th>
+                  <th style={tableHeaderStyle}>Home</th>
+                  <th style={tableHeaderStyle}>Packs</th>
+                  <th style={tableHeaderStyle}>Starter</th>
+                </tr>
+              </thead>
+              <tbody>
+                {recentSessions.map((session) => (
+                  <tr key={session.session_id} style={{ borderTop: "1px solid #27312d" }}>
+                    <td style={tableCellStyle}>
+                      <strong>{session.username || "Kein Username"}</strong>
+                      <div style={{ color: "#7f9188", fontSize: "11px", marginTop: "3px" }}>{session.email || session.user_id}</div>
+                    </td>
+                    <td style={tableCellStyle}>{formatDate(session.started_at)}</td>
+                    <td style={tableCellStyle}>{formatDuration(session.duration_seconds)}</td>
+                    <td style={tableCellStyle}>{session.platform || "—"}</td>
+                    <td style={tableCellStyle}>{session.last_screen || session.last_event_name || "—"}</td>
+                    <td style={tableCellStyle}>{session.home_reached ? "✅" : "—"}</td>
+                    <td style={tableCellStyle}>{session.packs_reached ? "✅" : "—"}</td>
+                    <td style={tableCellStyle}>{session.starter_pack_opened ? "✅ geöffnet" : session.starter_pack_seen ? "👀 gesehen" : "—"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
       <SectionTitle title="Realtime Presence" subtitle="Live-Sessions aus dem Realtime-Channel online-users." />
       <div style={kpiGridStyle}>
         <KpiCard title="Realtime Status" value={isConnected ? "Verbunden" : "Nicht verbunden"} accent={isConnected ? "green" : "red"} />
@@ -422,6 +549,17 @@ function formatMoney(value: number | string | null | undefined) {
 function formatDate(dateString?: string | null) {
   if (!dateString) return "—";
   return new Date(dateString).toLocaleString("de-DE");
+}
+
+function formatDuration(value: number | string | null | undefined) {
+  const seconds = Math.max(0, Math.round(toNumber(value)));
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const rest = seconds % 60;
+
+  if (hours > 0) return `${hours} Std. ${minutes} Min.`;
+  if (minutes > 0) return `${minutes} Min. ${rest} Sek.`;
+  return `${rest} Sek.`;
 }
 
 const pageStyle: CSSProperties = { width: "100%" };

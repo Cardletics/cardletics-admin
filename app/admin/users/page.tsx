@@ -18,6 +18,18 @@ type Profile = {
   created_at: string;
   last_seen_at: string | null;
 
+  last_session_started_at?: string | null;
+  last_session_ended_at?: string | null;
+  last_session_seconds?: number | string | null;
+  total_sessions?: number | string | null;
+  total_usage_seconds?: number | string | null;
+  last_event_name?: string | null;
+  last_screen?: string | null;
+  home_reached?: boolean | null;
+  packs_reached?: boolean | null;
+  starter_pack_seen?: boolean | null;
+  starter_pack_opened?: boolean | null;
+
   subscription_variant: string | null;
   subscription_raw_variant: string | null;
   subscription_status: string | null;
@@ -64,10 +76,11 @@ export default function UsersPage() {
       setLoading(true);
       setLoadError(null);
 
-      const [usersResult, countsResult, platformsResult] = await Promise.all([
+      const [usersResult, countsResult, platformsResult, sessionsResult] = await Promise.all([
         supabase.rpc("admin_list_users_v2"),
         supabase.rpc("admin_inventory_counts_by_user"),
         supabase.rpc("admin_user_platforms"),
+        supabase.rpc("admin_user_session_summaries"),
       ]);
 
       if (cancelled) return;
@@ -103,11 +116,21 @@ export default function UsersPage() {
             .map((row) => [row.user_id, row.app_platform] as const),
         );
 
+        if (sessionsResult.error) {
+          console.warn("Session-Zusammenfassungen konnten nicht geladen werden:", sessionsResult.error);
+        }
+
+        const sessions = new Map<string, Partial<Profile>>(
+          (((sessionsResult.error ? [] : sessionsResult.data) as (Partial<Profile> & { user_id: string })[] | null) || [])
+            .map((row) => [row.user_id, row] as const),
+        );
+
         const mergedUsers = ((usersResult.data as Omit<Profile, "inventory_count" | "app_platform">[] | null) || [])
           .map((user) => ({
             ...user,
             inventory_count: counts.get(user.id) ?? 0,
             app_platform: platforms.get(user.id) ?? null,
+            ...(sessions.get(user.id) || {}),
           }));
 
         setUsers(mergedUsers);
@@ -296,8 +319,19 @@ export default function UsersPage() {
     return new Date(dateString).toLocaleString("de-DE");
   }
 
-  function formatNumber(value: number | null | undefined) {
+  function formatNumber(value: number | string | null | undefined) {
     return safeNumber(value).toLocaleString("de-DE");
+  }
+
+  function formatDuration(value: number | string | null | undefined) {
+    const totalSeconds = Math.max(0, Math.round(safeNumber(value)));
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+
+    if (hours > 0) return `${hours} Std. ${minutes} Min.`;
+    if (minutes > 0) return `${minutes} Min. ${seconds} Sek.`;
+    return `${seconds} Sek.`;
   }
 
   function activityLabel(user: Profile) {
@@ -365,7 +399,7 @@ export default function UsersPage() {
           <strong>Fehler beim Laden der User</strong>
           <p style={errorTextStyle}>{loadError}</p>
           <p style={errorHintStyle}>
-            Prüfe, ob du als Admin eingeloggt bist und ob die RPCs <strong>admin_list_users_v2</strong>, <strong>admin_inventory_counts_by_user</strong> und <strong>admin_user_platforms</strong> verfügbar sind.
+            Prüfe, ob du als Admin eingeloggt bist und ob die RPCs <strong>admin_list_users_v2</strong>, <strong>admin_inventory_counts_by_user</strong>, <strong>admin_user_platforms</strong> und <strong>admin_user_session_summaries</strong> verfügbar sind.
           </p>
         </div>
       )}
@@ -510,6 +544,10 @@ export default function UsersPage() {
 
                   <div style={mobileInfoGridStyle}>
                     <InfoItem label="Last Seen" value={formatDate(user.last_seen_at)} />
+                    <InfoItem label="Letzte Session" value={user.last_session_started_at ? formatDuration(user.last_session_seconds) : "—"} />
+                    <InfoItem label="Gesamtnutzung" value={user.total_sessions ? `${formatDuration(user.total_usage_seconds)} · ${formatNumber(user.total_sessions)} Sessions` : "—"} />
+                    <InfoItem label="Letzter Bereich" value={user.last_screen || user.last_event_name || "—"} />
+                    <InfoItem label="Starter-Pack" value={user.starter_pack_opened ? "Geöffnet" : user.starter_pack_seen ? "Gesehen" : "Noch nicht gesehen"} />
                     <InfoItem label="Land" value={countryLabel(user.country_code)} />
                     <InfoItem label="Abo" value={planLabel(getPlan(user), user)} />
                     <InfoItem label="Plattform" value={platformLabel(user)} />
@@ -527,7 +565,7 @@ export default function UsersPage() {
                 style={{
                   width: "100%",
                   borderCollapse: "collapse",
-                  minWidth: "1210px",
+                  minWidth: "1450px",
                 }}
               >
                 <thead>
@@ -535,6 +573,8 @@ export default function UsersPage() {
                     <th style={tableHeaderStyle}>Username</th>
                     <th style={tableHeaderStyle}>E-Mail</th>
                     <th style={tableHeaderStyle}>Last Seen</th>
+                    <th style={tableHeaderStyle}>Letzte Session</th>
+                    <th style={tableHeaderStyle}>Starter-Pack</th>
                     <th style={tableHeaderStyle}>Land</th>
                     <th style={tableHeaderStyle}>Abo Plan</th>
                     <th style={tableHeaderStyle}>Plattform</th>
@@ -561,6 +601,16 @@ export default function UsersPage() {
                             {formatDate(user.last_seen_at)}
                           </span>
                         </div>
+                      </td>
+                      <td style={tableCellStyle}>
+                        <div style={lastSeenCellStyle}>
+                          <strong>{user.last_session_started_at ? formatDuration(user.last_session_seconds) : "—"}</strong>
+                          <span style={lastSeenSublineStyle}>{user.last_screen || user.last_event_name || "Kein Tracking"}</span>
+                          <span style={lastSeenDateStyle}>{formatDate(user.last_session_started_at || null)}</span>
+                        </div>
+                      </td>
+                      <td style={tableCellStyle}>
+                        {user.starter_pack_opened ? "✅ Geöffnet" : user.starter_pack_seen ? "👀 Gesehen" : "—"}
                       </td>
                       <td style={tableCellStyle}>
                         {countryLabel(user.country_code)}

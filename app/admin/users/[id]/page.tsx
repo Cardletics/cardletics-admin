@@ -33,7 +33,7 @@ type CoinMode = "set" | "add" | "subtract";
 type SubscriptionVariant = "free" | "elite" | "master";
 type SubscriptionStatus = "active" | "trialing" | "cancelled" | "expired";
 
-type TabKey = "overview" | "packs" | "cards" | "raw";
+type TabKey = "overview" | "sessions" | "packs" | "cards" | "raw";
 
 const variantOptions: { value: SubscriptionVariant; label: string }[] = [
   { value: "free", label: "Free" },
@@ -61,6 +61,9 @@ export default function AdminUserDetailPage() {
   const [boostPurchases, setBoostPurchases] = useState<JsonMap[]>([]);
   const [packRewards, setPackRewards] = useState<JsonMap[]>([]);
   const [dailyClaims, setDailyClaims] = useState<JsonMap[]>([]);
+  const [appSessions, setAppSessions] = useState<JsonMap[]>([]);
+  const [appEvents, setAppEvents] = useState<JsonMap[]>([]);
+  const [sessionLoading, setSessionLoading] = useState(true);
 
   const [loading, setLoading] = useState(true);
   const [inventoryLoading, setInventoryLoading] = useState(true);
@@ -343,6 +346,36 @@ export default function AdminUserDetailPage() {
     }
 
     setPackLoading(false);
+  }
+
+
+  async function loadAppSessions() {
+    if (!userId) return;
+
+    setSessionLoading(true);
+
+    const [sessionsResult, eventsResult] = await Promise.all([
+      supabase.rpc("admin_get_user_app_sessions", { p_user_id: userId, p_limit: 30 }),
+      supabase.rpc("admin_get_user_app_events", { p_user_id: userId, p_limit: 100 }),
+    ]);
+
+    if (sessionsResult.error) {
+      console.error("App-Sessions konnten nicht geladen werden:", sessionsResult.error);
+      setAppSessions([]);
+      setErrorMessage(sessionsResult.error.message || "App-Sessions konnten nicht geladen werden.");
+    } else {
+      setAppSessions(Array.isArray(sessionsResult.data) ? (sessionsResult.data as JsonMap[]) : []);
+    }
+
+    if (eventsResult.error) {
+      console.error("App-Events konnten nicht geladen werden:", eventsResult.error);
+      setAppEvents([]);
+      setErrorMessage(eventsResult.error.message || "App-Events konnten nicht geladen werden.");
+    } else {
+      setAppEvents(Array.isArray(eventsResult.data) ? (eventsResult.data as JsonMap[]) : []);
+    }
+
+    setSessionLoading(false);
   }
 
   async function loadCatalog() {
@@ -662,7 +695,7 @@ export default function AdminUserDetailPage() {
   }
 
   async function reloadAll() {
-    await Promise.all([loadDetail(), loadInventory(), loadPacks(), loadAccountAccess()]);
+    await Promise.all([loadDetail(), loadInventory(), loadPacks(), loadAppSessions(), loadAccountAccess()]);
     if (activeTab === "cards") {
       await loadCatalog();
     }
@@ -680,6 +713,7 @@ export default function AdminUserDetailPage() {
 
   const profile = detail?.profile || {};
   const subscription = detail?.subscription || null;
+  const latestAppSession = appSessions[0] || null;
 
   const filteredInventory = useMemo(() => {
     const search = cardSearch.trim().toLowerCase();
@@ -892,6 +926,7 @@ export default function AdminUserDetailPage() {
 
       <div style={tabsStyle}>
         <TabButton active={activeTab === "overview"} onClick={() => setActiveTab("overview")}>Übersicht</TabButton>
+        <TabButton active={activeTab === "sessions"} onClick={() => setActiveTab("sessions")}>Sessions</TabButton>
         <TabButton active={activeTab === "packs"} onClick={() => setActiveTab("packs")}>Boosts & Tokens</TabButton>
         <TabButton active={activeTab === "cards"} onClick={() => setActiveTab("cards")}>Karten</TabButton>
         <TabButton active={activeTab === "raw"} onClick={() => setActiveTab("raw")}>Rohdaten</TabButton>
@@ -990,6 +1025,28 @@ export default function AdminUserDetailPage() {
               <p style={hintStyle}>Aktuelle Tarife: Free · Club 4,99 € · Master 9,99 €. Manuell über das Admin-Backend vergebene Abos werden als Geschenk mit 0,00 € Umsatz gespeichert.</p>
             </section>
           </div>
+
+          <section style={cardStyle}>
+            <div style={sectionHeaderStyle}>
+              <div>
+                <h2 style={sectionTitleStyle}>App-Nutzung</h2>
+                <p style={sectionTextStyle}>Sessiondauer und die wichtigsten Schritte bis zum Starter-Pack.</p>
+              </div>
+              <span style={sectionCountStyle}>{sessionLoading ? "Lade..." : `${appSessions.length} Sessions`}</span>
+            </div>
+            <InfoGrid
+              items={[
+                ["Letzte Session", latestAppSession ? formatDuration(readNumber(latestAppSession, "duration_seconds")) : "—"],
+                ["Letzter Start", latestAppSession ? formatDate(readString(latestAppSession, "started_at")) : "—"],
+                ["Letzter Bereich", latestAppSession ? (readString(latestAppSession, "last_screen") || readString(latestAppSession, "last_event_name") || "—") : "—"],
+                ["Home erreicht", appSessions.some((row) => Boolean(row.home_reached_at)) ? "Ja" : "Nein"],
+                ["Packs besucht", appSessions.some((row) => Boolean(row.packs_reached_at)) ? "Ja" : "Nein"],
+                ["Starter-Pack gesehen", appSessions.some((row) => Boolean(row.starter_pack_seen_at)) ? "Ja" : "Nein"],
+                ["Starter-Pack geklickt", appSessions.some((row) => Boolean(row.starter_pack_clicked_at)) ? "Ja" : "Nein"],
+                ["Starter-Pack geöffnet", appSessions.some((row) => Boolean(row.starter_pack_opened_at)) ? "Ja" : "Nein"],
+              ]}
+            />
+          </section>
 
           <div style={gridTwoStyle}>
             <section style={cardStyle}>
@@ -1090,6 +1147,62 @@ export default function AdminUserDetailPage() {
           </div>
 
           <AffiliateControlCard userId={userId} />
+        </>
+      )}
+
+      {activeTab === "sessions" && (
+        <>
+          <section style={cardStyle}>
+            <div style={sectionHeaderStyle}>
+              <div>
+                <h2 style={sectionTitleStyle}>App-Sessions</h2>
+                <p style={sectionTextStyle}>Eine Session beginnt nach erfolgreicher Authentifizierung und endet beim echten Verlassen/Backgrounding der App.</p>
+              </div>
+              <span style={sectionCountStyle}>{sessionLoading ? "Lade..." : `${appSessions.length} Sessions`}</span>
+            </div>
+            {appSessions.length === 0 ? (
+              <p style={emptyTextStyle}>Noch keine Sessiondaten vorhanden.</p>
+            ) : (
+              <div style={cardGridStyle}>
+                {appSessions.map((session, index) => (
+                  <div key={readString(session, "id") || `${index}`} style={inventoryCardStyle}>
+                    <div style={cardTopRowStyle}>
+                      <strong style={cardNameStyle}>{formatDate(readString(session, "started_at"))}</strong>
+                      <span style={rarityBadgeStyle}>{formatDuration(readNumber(session, "duration_seconds"))}</span>
+                    </div>
+                    <InfoGrid
+                      compact
+                      items={[
+                        ["Plattform", readString(session, "platform") || "—"],
+                        ["Ende", formatDate(readString(session, "ended_at"))],
+                        ["Letzter Bereich", readString(session, "last_screen") || readString(session, "last_event_name") || "—"],
+                        ["Setup", session.fitness_setup_finished_at ? "Abgeschlossen" : session.fitness_setup_viewed_at ? "Angesehen" : "—"],
+                        ["Home", session.home_reached_at ? "Ja" : "Nein"],
+                        ["Packs", session.packs_reached_at ? "Ja" : "Nein"],
+                        ["Starter gesehen", session.starter_pack_seen_at ? "Ja" : "Nein"],
+                        ["Starter geöffnet", session.starter_pack_opened_at ? "Ja" : "Nein"],
+                      ]}
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+
+          <section style={cardStyle}>
+            <div style={sectionHeaderStyle}>
+              <div>
+                <h2 style={sectionTitleStyle}>Funnel-Events</h2>
+                <p style={sectionTextStyle}>Zeitlicher Verlauf der erfassten Meilensteine, neueste zuerst.</p>
+              </div>
+              <span style={sectionCountStyle}>{sessionLoading ? "Lade..." : `${appEvents.length} Events`}</span>
+            </div>
+            <JsonCardGrid
+              items={appEvents}
+              emptyText="Noch keine App-Events vorhanden."
+              preferredTitleKeys={["event_name", "screen_name", "id"]}
+            />
+          </section>
         </>
       )}
 
@@ -1489,7 +1602,7 @@ export default function AdminUserDetailPage() {
       {activeTab === "raw" && (
         <section style={cardStyle}>
           <div style={sectionHeaderStyle}><h2 style={sectionTitleStyle}>Rohdaten</h2></div>
-          <pre style={rawBoxStyle}>{JSON.stringify({ detail, inventory, packRewards, boostPurchases, dailyClaims }, null, 2)}</pre>
+          <pre style={rawBoxStyle}>{JSON.stringify({ detail, inventory, packRewards, boostPurchases, dailyClaims, appSessions, appEvents }, null, 2)}</pre>
         </section>
       )}
     </div>
@@ -2295,7 +2408,7 @@ function JsonCardGrid({ items, emptyText, preferredTitleKeys = ["pack_key", "pac
 }
 
 function summaryItems(item: JsonMap): [string, string][] {
-  const preferred = ["id", "pack_key", "pack_name", "pack_tier", "reward_key", "status", "cards_count", "card_count", "cards_per_open", "quantity", "coin_cost", "total_coin_cost", "claim_date", "created_at", "claimed_at"];
+  const preferred = ["id", "event_name", "screen_name", "session_id", "pack_key", "pack_name", "pack_tier", "reward_key", "status", "duration_seconds", "platform", "cards_count", "card_count", "cards_per_open", "quantity", "coin_cost", "total_coin_cost", "claim_date", "started_at", "ended_at", "created_at", "claimed_at"];
   const rows: [string, string][] = [];
   for (const key of preferred) {
     if (item[key] !== undefined && item[key] !== null && rows.length < 8) {
@@ -2349,6 +2462,7 @@ function readBoolean(source: JsonMap | null | undefined, key: string) {
 function formatNumber(value: unknown) { return Math.round(readNumber(value)).toLocaleString("de-DE"); }
 function formatMoney(value: unknown) { return readNumber(value).toLocaleString("de-DE", { style: "currency", currency: "EUR" }); }
 function formatDate(dateString?: string | null) { if (!dateString) return "—"; const date = new Date(dateString); if (Number.isNaN(date.getTime())) return "—"; return date.toLocaleString("de-DE"); }
+function formatDuration(value: number) { const seconds = Math.max(0, Math.round(value)); const hours = Math.floor(seconds / 3600); const minutes = Math.floor((seconds % 3600) / 60); const rest = seconds % 60; if (hours > 0) return `${hours} Std. ${minutes} Min.`; if (minutes > 0) return `${minutes} Min. ${rest} Sek.`; return `${rest} Sek.`; }
 function profilePlatformLabel(value: string) {
   const platform = value.trim().toLowerCase();
 
