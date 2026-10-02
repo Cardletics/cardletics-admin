@@ -77,7 +77,7 @@ const screenshotFiles = [
   "/movement-detail-screen.png",
   "/nearby-screen.png",
   "/events-screen.png",
-  "/friends-screen.png",
+  "/friend-screen.png",
 ];
 
 function makeScreens(items: { title: string; text: string }[]): ScreenshotItem[] {
@@ -1688,10 +1688,9 @@ function ScreenshotCard({
           }}
         >
           <div style={phoneFrameInnerStyle}>
-            <div style={phoneNotchStyle} />
             <div style={screenshotRealWrapStyle}>
               <img
-                src={`${fileName}?v=iphone-1320x2868`}
+                src={`${fileName}?v=iphone-1320x2868-fullframe-v2`}
                 alt={title}
                 width={1320}
                 height={2868}
@@ -1823,7 +1822,7 @@ function Lightbox({
             }}
           >
             <img
-              src={`${item.fileName}?v=iphone-1320x2868`}
+              src={`${item.fileName}?v=iphone-1320x2868-fullframe-v2`}
               alt={item.title}
               width={1320}
               height={2868}
@@ -2381,28 +2380,15 @@ const phoneFrameInnerStyle: React.CSSProperties = {
   position: "relative",
   borderRadius: "30px",
   background: "#000000",
-  padding: "14px 8px 8px 8px",
+  padding: 0,
   overflow: "hidden",
-};
-
-const phoneNotchStyle: React.CSSProperties = {
-  position: "absolute",
-  top: "6px",
-  left: "50%",
-  transform: "translateX(-50%)",
-  width: "92px",
-  height: "16px",
-  borderRadius: "999px",
-  background: "#0a0a0a",
-  boxShadow: "inset 0 -1px 2px rgba(255,255,255,0.08)",
-  zIndex: 2,
 };
 
 const screenshotRealWrapStyle: React.CSSProperties = {
   position: "relative",
   width: "100%",
   aspectRatio: "1320 / 2868",
-  borderRadius: "24px",
+  borderRadius: "30px",
   overflow: "hidden",
   background: "#000000",
 };
@@ -2410,7 +2396,7 @@ const screenshotRealWrapStyle: React.CSSProperties = {
 const screenshotImageStyle: React.CSSProperties = {
   width: "100%",
   height: "100%",
-  objectFit: "contain",
+  objectFit: "cover",
   objectPosition: "center top",
   display: "block",
 };
@@ -2768,7 +2754,7 @@ const lightboxPhoneWrapStyle: React.CSSProperties = {
 const lightboxImageStyle: React.CSSProperties = {
   width: "100%",
   height: "100%",
-  objectFit: "contain",
+  objectFit: "cover",
   objectPosition: "center top",
   display: "block",
 };
